@@ -35,7 +35,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 4. **Observabilidade**: atribuir ownership de dashboards/runbooks e definir processo de revisão de custos e alertas.【F:docs/revisao-validacao-artefatos.md†L126-L137】
 5. **UX e Operações**: integrar checklist de acessibilidade aos protótipos e documentar matriz RACI e critérios de priorização para expansão.【F:docs/revisao-validacao-artefatos.md†L137-L159】
 
-As ações acima devem ser concluídas até ao final da Semana 1 para não bloquear o arranque do Sprint 0.
+As ações acima devem ser concluídas até ao final da Semana 1 para não bloquear o arranque do Sprint 0. O calendário trimestral de revisão e o quadro de acompanhamento das ações corretivas estão publicados em `docs/revisao-validacao-artefatos.md` e devem ser utilizados como referência única para status e decisões de governance.
 
 ## Roteiro de Comunicação e Sincronização
 - **Daily Stand-up**: 15 minutos por squad, com sincronização inter-squads semanal conduzida pelo Operations Manager.

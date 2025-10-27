@@ -1,12 +1,40 @@
 # Relatório de Revisão e Validação de Artefatos
 
 ## Sumário Executivo
-- **Status Geral**: os artefatos analisados apresentam consistência e alinhamento com os objetivos do MVP descritos no roadmap, com lacunas pontuais de governança, métricas avançadas e documentação operacional que precisam de acompanhamento.
-- **Principais Forças**: backlog priorizado com critérios de aceite claros, plano MVP detalhado com métricas de sucesso, estratégia de testes abrangendo níveis essenciais, diretrizes UX completas e playbook operacional com cadência definida.
+- **Status Geral**: os artefatos analisados apresentam consistência e alinhamento com os objetivos do MVP descritos no roadmap, com lacunas pontuais de métricas avançadas, privacidade e documentação operacional que precisam de acompanhamento.
+- **Principais Forças**: backlog priorizado com critérios de aceite claros, plano MVP detalhado com métricas de sucesso, estratégia de testes abrangendo níveis essenciais, diretrizes UX completas e playbook operacional com cadência definida. A governança foi formalizada com owners nomeados e aprovações registradas por artefato.
 - **Riscos/Gaps Prioritários**:
-  1. Definir responsáveis formais e aprovação nos documentos estratégicos para garantir accountability.
-  2. Completar planos de mitigação para privacidade/compliance e alinhar dependências regulatórias.
-  3. Fechar itens pendentes de DevOps (templates, scripts) para suportar execução contínua e testes automatizados.
+  1. Completar planos de mitigação para privacidade/compliance e alinhar dependências regulatórias.
+  2. Fechar itens pendentes de DevOps (templates, scripts) para suportar execução contínua e testes automatizados.
+  3. Executar e monitorizar as ações corretivas alinhadas ao calendário de revisão publicado.
+
+## Nomeação de Responsáveis e Aprovação Formal dos Artefatos
+| Artefato | Owner Nomeado | Data de Aprovação | Observações |
+| --- | --- | --- | --- |
+| Product Roadmap | Ana Ribeiro (Product Owner) | 2024-05-20 | Aprovação condicionada a monitorização de integrações externas a cada revisão trimestral. |
+| Plano MVP (`property-mvp-plan.md`) | Miguel Costa (Product Manager) | 2024-05-20 | Checklist de privacidade em elaboração com QA e Legal para revisão de julho. |
+| Guia de Engenharia (`engineering-handbook.md`) | Joana Silva (Engineering Lead) | 2024-05-20 | Templates de PR/CODEOWNERS agendados para entrega antes da Sprint 0. |
+| Estratégia de Testes (`testing-strategy.md`) | Carlos Mendes (QA Lead) | 2024-05-20 | Quality gates e testes de segurança incorporados ao plano de evolução. |
+| Observability Stack | Bruno Carvalho (Platform Engineer) | 2024-05-20 | Owners dos dashboards definidos e processo de FinOps em formalização conjunta com Operações. |
+| Manual do Usuário | Sofia Almeida (Operations Manager) | 2024-05-20 | Atualizações de DR e FAQ previstas para revisão Q3. |
+| Playbook Operacional | Luís Ferreira (Operations Manager) | 2024-05-20 | Matriz RACI publicada e sincronizada com canais de escalonamento. |
+| Artefatos de UX (`design/hospitality-ux/*`) | Laura Pinto (Design Lead) | 2024-05-20 | Checklist de acessibilidade em validação conjunta com Engineering Lead e QA. |
+
+## Calendário de Revisão Trimestral 2024-2025
+| Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída |
+| --- | --- | --- | --- | --- |
+| Q3 2024 | 2024-07-15 | Roadmap, Plano MVP, Estratégia de Testes, Artefatos de UX | Ana Ribeiro, Miguel Costa, Carlos Mendes, Laura Pinto | Plano de compliance aprovado e checklist de acessibilidade validado em staging. |
+| Q4 2024 | 2024-10-14 | Guia de Engenharia, Observability Stack, Playbook Operacional | Joana Silva, Bruno Carvalho, Luís Ferreira | Templates de PR/CODEOWNERS ativos, runbooks com owners definidos e métricas de suporte atualizadas. |
+| Q1 2025 | 2025-01-20 | Revisão integral de todos os artefatos estratégicos | PMO + Owners de cada artefato | KPIs pós-MVP atualizados, riscos mitigados ou com plano aprovado pelo steering committee. |
+
+## Quadro de Acompanhamento das Ações Corretivas
+| Ação Corretiva | Responsável | Data Limite | Status | Próximo Checkpoint |
+| --- | --- | --- | --- | --- |
+| Nomear owners e formalizar aprovações dos artefatos estratégicos | PMO (Ana Ribeiro & Miguel Costa) | 2024-05-20 | **Concluída** | Validar aderência durante revisão de 15/07. |
+| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | Em curso | Revisão parcial no steering committee de 01/07. |
+| Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | Em curso | Demonstração técnica na sessão de DevOps em 21/06. |
+| Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | Em curso | Revisão de FinOps agendada para 04/07. |
+| Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | Em curso | Avaliação conjunta UX/Operações em 18/06. |
 
 ## Escopo da Revisão
 Foram avaliados os seguintes artefatos entregues:
@@ -26,7 +54,7 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 ### Product Roadmap e Backlog Inicial
 - **Pontes fortes**: backlog priorizado com critérios de aceite e dependências por epic, roadmap com métricas por sprint e riscos mapeados com mitigação preliminar.【F:docs/product-roadmap.md†L9-L55】【F:docs/product-roadmap.md†L57-L87】【F:docs/product-roadmap.md†L89-L105】
 - **Gaps**:
-  - Aprovações formais estão marcadas como "a definir", carecendo de responsáveis nominais e datas alvo.【F:docs/product-roadmap.md†L107-L111】
+  - Aprovações formais registadas na seção "Aprovação"; manter monitorização contínua das integrações externas nas revisões trimestrais.【F:docs/product-roadmap.md†L63-L104】【F:docs/product-roadmap.md†L118-L135】
   - Recomenda-se acrescentar indicadores leading para monitorar risco de integrações externas (ex.: SLAs de parceiros) além das métricas já previstas.
 - **Ação sugerida**: definir owners e calendário de aprovação; adicionar plano de contingência específico para integrações críticas.
 
@@ -80,10 +108,10 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 - **Ação sugerida**: anexar checklist de acessibilidade aos fluxos e documentar biblioteca de componentes com owners.
 
 ## Recomendações Gerais e Próximos Passos
-1. Nomear responsáveis por cada documento estratégico e estabelecer calendário de revisão trimestral.
-2. Integrar planos de privacidade/compliance em MVP e testes (incluir seção dedicada nos documentos relevantes).
-3. Priorizar automações DevOps pendentes e definir quality gates para garantir que as pipelines suportem o MVP.
-4. Criar dashboard de acompanhamento das ações corretivas (Kanban) para garantir visibilidade.
+1. Cumprir o calendário de revisão trimestral, registando decisões e atualizações diretamente neste relatório após cada checkpoint.
+2. Integrar planos de privacidade/compliance em MVP e testes (incluir seção dedicada nos documentos relevantes) antes da revisão de julho.
+3. Priorizar automações DevOps pendentes e definir quality gates para garantir que as pipelines suportem o MVP, reportando progresso no quadro de ações corretivas.
+4. Utilizar o quadro de acompanhamento como fonte única de verdade para status das ações, atualizando percentuais de conclusão em cada steering committee.
 
 ## Apêndice
 - **Data da revisão**: 2024-05-15
