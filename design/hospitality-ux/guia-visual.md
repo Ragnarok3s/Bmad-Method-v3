@@ -51,6 +51,15 @@ Define princípios visuais para garantir consistência entre dashboards web e ap
 - Motion reduzida disponível (desativar animações não essenciais).
 - Texto de botões e ícones com labels para screen readers.
 
+### Checklist de Acessibilidade
+- [ ] Validar contraste das combinações de cores em páginas críticas (home dashboard, reservas, housekeeping).
+- [ ] Garantir foco visível em todos os componentes interativos em versões desktop e mobile.
+- [ ] Confirmar que formulários possuem labels vinculados e mensagens de erro descritivas.
+- [ ] Revisar ordem de tabulação e leitura de screen readers nos fluxos de reserva e faturação.
+- [ ] Verificar que elementos dinâmicos (toasts, banners, alerts) comunicam estado para tecnologias assistivas.
+- [ ] Incluir opções de redução de movimento e alternativas para gestos exclusivamente visuais.
+- [ ] Documentar texto alternativo obrigatório para ícones informativos e imagens de suporte.
+
 ## Documentação e Hand-off
 - Tokenizar cores, tipografia e espaçamentos em biblioteca Figma.
 - Manter changelog de componentes reutilizáveis.
