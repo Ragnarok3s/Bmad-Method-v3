@@ -40,10 +40,29 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 
 ## Governança de Observabilidade
 
+### Ownership de Dashboards
+
+| Dashboard | Objetivo | Owner | Backup | Cadência de Revisão |
+|-----------|----------|-------|--------|---------------------|
+| Saúde de Agentes (Grafana) | Monitorar latência, throughput e erros por agente/playbook. | Platform Engineer Lead | SRE On-call | Quinzenal (revisão técnica) + mensal com stakeholders de produto |
+| Engajamento de Operações | Acompanhar KPIs operacionais (tempo de resposta, taxa de automatização). | Operations Manager | Product Analyst | Mensal |
+| FinOps de Observabilidade | Analisar custos de ingestão/armazenamento por ambiente. | FinOps Analyst | Platform Engineer | Mensal com reporte para steering committee |
+
+### Ownership de Runbooks
+
+| Runbook | Escopo | Owner | Backup | Última Revisão | Próxima Revisão |
+|---------|--------|-------|--------|----------------|-----------------|
+| Alerta 5xx Serviços Core | Diagnóstico e mitigação de erros 5xx persistentes. | SRE On-call | Backend Tech Lead | Maio/2024 | Julho/2024 |
+| Falhas em Jobs de Playbook | Tratativa para jobs agendados com falha recorrente. | Platform Engineer Lead | QA Lead | Maio/2024 | Junho/2024 |
+| Queda de Engajamento Usuário | Procedimentos para investigar redução de engajamento. | Operations Manager | Product Owner | Abril/2024 | Junho/2024 |
+
+### Processos de Revisão
+
 1. Definir SLIs/SLOs para componentes críticos (latência de playbook, sucesso de onboarding, ingestão de logs).
-2. Revisar painéis quinzenalmente com stakeholders.
-3. Documentar runbooks por tipo de alerta, incluindo critérios de fechamento.
-4. Estabelecer processo de _post-incident review_ com métricas de MTTA/MTTR.
+2. Revisar dashboards de saúde quinzenalmente com stakeholders técnicos e mensalmente com equipa de produto.
+3. Auditar runbooks mensalmente, atualizando critérios de acionamento, procedimentos de mitigação e owners quando necessário.
+4. Estabelecer processo de _post-incident review_ com métricas de MTTA/MTTR, incluindo verificação de cobertura de runbooks e atualização de ações corretivas em até 5 dias úteis.
+5. Consolidar resultados de revisões em relatório compartilhado no repositório GitOps e reportar riscos no steering committee.
 
 ## Roadmap Futuro
 
