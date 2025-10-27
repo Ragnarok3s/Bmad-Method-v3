@@ -11,6 +11,20 @@ Guiar as equipes de operações, suporte e produto na execução diária da plat
 - **Cadência de Revisão**: Quinzenal (ritual Ops Review) e revisão estratégica trimestral.
 - **Ferramentas Principais**: ITSM (Jira Service Management ou similar), Slack/Teams, Confluence/Notion, Grafana, Data Warehouse.
 
+### Matriz RACI
+
+| Atividade | Operações | Produto | Engenharia de Plataforma | Analytics | Customer Success |
+|-----------|-----------|---------|--------------------------|-----------|------------------|
+| Definição e atualização de SLAs | **R**esponsável | **C**onsultado | **A**provador | C | C |
+| Gestão do backlog de melhorias operacionais | R | **A**provador | C | C | C |
+| Resposta a incidentes críticos | **A**provador | C | **R**esponsável | C | **I**nformado |
+| Evolução da base de conhecimento | R | C | I | C | C |
+| Monitorização de métricas e alertas | C | C | R | **A**provador | I |
+| Planeamento de integrações externas | C | **R/A** | R | C | I |
+| Rotinas de feedback com clientes | C | C | I | C | **R/A** |
+
+Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = Informado.
+
 ## Canais de Suporte
 
 ### Base de Conhecimento
