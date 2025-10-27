@@ -48,6 +48,17 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 - Critérios: todas epics MVP concluídas; monitoração ativa; suporte inicial publicado.
 - Próximos passos: planejar lote pós-MVP focado em escalabilidade e monetização.
 
+## Governança e Aprovação do Roadmap
+
+| Papel | Responsável Nomeado | Responsabilidades-Chave | Cadência de Revisão |
+|-------|----------------------|-------------------------|---------------------|
+| Steering Executivo | Marina Lopes (Product Owner) | Validar prioridades de negócio, aprovar ajustes de escopo e comunicar decisões aos stakeholders. | Quinzenal (steering committee) e ad hoc para mudanças críticas |
+| Liderança Técnica | Rafael Monteiro (Tech Lead) | Avaliar impacto técnico das mudanças, garantir viabilidade das entregas e aprovar débitos técnicos associados. | Quinzenal, sincronizado com planning |
+| Governança de Dados | Bianca Souza (Data & Analytics Lead) | Validar implicações em métricas, fontes de dados e compliance antes de publicar alterações. | Mensal e sempre que novas métricas forem introduzidas |
+
+- **Processo de alteração**: qualquer proposta de repriorização deve ser registrada como RFC no repositório do produto, receber parecer técnico e de dados em até 48h úteis e somente então seguir para aprovação final da Marina Lopes.
+- **Comunicação**: decisões aprovadas são atualizadas no roadmap e divulgadas em `#steering-bmad` com resumo do impacto e próximos passos.
+
 ## Riscos e Mitigações
 
 | Risco | Probabilidade | Impacto | Mitigação |
@@ -58,6 +69,6 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 
 ## Aprovação
 
-- Product Owner: _a definir_
-- Tech Lead: _a definir_
-- Data Owner: _a definir_
+- Product Owner: Marina Lopes
+- Tech Lead: Rafael Monteiro
+- Data Owner: Bianca Souza
