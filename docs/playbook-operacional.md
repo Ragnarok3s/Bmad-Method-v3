@@ -1,0 +1,144 @@
+# Playbook Operacional e Estratégias de Crescimento
+
+## Objetivo
+
+Guiar as equipes de operações, suporte e produto na execução diária da plataforma Bmad Method v3, estruturando canais de suporte, métricas de sucesso e iniciativas de expansão.
+
+## Governança Operacional
+
+- **Owner**: Líder de Operações.
+- **Stakeholders**: Produto, Engenharia de Plataforma, Analytics, Customer Success.
+- **Cadência de Revisão**: Quinzenal (ritual Ops Review) e revisão estratégica trimestral.
+- **Ferramentas Principais**: ITSM (Jira Service Management ou similar), Slack/Teams, Confluence/Notion, Grafana, Data Warehouse.
+
+## Canais de Suporte
+
+### Base de Conhecimento
+
+- **Propósito**: Resolver dúvidas frequentes e reduzir volume de tickets.
+- **Estrutura**:
+  - Primeiros passos, FAQs por persona, guias de troubleshooting, artigos de deep dive técnico.
+  - Tagging por produto, módulo e severidade.
+- **Processo de Atualização**:
+  1. Registrar aprendizados após cada incidente resolvido.
+  2. Revisão editorial semanal pelo Analista de Operações.
+  3. Publicar métricas de consumo (visualizações, taxa de resolução sem ticket) no painel de analytics.
+- **KPIs**: Taxa de autoatendimento ≥ 40%, satisfação dos artigos ≥ 4/5.
+
+### Central de Tickets
+
+- **Fluxo**:
+  1. Usuário abre ticket via portal ou e-mail.
+  2. Triagem automática classifica severidade e persona.
+  3. SLA padrão: `S1` 1h resposta / 4h resolução; `S2` 4h / 1 dia; `S3` 1 dia / 3 dias.
+  4. Engajamento de squads específicos via roteamento automático baseado no componente afetado.
+  5. Encerramento exige comunicação ao usuário, atualização da base de conhecimento e captura de NPS transacional.
+- **Automação Recomendada**: Integração ITSM ↔ plataforma para anexar logs e telemetria automaticamente.
+
+### Chat de Suporte em Tempo Real
+
+- **Disponibilidade**: 9h-18h BRT em dias úteis, com alerta para plantonistas fora desse horário.
+- **Workflow**:
+  1. Bot realiza triagem inicial com perguntas padrão.
+  2. Se for incidente crítico, abre ticket `S1` automaticamente e convoca war room (canal dedicado).
+  3. Para dúvidas simples, envia snippets da base de conhecimento.
+- **Boas Práticas**: Registrar resumo da conversa no ticket associado para rastreabilidade.
+
+## Métricas de Sucesso
+
+### Taxa de Ocupação dos Agentes
+
+- **Definição**: Percentual de tempo em que agentes estão ativos em playbooks versus capacidade planejada.
+- **Cálculo**: `tempo_executado / tempo_disponivel` por agente, agregado semanalmente.
+- **Instrumentação**:
+  - Capturar logs de execução com timestamps.
+  - Armazenar em data warehouse (tabela `agent_utilization` com dimensões de agente, playbook, cliente).
+  - Dashboard em Grafana/Looker com alertas quando ocupação < 60% ou > 90%.
+
+### Tempo de Resposta de Suporte
+
+- **Definição**: Tempo médio entre abertura de ticket/chat e primeira interação humana.
+- **Cálculo**: Mediana por severidade (`S1`, `S2`, `S3`) para evitar distorções.
+- **Instrumentação**:
+  - Webhooks do ITSM para registrar timestamps.
+  - Monitorar via alertas no Slack quando SLA estourar.
+  - Relatórios semanais compartilhados com liderança.
+
+### NPS (Net Promoter Score)
+
+- **Definição**: Métrica de lealdade coletada em momentos chave (após onboarding, após resolução de ticket, revisão trimestral).
+- **Coleta**:
+  - Formulário integrado ao produto (escala 0-10 + comentário).
+  - Classificação automática em detratores (0-6), neutros (7-8), promotores (9-10).
+- **Instrumentação**:
+  - Pipeline para enviar respostas para ferramenta de analytics.
+  - Dashboard com tendência mensal e segmentação por persona.
+- **Meta Inicial**: NPS ≥ 35 no pós-onboarding e ≥ 45 no suporte.
+
+## Rotinas Operacionais
+
+| Rotina | Frequência | Responsável | Saídas |
+|--------|------------|-------------|--------|
+| Revisão de SLAs | Semanal | Analista de Operações | Relatório com tickets fora do SLA e ações corretivas |
+| Comitê de Qualidade | Quinzenal | Produto + Operações | Backlog de melhorias, updates em playbooks |
+| Auditoria de Permissões | Mensal | Administrador de Workspace | Checklist atualizado, revogação de acessos |
+| Revisão de Dashboards | Mensal | Data/Analytics | Ajustes em métricas, novas visualizações |
+| Post-Mortem de Incidentes | Sob demanda | Engenheiro de Plataforma | Documento de lições aprendidas e tarefas de follow-up |
+
+## Estratégias de Expansão
+
+### Novas Integrações
+
+- **Prioridades**:
+  1. Plataformas de CRM (HubSpot, Salesforce) para sincronizar contexto de clientes.
+  2. Ferramentas de comunicação (Teams, WhatsApp Business) para ampliar canais de execução.
+  3. Sistemas ITSM complementares para clientes enterprise.
+- **Etapas**:
+  - Avaliar APIs e requisitos de segurança.
+  - Prototipar integração com ambiente sandbox.
+  - Validar com grupo piloto e medir impacto na taxa de ocupação.
+
+### Automações IoT
+
+- **Cenários**:
+  - Monitoramento de dispositivos físicos utilizados pelos agentes (ex.: sensores em hubs de atendimento).
+  - Ações automáticas baseadas em eventos (ex.: ligar redundância ao detectar falha de hardware).
+- **Plano de Ação**:
+  1. Mapear dispositivos e protocolos (MQTT, OPC-UA, Modbus).
+  2. Definir gateway seguro para ingestão de dados.
+  3. Criar playbooks específicos para alertas IoT com escalonamento automático.
+  4. Medir redução de incidentes não planejados e impacto em NPS.
+
+### Analytics Avançado
+
+- **Iniciativas**:
+  - Modelos de previsão de demanda para otimizar escala de agentes.
+  - Segmentação de usuários baseada em comportamento dentro da plataforma.
+  - Detecção de anomalias em tempo de resposta e ocupação.
+- **Roadmap**:
+  1. Consolidar data lake com eventos de produto, suporte e feedback.
+  2. Implementar camada de feature store para machine learning.
+  3. Desenvolver dashboards self-service e alertas proativos.
+  4. Incorporar insights em reuniões de planejamento trimestral.
+
+## Plano de Execução
+
+| Horizonte | Iniciativas | Entregáveis | Métricas Esperadas |
+|-----------|-------------|-------------|--------------------|
+| 0-30 dias | Lançar base de conhecimento v1, configurar SLAs na central de tickets, ativar chatbot com triagem. | 20 artigos publicados, SLAs parametrizados, bot integrado. | Tempo de resposta S2 < 4h, taxa autoatendimento 25%. |
+| 30-60 dias | Instrumentar métricas de ocupação e NPS, criar dashboards operacionais, iniciar piloto de nova integração (CRM). | Pipelines de dados ativos, dashboards em produção, piloto configurado. | NPS ≥ 30, ocupação medida semanalmente. |
+| 60-90 dias | Expandir integrações (comunicação), prototipar automações IoT, iniciar projeto de analytics avançado. | Playbooks multi-canal, gateway IoT em beta, backlog de modelos preditivos. | Redução 15% incidentes críticos, previsão de demanda com acurácia inicial 70%. |
+
+## Gestão de Riscos
+
+| Risco | Mitigação |
+|-------|-----------|
+| Sobrecarga do time de suporte na implantação dos novos canais | Escalonar implantação em ondas e reforçar treinamento cross-team. |
+| Falha em integrações externas impactando SLAs | Implementar fallback manual e monitoramento ativo de APIs externas. |
+| Privacidade de dados nos pipelines de analytics | Aplicar mascaramento, controle de acesso granular e auditoria contínua. |
+
+## Próximos Passos
+
+1. Socializar este playbook com líderes das squads.
+2. Configurar OKRs alinhados às métricas de sucesso.
+3. Agendar primeira revisão quinzenal para acompanhamento das ações de suporte e expansão.
