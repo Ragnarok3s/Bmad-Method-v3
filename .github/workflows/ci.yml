@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  build:
+    name: Lint and Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v6.4.1
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_MARKDOWN: true
+          VALIDATE_YAML: true
+          VALIDATE_JSON: true
+          VALIDATE_BASH: true
+
+      - name: Placeholder - Unit Tests
+        run: |
+          echo "Skipping unit tests - scripts/test-unit.sh ainda não implementado"
+
+      - name: Placeholder - Integration Tests
+        run: |
+          echo "Skipping integration tests - scripts/test-integration.sh ainda não implementado"
+
+      - name: Upload Placeholder Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-plan
+          path: docs/
