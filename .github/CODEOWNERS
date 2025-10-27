@@ -1,0 +1,8 @@
+# Bmad Method v3 - CODEOWNERS
+# Atribuições garantem revisão automática dos domínios responsáveis.
+
+*                                   @bmad-method/engineering-leads
+/docs/                              @bmad-method/documentation
+/design/                            @bmad-method/product-design
+/web-bundles/                       @bmad-method/frontend
+/scripts/                           @bmad-method/devops
