@@ -13,17 +13,38 @@ Guiar as equipes de operações, suporte e produto na execução diária da plat
 
 ### Matriz RACI
 
-| Atividade | Operações | Produto | Engenharia de Plataforma | Analytics | Customer Success |
-|-----------|-----------|---------|--------------------------|-----------|------------------|
-| Definição e atualização de SLAs | **R**esponsável | **C**onsultado | **A**provador | C | C |
-| Gestão do backlog de melhorias operacionais | R | **A**provador | C | C | C |
-| Resposta a incidentes críticos | **A**provador | C | **R**esponsável | C | **I**nformado |
-| Evolução da base de conhecimento | R | C | I | C | C |
-| Monitorização de métricas e alertas | C | C | R | **A**provador | I |
-| Planeamento de integrações externas | C | **R/A** | R | C | I |
-| Rotinas de feedback com clientes | C | C | I | C | **R/A** |
+| Atividade | Operações | Produto | Engenharia de Plataforma | Analytics | Customer Success | UX/Design |
+|-----------|-----------|---------|--------------------------|-----------|------------------|-----------|
+| Definição e atualização de SLAs | **R**esponsável | **C**onsultado | **A**provador | C | C | I |
+| Gestão do backlog de melhorias operacionais | R | **A**provador | C | C | C | C |
+| Resposta a incidentes críticos | **A**provador | C | **R**esponsável | C | **I**nformado | I |
+| Evolução da base de conhecimento | R | C | I | C | C | **C**onsultado |
+| Monitorização de métricas e alertas | C | C | R | **A**provador | I | I |
+| Planeamento de integrações externas | C | **R/A** | R | C | I | C |
+| Rotinas de feedback com clientes | C | C | I | C | **R/A** | C |
+| Aplicação do checklist de acessibilidade nos fluxos operacionais | **C**onsultado | A | R | I | I | **R**esponsável |
+| Revisão trimestral do quadro de ações corretivas | **R/A** | C | C | C | I | C |
 
 Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = Informado.
+
+### Critérios de Priorização Operacional
+
+1. **Impacto em SLA e experiência do cliente (40%)**
+   - Alto: bloqueia SLA crítico (`S1`/`S2`) ou compromete NPS < 30.
+   - Médio: risco de degradação de SLA secundário (`S3`) ou NPS entre 30-45.
+   - Baixo: melhoria incremental sem efeito direto em SLA/NPS.
+2. **Urgência regulatória/compliance (20%)**
+   - Alto: requisito legal ou auditoria marcada com prazo firme.
+   - Médio: recomendações de auditorias internas ou políticas corporativas.
+   - Baixo: oportunidades de melhoria futura.
+3. **Complexidade técnica/esforço (20%)**
+   - Baixo esforço: < 3 dias-equipa; Médio: 3-10 dias; Alto: > 10 dias ou dependências externas.
+4. **Dependências cross-squad e disponibilidade de recursos (10%)**
+   - Avaliar bloqueios em DevOps, Design e Analytics; prioridade maior quando dependências estão desbloqueadas.
+5. **Efeito na observabilidade e acessibilidade (10%)**
+   - Itens que mitigam gaps de monitorização ou asseguram aderência ao checklist de acessibilidade recebem multiplicador positivo.
+
+> **Fórmula sugerida**: `Prioridade = (Impacto x 0,4) + (Urgência x 0,2) + (Complexidade invertida x 0,2) + (Dependências x 0,1) + (Observabilidade/Acessibilidade x 0,1)` onde cada fator é pontuado de 1 (baixo) a 5 (alto). Itens com pontuação ≥ 3,5 devem entrar no próximo sprint ou rotina quinzenal.
 
 ## Canais de Suporte
 

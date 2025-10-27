@@ -22,7 +22,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 | Semana | Foco | Entregáveis |
 | --- | --- | --- |
 | Semana 0 (Kick-off) | Sessões de alinhamento, revisão de backlog, definição de Definition of Ready (DoR) e Definition of Done (DoD). | Ata de kick-off com decisões, backlog priorizado e DoR/DoD publicados. |
-| Semana 1 | Execução das ações corretivas críticas; setup de ambientes e pipelines. | Templates de PR e CODEOWNERS ativos, pipelines CI/CD com testes base, owners de dashboards definidos. |
+| Semana 1 | Execução das ações corretivas críticas; setup de ambientes e pipelines. | Templates de PR e CODEOWNERS ativos, CI executando `scripts/test-unit.sh`/`scripts/test-integration.sh`, política de rollback/versionamento publicada e owners de dashboards/runbooks validados. |
 | Semana 2 | Sprint 0 – construção de fundações técnicas e casos de uso prioritários (autenticação, inventário). | Deploy do ambiente de staging, histórias base concluídas com QA integrado. |
 | Semana 3 | Sprint 1 (parte 1) – funcionalidades de reservas e calendário; iniciação de testes E2E. | Incremento com reservas básicas, testes E2E em pipeline e métricas configuradas. |
 | Semana 4 | Sprint 1 (parte 2) – integrações externas (OTA/pagamentos) com critérios de privacidade. | Integrações em staging com checklist LGPD/GDPR validado. |
@@ -33,9 +33,9 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 2. **Compliance**: acrescentar seções de privacidade e checklist regulatório no plano MVP e na estratégia de testes, incluindo critérios de armazenamento seguro de dados sensíveis.【F:docs/revisao-validacao-artefatos.md†L94-L116】【F:docs/revisao-validacao-artefatos.md†L118-L143】
 3. **DevOps**: concluir templates e scripts pendentes, além de formalizar política de rollback e versionamento de infraestrutura.【F:docs/revisao-validacao-artefatos.md†L108-L118】
 4. **Observabilidade**: atribuir ownership de dashboards/runbooks e definir processo de revisão de custos e alertas.【F:docs/revisao-validacao-artefatos.md†L126-L137】
-5. **UX e Operações**: integrar checklist de acessibilidade aos protótipos e documentar matriz RACI e critérios de priorização para expansão.【F:docs/revisao-validacao-artefatos.md†L137-L159】
+5. **UX e Operações**: integrar checklist de acessibilidade aos protótipos e documentar matriz RACI e critérios de priorização para expansão (**Concluída Semana 1** – ver `design/hospitality-ux/prototipo-interativo.md` e `docs/playbook-operacional.md`).【F:docs/revisao-validacao-artefatos.md†L137-L159】
 
-As ações acima devem ser concluídas até ao final da Semana 1 para não bloquear o arranque do Sprint 0.
+As ações acima devem ser concluídas até ao final da Semana 1 para não bloquear o arranque do Sprint 0. O calendário trimestral de revisão e o quadro de acompanhamento das ações corretivas estão publicados em `docs/revisao-validacao-artefatos.md` e devem ser utilizados como referência única para status e decisões de governance.
 
 ## Roteiro de Comunicação e Sincronização
 - **Daily Stand-up**: 15 minutos por squad, com sincronização inter-squads semanal conduzida pelo Operations Manager.
