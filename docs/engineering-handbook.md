@@ -14,7 +14,7 @@ Este guia descreve convenções de branching, automações de CI/CD e práticas 
 
 1. Abrir PRs pequenos (< 500 linhas) com descrição objetiva, checklist de testes e referência ao item de backlog.
 2. Exigir no mínimo 1 reviewer técnico e 1 reviewer de produto para mudanças relevantes ao usuário.
-3. Uso obrigatório de templates de PR (adicionar em `.github/pull_request_template.md` em iteração futura).
+3. Uso obrigatório do template de PR disponível em `.github/pull_request_template.md`.
 4. Não realizar merges diretos em `main`; utilizar `squash` para features.
 
 ## Automação CI/CD
@@ -24,8 +24,9 @@ Este guia descreve convenções de branching, automações de CI/CD e práticas 
 Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main` e `develop`:
 
 1. **Lint & Static Analysis**: roda `github/super-linter` para garantir padrões em Markdown, YAML e scripts.
-2. **Testes Unitários**: placeholder para integração futura (executa script `./scripts/test-unit.sh` quando existir).
-3. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
+2. **Testes Unitários**: executa `./scripts/test-unit.sh` para padronizar a chamada de suítes locais.
+3. **Testes de Integração (opcional)**: reutiliza `./scripts/test-integration.sh` quando houver cenários automatizados.
+4. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
 
 ### Deploy Automatizado
 
@@ -53,7 +54,7 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 
 ## Próximas Ações
 
-- [ ] Criar template de PR.
-- [ ] Adicionar scripts de testes unitários e integração.
-- [ ] Definir CODEOWNERS alinhado às áreas funcionais.
+- [x] Criar template de PR (`.github/pull_request_template.md`).
+- [x] Adicionar scripts de testes unitários e integração (`./scripts/test-unit.sh` e `./scripts/test-integration.sh`).
+- [x] Definir CODEOWNERS alinhado às áreas funcionais (`.github/CODEOWNERS`).
 - [ ] Automatizar geração de changelog.
