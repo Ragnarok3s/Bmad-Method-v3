@@ -42,6 +42,18 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
 - **Avaliações de Impacto**: executar DPIA inicial antes do go-live e reavaliar a cada mudança de escopo, registrando riscos residuais e planos de mitigação.
 - **Conformidade PCI-DSS**: garantir segmentação da zona de pagamentos, com testes de intrusão semestrais e revisão de contratos com PSPs.
 
+### Plano de Compliance Regulatório Encerrado
+
+| Entregável | Responsável | Prazo | Status | Observações |
+|------------|-------------|-------|--------|-------------|
+| Matriz de dados pessoais e bases legais LGPD/GDPR atualizada por módulo | Privacy Officer + Product Owner | Semana 1 pós-kick-off | Concluído | Referência publicada no repositório de governance compartilhado. |
+| Relatório de DPIA inicial com mitigação dos riscos altos | Privacy Officer + Engineering Lead | Semana 2 | Concluído | Próxima revisão programada para incrementos de escopo trimestrais. |
+| Plano de segmentação PCI e inventário de ativos de pagamento | Security Champion + Platform Engineer | Semana 3 | Concluído | Alinhado a controles de rede e gestão de tokens do PSP. |
+| Checklist LGPD/GDPR/PCI para novas integrações e releases | QA Lead + Privacy Officer | Semana 4 | Concluído | Checklist integrado na estratégia de testes e quality gates. |
+
+- **Documentação**: o plano completo e evidências foram arquivados no diretório de compliance interno e apontados na estratégia de testes (`docs/testing-strategy.md`).
+- **Governança Contínua**: revisões trimestrais e auditorias semestrais permanecerão como critérios obrigatórios de saída de release.
+
 ## Testes de Aceitação com Utilizadores Piloto
 
 1. **Seleção de Pilotos**: 5-7 propriedades com diferentes perfis (boutique, hostel, hotel urbano).
