@@ -41,6 +41,19 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 - **Auditoria de Acessos**: garantir que testes de integração validem trilhas de auditoria (criação/edição/consulta) para usuários privilegiados.
 - **Localização de Dados**: cobrir cenários de transferência internacional com mocks de provedores para confirmar aplicação de cláusulas contratuais padrão.
 - **Revisão de Terceiros**: incluir verificação trimestral de conformidade com PSPs e OTAs quanto a cláusulas de proteção de dados.
+- **Plano Encerrado**: registrar no relatório de QA de cada release que o plano de compliance regulatório (LGPD/GDPR, PCI) foi executado dentro do cronograma do kick-off, anexando evidências de DPIA, segmentação PCI e checklist de integrações.
+- **Gate de Kick-off**: bloquear a transição para Sprint 0 até que o checklist de conformidade, o DoR/DoD aprovados e o relatório de readiness de staging estejam anexados ao `docs/revisao-validacao-artefatos.md`.
+
+### Cronograma de Verificações de Compliance
+
+| Semana / Marco | Atividades de QA | Evidências Necessárias | Responsáveis |
+|----------------|------------------|------------------------|--------------|
+| Semana 1 (pós-kick-off) | Validar matriz de dados pessoais e bases legais em testes unitários críticos | Relatório da matriz atualizado e aprovadores no Jira | QA Lead + Privacy Officer |
+| Semana 2 | Incluir cenários de DPIA nas suites de integração e capturar logs de mitigação | Export do relatório DPIA com riscos residuais aceites | QA Lead + Engineering Lead |
+| Semana 3 | Executar testes de segmentação PCI em ambiente controlado | Checklist de segregação de rede e captura de tokens mascarados | Security Champion |
+| Semana 4 | Incorporar checklist LGPD/GDPR/PCI nos quality gates de release | Checklist assinado e arquivado na pipeline; evidência referenciada no relatório de revisão | QA Lead |
+
+- **Governança**: o resultado das verificações alimenta os quality gates de privacidade e segurança, mantendo histórico versionado no repositório de relatórios.
 
 ## QA Manual
 

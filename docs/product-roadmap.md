@@ -12,8 +12,12 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 
 ## Backlog Inicial
 
+> O backlog abaixo está ordenado por prioridade atualizada após a repriorização focada em housekeeping móvel. Os itens `BL-HK` devem ser concluídos antes dos demais épicos MVP.
+
 | ID | Epic / Área | Item de Backlog | Critérios de Aceite | Dependências |
 |----|-------------|-----------------|---------------------|---------------|
+| BL-HK01 | Housekeeping Móvel | Disponibilizar app responsivo/offline para staff registrar status de quartos e amenities | Staff consegue atualizar tarefas em < 2 minutos, mesmo offline; sincronização automática ao recuperar conexão; histórico visível para gestores. | Design mobile; APIs de inventário; mecanismo de sincronização |
+| BL-HK02 | Integrações Housekeeping-Parceiros | Conectar app de housekeeping a parceiros de lavanderia e manutenção com SLAs definidos | Agendamentos enviados com janela acordada; confirmação automática registrada; alertas para violações de SLA. | SLAs com parceiros formalizados; webhooks ou APIs de parceiros |
 | BL-01 | Onboarding | Criar wizard de onboarding guiado para novos workspaces | Usuário conclui onboarding em < 5 minutos; coleta dados básicos de equipe; dispara checklist inicial. | Design UX aprovado; APIs de cadastro estáveis |
 | BL-02 | Configuração de Agentes | Implementar catálogo centralizado de agentes com filtros por competência | Catálogo lista agentes com tags; filtros aplicados dinamicamente; seleção gera pré-configuração. | APIs de agentes; design system |
 | BL-03 | Playbooks Automatizados | Disponibilizar biblioteca inicial de playbooks com templates pré-aprovados | Usuário seleciona playbook e inicia execução em 3 passos; logs de execução armazenados. | Mecanismo de execução de playbooks |
@@ -27,6 +31,7 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 ### Sprint 0 — Preparação (Semana 0)
 - Configurar repositório, pipelines e ambientes (ver docs/engineering-handbook.md).
 - Finalizar design de experiência crítica (onboarding e catálogo).
+- Confirmar que SLAs/janelas operacionais com parceiros de lavanderia/manutenção estão assinados e publicados para uso do app de housekeeping.
 - Alinhar métricas de sucesso e instrumentação inicial.
 
 ### Sprint 1 — Fundamentos (Semanas 1-2)
