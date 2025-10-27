@@ -4,7 +4,7 @@
 - **Status Geral**: os artefatos analisados apresentam consistência e alinhamento com os objetivos do MVP descritos no roadmap, com lacunas pontuais de métricas avançadas, privacidade e documentação operacional que precisam de acompanhamento.
 - **Principais Forças**: backlog priorizado com critérios de aceite claros, plano MVP detalhado com métricas de sucesso, estratégia de testes abrangendo níveis essenciais, diretrizes UX completas e playbook operacional com cadência definida. A governança foi formalizada com owners nomeados e aprovações registradas por artefato.
 - **Riscos/Gaps Prioritários**:
-  1. Completar planos de mitigação para privacidade/compliance e alinhar dependências regulatórias.
+  1. Completar planos de mitigação para privacidade/compliance e alinhar dependências regulatórias, garantindo encerramento formal antes da Sprint 1.
   2. Fechar itens pendentes de DevOps (templates, scripts) para suportar execução contínua e testes automatizados.
   3. Executar e monitorizar as ações corretivas alinhadas ao calendário de revisão publicado.
 
@@ -31,7 +31,8 @@
 | Ação Corretiva | Responsável | Data Limite | Status | Próximo Checkpoint |
 | --- | --- | --- | --- | --- |
 | Nomear owners e formalizar aprovações dos artefatos estratégicos | PMO (Ana Ribeiro & Miguel Costa) | 2024-05-20 | **Concluída** | Validar aderência durante revisão de 15/07. |
-| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | Em curso | Revisão parcial no steering committee de 01/07. |
+| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | **Em validação** | Evidências incorporadas nos documentos MVP/testes; formalizar encerramento e ata de aprovação antes da Sprint 1. |
+| Automatizar geração de changelog no handbook e pipeline de release | Joana Silva & Bruno Carvalho | 2024-07-26 | **Planejada** | Sprint 1: definir fluxo GitOps + script de changelog; Sprint 2: validar automação no handbook e publicar guia de uso. |
 | Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
 | Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | **Concluída (Semana 1)** | Revisar evidências na cadência de steering de 01/07. |
@@ -78,7 +79,7 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
   - Itens críticos como template de PR, scripts de testes e CODEOWNERS ainda pendentes, podendo atrasar a implementação de automações.【F:docs/engineering-handbook.md†L121-L128】
   - Recomenda-se acrescentar política de versionamento de infraestrutura e playbooks de rollback.
 - **Mitigação Semana 1 do kick-off**: templates, scripts e CODEOWNERS ativados; política de versionamento/rollback formalizada e CI configurada para executar `scripts/test-unit.sh` e `scripts/test-integration.sh` automaticamente.【F:docs/engineering-handbook.md†L93-L141】【F:docs/plano-kickoff-mvp.md†L23-L38】
-- **Ação sugerida**: manter monitorização da automação de changelog e validar execução dos scripts em cada revisão de pipeline.
+- **Ação sugerida**: manter monitorização da automação de changelog e validar execução dos scripts em cada revisão de pipeline; planejar implementação das rotinas de changelog durante as Sprints 1 e 2, documentando o fluxo no handbook assim que os testes concluírem.【F:docs/engineering-handbook.md†L55-L72】
 
 ### Estratégia de Testes e QA
 - **Pontes fortes**: cobertura prevista para testes unitários, integração e E2E com métricas claras, integração com CI/CD e roadmap de evolução para performance e acessibilidade.【F:docs/testing-strategy.md†L5-L67】【F:docs/testing-strategy.md†L69-L129】
@@ -121,7 +122,7 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 ## Recomendações Gerais e Próximos Passos
 1. Cumprir o calendário de revisão trimestral, registando decisões e atualizações diretamente neste relatório após cada checkpoint.
 2. Integrar planos de privacidade/compliance em MVP e testes (incluir seção dedicada nos documentos relevantes) antes da revisão de julho.
-3. Priorizar automações DevOps pendentes e definir quality gates para garantir que as pipelines suportem o MVP, reportando progresso no quadro de ações corretivas.
+3. Priorizar automações DevOps pendentes (incluindo a geração automatizada de changelog nas primeiras sprints) e definir quality gates para garantir que as pipelines suportem o MVP, reportando progresso no quadro de ações corretivas.
 4. Utilizar o quadro de acompanhamento como fonte única de verdade para status das ações, atualizando percentuais de conclusão em cada steering committee.
 
 ## Apêndice
