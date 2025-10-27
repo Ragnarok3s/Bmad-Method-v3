@@ -34,7 +34,7 @@
 | Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | Em curso | Revisão parcial no steering committee de 01/07. |
 | Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
-| Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | Em curso | Avaliação conjunta UX/Operações em 18/06. |
+| Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | **Concluída (Semana 1)** | Revisar evidências na cadência de steering de 01/07. |
 
 ## Escopo da Revisão
 Foram avaliados os seguintes artefatos entregues:
@@ -97,17 +97,19 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 
 ### Playbook Operacional
 - **Pontes fortes**: governança clara, canais de suporte com KPIs, métricas de sucesso detalhadas e plano de execução em ondas.【F:docs/playbook-operacional.md†L5-L117】【F:docs/playbook-operacional.md†L119-L175】
-- **Gaps**:
-  - Plano de comunicação inter-squads para incidentes não está explícito; definir matriz RACI e canais de escalonamento.
-  - Estratégias de expansão carecem de critérios para priorização entre integrações e automações.
-- **Ação sugerida**: documentar matriz RACI e critérios de priorização (impacto, esforço, dependências).
+- **Gaps (maio/2024)**:
+  - Plano de comunicação inter-squads para incidentes não estava explícito; definir matriz RACI e canais de escalonamento.
+  - Estratégias de expansão careciam de critérios para priorização entre integrações e automações.
+- **Mitigação Semana 1 do kick-off**: matriz RACI expandida com participação de UX/Design e checklist de acessibilidade, além de critérios de priorização ponderados por impacto, compliance e esforço documentados no playbook.【F:docs/playbook-operacional.md†L15-L82】
+- **Ação sugerida**: acompanhar aplicação dos critérios nas cerimónias quinzenais e atualizar pesos conforme métricas reais.
 
 ### Artefatos de UX (User Flows, Wireframes, Guia Visual, Protótipo)
-- **Pontes fortes**: fluxos completos dos principais processos, wireframes com feedback iterativo, guideline visual com tokens definidos e plano de protótipo com métricas de sucesso.【F:design/hospitality-ux/user-flows.md†L3-L67】【F:design/hospitality-ux/wireframes.md†L1-L73】【F:design/hospitality-ux/guia-visual.md†L1-L53】【F:design/hospitality-ux/prototipo-interativo.md†L1-L61】
-- **Gaps**:
+- **Pontes fortes**: fluxos completos dos principais processos, wireframes com feedback iterativo, guideline visual com tokens definidos e plano de protótipo com métricas de sucesso.【F:design/hospitality-ux/user-flows.md†L3-L67】【F:design/hospitality-ux/wireframes.md†L1-L73】【F:design/hospitality-ux/guia-visual.md†L1-L53】【F:design/hospitality-ux/prototipo-interativo.md†L1-L86】
+- **Gaps (maio/2024)**:
   - Necessário ligar explicitamente requisitos de acessibilidade aos protótipos (ex.: testes com leitores de ecrã, contraste validado).
   - Recomenda-se adicionar mapa de navegação consolidado e plano de hand-off detalhando tokens/componentes no Figma.
-- **Ação sugerida**: anexar checklist de acessibilidade aos fluxos e documentar biblioteca de componentes com owners.
+- **Mitigação Semana 1 do kick-off**: checklist de acessibilidade integrado ao plano de protótipo com responsabilidades, métricas e evidências por iteração, incluindo testes com leitores de ecrã e documentação de gaps para o quadro de ações corretivas.【F:design/hospitality-ux/prototipo-interativo.md†L33-L88】
+- **Ação sugerida**: priorizar elaboração do mapa de navegação consolidado antes da revisão Q3/2024.
 
 ## Recomendações Gerais e Próximos Passos
 1. Cumprir o calendário de revisão trimestral, registando decisões e atualizações diretamente neste relatório após cada checkpoint.

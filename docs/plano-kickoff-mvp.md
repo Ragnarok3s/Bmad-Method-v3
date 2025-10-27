@@ -33,7 +33,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 2. **Compliance**: acrescentar seções de privacidade e checklist regulatório no plano MVP e na estratégia de testes, incluindo critérios de armazenamento seguro de dados sensíveis.【F:docs/revisao-validacao-artefatos.md†L94-L116】【F:docs/revisao-validacao-artefatos.md†L118-L143】
 3. **DevOps**: concluir templates e scripts pendentes, além de formalizar política de rollback e versionamento de infraestrutura.【F:docs/revisao-validacao-artefatos.md†L108-L118】
 4. **Observabilidade**: atribuir ownership de dashboards/runbooks e definir processo de revisão de custos e alertas.【F:docs/revisao-validacao-artefatos.md†L126-L137】
-5. **UX e Operações**: integrar checklist de acessibilidade aos protótipos e documentar matriz RACI e critérios de priorização para expansão.【F:docs/revisao-validacao-artefatos.md†L137-L159】
+5. **UX e Operações**: integrar checklist de acessibilidade aos protótipos e documentar matriz RACI e critérios de priorização para expansão (**Concluída Semana 1** – ver `design/hospitality-ux/prototipo-interativo.md` e `docs/playbook-operacional.md`).【F:docs/revisao-validacao-artefatos.md†L137-L159】
 
 As ações acima devem ser concluídas até ao final da Semana 1 para não bloquear o arranque do Sprint 0. O calendário trimestral de revisão e o quadro de acompanhamento das ações corretivas estão publicados em `docs/revisao-validacao-artefatos.md` e devem ser utilizados como referência única para status e decisões de governance.
 
