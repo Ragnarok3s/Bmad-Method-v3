@@ -34,6 +34,14 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 | Gestão de agentes | Administrador publica novo playbook e monitora logs | Playwright | Nightly + smoke em produção |
 | Dashboard de analytics | Usuário acompanha métricas e exporta CSV | Cypress | Semanal, focado em regressão |
 
+## Privacidade e Conformidade Regulatório
+
+- **Checklist LGPD/GDPR**: validar consentimentos, finalidades, direitos do titular e políticas de retenção em testes de aceitação e regressão.
+- **Dados Sintéticos**: utilizar geradores anonimizados e mascaramento obrigatório em ambientes de teste; proibir dados reais em pipelines.
+- **Auditoria de Acessos**: garantir que testes de integração validem trilhas de auditoria (criação/edição/consulta) para usuários privilegiados.
+- **Localização de Dados**: cobrir cenários de transferência internacional com mocks de provedores para confirmar aplicação de cláusulas contratuais padrão.
+- **Revisão de Terceiros**: incluir verificação trimestral de conformidade com PSPs e OTAs quanto a cláusulas de proteção de dados.
+
 ## QA Manual
 
 - **Checklist de release**: executado em branch `release/<versao>`, cobrindo cenários críticos, acessibilidade básica e validação cross-browser (Chrome/Firefox).
@@ -51,6 +59,18 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 - **Métricas**: cobertura de código, taxa de falha por release, tempo médio de correção de bugs.
 - **Processo de bugs**: registrar no Jira com prioridade, steps to reproduce e anexos.
 - **Retrospectiva**: revisar falhas críticas ao fim de cada sprint para ajustar escopo de testes.
+
+## Quality Gates
+
+| Gate | Critério | Responsável | Ferramenta de Monitorização |
+|------|----------|-------------|------------------------------|
+| Cobertura de Código | ≥ 75% unit tests módulos core, ≥ 60% integração, tendência semanal não regressiva | QA Lead + Engineering Lead | SonarQube, cobertura CI | 
+| Bugs Abertos | Zero bugs críticos/severidade alta em aberto para release; máximo 5 médios com plano de mitigação aprovado | QA Lead | Jira + dashboard QA |
+| Testes de Segurança | Execução obrigatória de SAST (SonarQube/Semgrep) a cada PR, DAST mensal com OWASP ZAP e pentest semestral | Security Champion | Pipelines CI/CD, relatórios de segurança |
+| Privacidade | Checklist LGPD/GDPR assinado para novas integrações e mudança de escopo; log de consentimento validado | Privacy Officer | Planilha de conformidade + auditoria |
+| Observabilidade de QA | Todos os relatórios JUnit publicados, métricas em dashboard `QA-Quality` atualizadas por build | QA Lead | Grafana / DataDog |
+
+**Critérios de Bloqueio:** builds que não atinjam os thresholds acima devem falhar automaticamente, exigindo aprovação explícita do Engineering Lead e registro de risco em reunião de steering.
 
 ## Roadmap de Evolução
 

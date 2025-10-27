@@ -33,6 +33,15 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
   - Gestão de discrepâncias com fila de reconciliação manual.
 - **Métricas**: latência de sincronização < 5 minutos; erro de sincronização < 0,5% das operações.
 
+## Privacidade, Segurança e Conformidade Regulatório
+
+- **Bases Legais**: mapear dados pessoais tratados em cada módulo, associando finalidades e bases legais LGPD/GDPR (legítimo interesse, execução de contrato) na matriz de dados.
+- **Minimização de Dados**: coletar apenas atributos necessários para reservas, faturação e reporting; armazenar dados sensíveis (documentos, cartões) com cifragem AES-256 e segregação de acessos por função.
+- **Retenção e Eliminação**: definir políticas automáticas de retenção (ex.: 24 meses para dados operacionais, 7 anos para faturas) com rotinas de anonimização e deleção auditáveis.
+- **Direitos do Titular**: disponibilizar mecanismos para exportar, corrigir e excluir dados de hóspedes, com SLA de atendimento de 10 dias úteis e logs de atendimento.
+- **Avaliações de Impacto**: executar DPIA inicial antes do go-live e reavaliar a cada mudança de escopo, registrando riscos residuais e planos de mitigação.
+- **Conformidade PCI-DSS**: garantir segmentação da zona de pagamentos, com testes de intrusão semestrais e revisão de contratos com PSPs.
+
 ## Testes de Aceitação com Utilizadores Piloto
 
 1. **Seleção de Pilotos**: 5-7 propriedades com diferentes perfis (boutique, hostel, hotel urbano).
