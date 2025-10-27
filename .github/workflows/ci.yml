@@ -31,13 +31,11 @@ jobs:
           VALIDATE_JSON: true
           VALIDATE_BASH: true
 
-      - name: Placeholder - Unit Tests
-        run: |
-          echo "Skipping unit tests - scripts/test-unit.sh ainda não implementado"
+      - name: Run Unit Tests
+        run: ./scripts/test-unit.sh
 
-      - name: Placeholder - Integration Tests
-        run: |
-          echo "Skipping integration tests - scripts/test-integration.sh ainda não implementado"
+      - name: Run Integration Tests
+        run: ./scripts/test-integration.sh
 
       - name: Upload Placeholder Artifacts
         if: always()

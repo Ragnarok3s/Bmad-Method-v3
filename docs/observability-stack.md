@@ -44,17 +44,17 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 
 | Dashboard | Objetivo | Owner | Backup | Cadência de Revisão |
 |-----------|----------|-------|--------|---------------------|
-| Saúde de Agentes (Grafana) | Monitorar latência, throughput e erros por agente/playbook. | Platform Engineer Lead | SRE On-call | Quinzenal (revisão técnica) + mensal com stakeholders de produto |
-| Engajamento de Operações | Acompanhar KPIs operacionais (tempo de resposta, taxa de automatização). | Operations Manager | Product Analyst | Mensal |
-| FinOps de Observabilidade | Analisar custos de ingestão/armazenamento por ambiente. | FinOps Analyst | Platform Engineer | Mensal com reporte para steering committee |
+| Saúde de Agentes (Grafana) | Monitorar latência, throughput e erros por agente/playbook. | Bruno Carvalho (Platform Engineer Lead) | Inês Duarte (SRE On-call) | Quinzenal (revisão técnica) + mensal com stakeholders de produto |
+| Engajamento de Operações | Acompanhar KPIs operacionais (tempo de resposta, taxa de automatização). | Luís Ferreira (Operations Manager) | Paula Gomes (Product Analyst) | Mensal |
+| FinOps de Observabilidade | Analisar custos de ingestão/armazenamento por ambiente. | Marina Lopes (FinOps Analyst) | Bruno Carvalho (Platform Engineer Lead) | Mensal com reporte para steering committee |
 
 ### Ownership de Runbooks
 
 | Runbook | Escopo | Owner | Backup | Última Revisão | Próxima Revisão |
 |---------|--------|-------|--------|----------------|-----------------|
-| Alerta 5xx Serviços Core | Diagnóstico e mitigação de erros 5xx persistentes. | SRE On-call | Backend Tech Lead | Maio/2024 | Julho/2024 |
-| Falhas em Jobs de Playbook | Tratativa para jobs agendados com falha recorrente. | Platform Engineer Lead | QA Lead | Maio/2024 | Junho/2024 |
-| Queda de Engajamento Usuário | Procedimentos para investigar redução de engajamento. | Operations Manager | Product Owner | Abril/2024 | Junho/2024 |
+| Alerta 5xx Serviços Core | Diagnóstico e mitigação de erros 5xx persistentes. | Inês Duarte (SRE On-call) | Pedro Martins (Backend Tech Lead) | Maio/2024 | Julho/2024 |
+| Falhas em Jobs de Playbook | Tratativa para jobs agendados com falha recorrente. | Bruno Carvalho (Platform Engineer Lead) | Carla Nunes (QA Lead) | Maio/2024 | Junho/2024 |
+| Queda de Engajamento Usuário | Procedimentos para investigar redução de engajamento. | Luís Ferreira (Operations Manager) | Ana Ribeiro (Product Owner) | Abril/2024 | Junho/2024 |
 
 ### Processos de Revisão
 
@@ -63,6 +63,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 3. Auditar runbooks mensalmente, atualizando critérios de acionamento, procedimentos de mitigação e owners quando necessário.
 4. Estabelecer processo de _post-incident review_ com métricas de MTTA/MTTR, incluindo verificação de cobertura de runbooks e atualização de ações corretivas em até 5 dias úteis.
 5. Consolidar resultados de revisões em relatório compartilhado no repositório GitOps e reportar riscos no steering committee.
+6. Atualizar o quadro de ações corretivas (`docs/revisao-validacao-artefatos.md`) ao final de cada revisão semanal da Semana 1 do kick-off.
 
 ## Roadmap Futuro
 

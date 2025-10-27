@@ -22,7 +22,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 | Semana | Foco | Entregáveis |
 | --- | --- | --- |
 | Semana 0 (Kick-off) | Sessões de alinhamento, revisão de backlog, definição de Definition of Ready (DoR) e Definition of Done (DoD). | Ata de kick-off com decisões, backlog priorizado e DoR/DoD publicados. |
-| Semana 1 | Execução das ações corretivas críticas; setup de ambientes e pipelines. | Templates de PR e CODEOWNERS ativos, pipelines CI/CD com testes base, owners de dashboards definidos. |
+| Semana 1 | Execução das ações corretivas críticas; setup de ambientes e pipelines. | Templates de PR e CODEOWNERS ativos, CI executando `scripts/test-unit.sh`/`scripts/test-integration.sh`, política de rollback/versionamento publicada e owners de dashboards/runbooks validados. |
 | Semana 2 | Sprint 0 – construção de fundações técnicas e casos de uso prioritários (autenticação, inventário). | Deploy do ambiente de staging, histórias base concluídas com QA integrado. |
 | Semana 3 | Sprint 1 (parte 1) – funcionalidades de reservas e calendário; iniciação de testes E2E. | Incremento com reservas básicas, testes E2E em pipeline e métricas configuradas. |
 | Semana 4 | Sprint 1 (parte 2) – integrações externas (OTA/pagamentos) com critérios de privacidade. | Integrações em staging com checklist LGPD/GDPR validado. |

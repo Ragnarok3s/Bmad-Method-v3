@@ -32,8 +32,8 @@
 | --- | --- | --- | --- | --- |
 | Nomear owners e formalizar aprovações dos artefatos estratégicos | PMO (Ana Ribeiro & Miguel Costa) | 2024-05-20 | **Concluída** | Validar aderência durante revisão de 15/07. |
 | Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | Em curso | Revisão parcial no steering committee de 01/07. |
-| Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | Em curso | Demonstração técnica na sessão de DevOps em 21/06. |
-| Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | Em curso | Revisão de FinOps agendada para 04/07. |
+| Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
+| Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
 | Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | Em curso | Avaliação conjunta UX/Operações em 18/06. |
 
 ## Escopo da Revisão
@@ -66,11 +66,12 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 - **Ação sugerida**: adicionar seção de conformidade e checklist regulatório; mapear dependências para iniciativas H1-H3.
 
 ### Guia de Engenharia e Operações
-- **Pontes fortes**: define convenções de branching, fluxo de PRs e visão de CI/CD alinhada ao uso de GitOps, com próximos passos listados.【F:docs/engineering-handbook.md†L5-L69】【F:docs/engineering-handbook.md†L71-L119】
-- **Gaps**:
+- **Pontes fortes**: define convenções de branching, fluxo de PRs e visão de CI/CD alinhada ao uso de GitOps, com próximos passos listados.【F:docs/engineering-handbook.md†L5-L69】【F:docs/engineering-handbook.md†L71-L141】
+- **Gaps identificados (maio/2024)**:
   - Itens críticos como template de PR, scripts de testes e CODEOWNERS ainda pendentes, podendo atrasar a implementação de automações.【F:docs/engineering-handbook.md†L121-L128】
   - Recomenda-se acrescentar política de versionamento de infraestrutura e playbooks de rollback.
-- **Ação sugerida**: priorizar entrega dos itens pendentes antes da Sprint 0 e documentar processo de rollback/DR.
+- **Mitigação Semana 1 do kick-off**: templates, scripts e CODEOWNERS ativados; política de versionamento/rollback formalizada e CI configurada para executar `scripts/test-unit.sh` e `scripts/test-integration.sh` automaticamente.【F:docs/engineering-handbook.md†L93-L141】【F:docs/plano-kickoff-mvp.md†L23-L38】
+- **Ação sugerida**: manter monitorização da automação de changelog e validar execução dos scripts em cada revisão de pipeline.
 
 ### Estratégia de Testes e QA
 - **Pontes fortes**: cobertura prevista para testes unitários, integração e E2E com métricas claras, integração com CI/CD e roadmap de evolução para performance e acessibilidade.【F:docs/testing-strategy.md†L5-L67】【F:docs/testing-strategy.md†L69-L129】
@@ -80,11 +81,12 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 - **Ação sugerida**: estabelecer gates mínimos (ex.: cobertura, taxa de falha) e incorporar testes de segurança automatizados.
 
 ### Seleção de Ferramentas de Observabilidade
-- **Pontes fortes**: arquitetura de logs, métricas e alertas coerente com stack OpenTelemetry, grafana e GitOps; governança documentada com roadmap futuro.【F:docs/observability-stack.md†L3-L53】【F:docs/observability-stack.md†L55-L99】
-- **Gaps**:
+- **Pontes fortes**: arquitetura de logs, métricas e alertas coerente com stack OpenTelemetry, grafana e GitOps; governança documentada com roadmap futuro.【F:docs/observability-stack.md†L3-L53】【F:docs/observability-stack.md†L55-L121】
+- **Gaps identificados (maio/2024)**:
   - Falta definição de ownership por dashboard/alerta e critérios de revisão para runbooks.
   - Sugerir incluir estratégia de custos (FinOps) antes do pós-MVP dado impacto potencial.
-- **Ação sugerida**: atribuir owners para painéis principais e formalizar processo de revisão de runbooks e custos.
+- **Mitigação Semana 1 do kick-off**: owners nomeados para dashboards e runbooks, backups definidos e cadências quinzenais/mensais alinhadas com processo de FinOps e atualizações no quadro de ações corretivas.【F:docs/observability-stack.md†L57-L121】【F:docs/revisao-validacao-artefatos.md†L33-L46】
+- **Ação sugerida**: evoluir indicadores de FinOps com alertas automatizados antes da revisão Q4/2024.
 
 ### Manual do Usuário
 - **Pontes fortes**: define personas, onboarding detalhado, fluxos operacionais e checklist de lançamento, cobrindo principais funcionalidades.【F:docs/manual-do-usuario.md†L5-L85】【F:docs/manual-do-usuario.md†L87-L141】

@@ -24,8 +24,8 @@ Este guia descreve convenções de branching, automações de CI/CD e práticas 
 Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main` e `develop`:
 
 1. **Lint & Static Analysis**: roda `github/super-linter` para garantir padrões em Markdown, YAML e scripts.
-2. **Testes Unitários**: executa `./scripts/test-unit.sh` para padronizar a chamada de suítes locais.
-3. **Testes de Integração (opcional)**: reutiliza `./scripts/test-integration.sh` quando houver cenários automatizados.
+2. **Testes Unitários**: executa `./scripts/test-unit.sh`, que detecta suites Node.js e Python e falha em caso de erro nos testes.
+3. **Testes de Integração (opcional)**: reutiliza `./scripts/test-integration.sh`, priorizando `npm run test:integration` ou `pytest -m integration` quando configurados.
 4. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
 
 ### Deploy Automatizado
@@ -33,6 +33,17 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 - Configurar pipeline separado `deploy.yml` (futuro) disparado em tags `v*`.
 - Deploy utiliza GitOps com ArgoCD; pipeline faz commit em repositório de manifests.
 - Gate manual de aprovação do time de produto antes de promover para produção.
+
+### Rollback e Versionamento de Infraestrutura
+
+- **Versionamento Semântico**: releases etiquetadas como `vMAJOR.MINOR.PATCH`, acompanhando o estado dos manifests no repositório GitOps. Hotfixes incrementam `PATCH`; funcionalidades de MVP incrementam `MINOR`.
+- **Controle de Releases**: toda tag dispara checklist de validação e publicação de changelog. Manter histórico no diretório `releases/` (a criar) com resumo de mudanças e owners responsáveis pela aprovação.
+- **Rollback Automatizado**: rollback é executado via GitOps revertendo o commit de manifest em produção com `git revert` e aplicando tag `vX.Y.Z-rollback`. Procedimento documentado exige:
+  1. Abrir incidente no canal `#incident` e acionar SRE on-call.
+  2. Reverter commit no repositório GitOps, aguardar sincronização do ArgoCD e validar métricas críticas (latência, erros 5xx) em Grafana.
+  3. Atualizar runbook correspondente com causa raiz e follow-up no steering committee.
+- **Backups de Estado**: snapshots de bases de dados gerenciadas antes de cada deploy de release, com retenção mínima de 7 dias.
+- **Auditoria**: registrar ID da release e hash do commit na ata do steering committee pós-deploy para rastreabilidade.
 
 ## Convenções de Commit
 
@@ -57,4 +68,5 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 - [x] Criar template de PR (`.github/pull_request_template.md`).
 - [x] Adicionar scripts de testes unitários e integração (`./scripts/test-unit.sh` e `./scripts/test-integration.sh`).
 - [x] Definir CODEOWNERS alinhado às áreas funcionais (`.github/CODEOWNERS`).
+- [x] Formalizar política de rollback e versionamento de infraestrutura.
 - [ ] Automatizar geração de changelog.
