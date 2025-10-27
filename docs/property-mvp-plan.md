@@ -32,6 +32,7 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
   - Importação de reservas e atualizações de estado.
   - Gestão de discrepâncias com fila de reconciliação manual.
 - **Métricas**: latência de sincronização < 5 minutos; erro de sincronização < 0,5% das operações.
+- **Governança de Parceiros**: formalizar SLAs e janelas de manutenção com cada parceiro (OTAs, lavanderia, manutenção) antes do Sprint 0, garantindo comunicação em `docs/plano-kickoff-mvp.md` e atualização contínua do backlog.
 
 ## Privacidade, Segurança e Conformidade Regulatório
 
@@ -81,7 +82,7 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
 ## Próximos Passos
 
 1. Finalizar arquitetura técnica detalhada de cada módulo e integrações.
-2. Definir backlog de histórias alinhado ao plano MVP e distribuir entre squads.
+2. Definir backlog de histórias alinhado ao plano MVP e distribuir entre squads, priorizando housekeeping móvel conforme `docs/product-roadmap.md`.
 3. Configurar pipelines de QA automatizados para cenários críticos (reservas, pagamentos, sincronização OTA).
 4. Agendar ciclo de testes com pilotos e preparar dashboards de acompanhamento de métricas.
 5. Revisar roadmap pós-MVP trimestralmente com base nos dados recolhidos e objetivos estratégicos.

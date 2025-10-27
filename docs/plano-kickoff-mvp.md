@@ -7,6 +7,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 - Confirmação de que os artefatos estratégicos foram validados, com exceção das ações corretivas listadas abaixo.【F:docs/revisao-validacao-artefatos.md†L5-L66】【F:docs/revisao-validacao-artefatos.md†L68-L108】
 - Aprovação executiva dos documentos estratégicos (roadmap, plano MVP, guias operacionais) após atribuição de owners e datas de revisão.【F:docs/revisao-validacao-artefatos.md†L68-L99】【F:docs/revisao-validacao-artefatos.md†L125-L133】
 - Equipa comprometida com calendário de sprints quinzenais, com capacidade alocada e cobertura de QA/DevOps definida.
+- SLAs e janelas operacionais com parceiros críticos (lavanderia, manutenção, fornecedores de amenities) assinados e documentados no repositório de operações antes do início do Sprint 0.
 
 ## Responsabilidades Principais
 | Área | Responsável | Escopo |
@@ -21,6 +22,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 ## Cronograma de Kick-off (6 Semanas)
 | Semana | Foco | Entregáveis |
 | --- | --- | --- |
+| Semana -1 (Pré-Sprint 0) | Negociar e formalizar SLAs/janelas operacionais com parceiros; alinhar backlog de housekeeping móvel. | SLAs assinados e publicados, backlog atualizado (`docs/product-roadmap.md`) comunicado ao time. |
 | Semana 0 (Kick-off) | Sessões de alinhamento, revisão de backlog, definição de Definition of Ready (DoR) e Definition of Done (DoD). | Ata de kick-off com decisões, backlog priorizado e DoR/DoD publicados. |
 | Semana 1 | Execução das ações corretivas críticas; setup de ambientes e pipelines. | Templates de PR e CODEOWNERS ativos, CI executando `scripts/test-unit.sh`/`scripts/test-integration.sh`, política de rollback/versionamento publicada e owners de dashboards/runbooks validados. |
 | Semana 2 | Sprint 0 – construção de fundações técnicas e casos de uso prioritários (autenticação, inventário). | Deploy do ambiente de staging, histórias base concluídas com QA integrado. |
