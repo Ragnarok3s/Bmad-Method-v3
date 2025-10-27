@@ -53,9 +53,16 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 ## Gestão de Releases
 
 1. Abrir branch `release/<versao>`.
-2. Gerar changelog automático usando `git-cliff` (script futuro em `/scripts`).
+2. Executar `./scripts/generate-changelog.sh -f <tag_anterior> -t HEAD -o CHANGELOG.md` para gerar e anexar a seção da release.
 3. Executar checklist de regressão manual (ver seção QA).
 4. Após aprovação, criar tag `vX.Y.Z` e disparar pipeline de deploy.
+
+### Automação de Changelog
+
+- **Script Padronizado**: `./scripts/generate-changelog.sh` agrupa commits por tipo (feat/fix/docs/chore/outros) seguindo Conventional Commits. O script identifica automaticamente a tag anterior quando `-f` não é informado, permitindo uso em pipelines.
+- **Pipelines**: adicionar etapa `Generate changelog` na workflow de release para rodar `./scripts/generate-changelog.sh -o CHANGELOG.md` e subir o arquivo como artefato antes da criação da tag.
+- **Governança**: toda release deve anexar o changelog gerado à ata de steering e referenciar links de evidências de QA e privacidade (conforme `docs/testing-strategy.md`). Exceções precisam de aprovação do Engineering Lead.
+- **Uso Local**: desenvolvedores podem passar `-t <ref>` para gerar changelog parcial durante revisões. O script evita falhar quando não há commits novos, retornando mensagem informativa.
 
 ## Governança do Repositório
 
@@ -69,4 +76,4 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 - [x] Adicionar scripts de testes unitários e integração (`./scripts/test-unit.sh` e `./scripts/test-integration.sh`).
 - [x] Definir CODEOWNERS alinhado às áreas funcionais (`.github/CODEOWNERS`).
 - [x] Formalizar política de rollback e versionamento de infraestrutura.
-- [ ] Automatizar geração de changelog.
+- [x] Automatizar geração de changelog.

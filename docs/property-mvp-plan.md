@@ -67,6 +67,16 @@ As evidências associadas às validações acima ficam registradas no relatório
 - **Documentação**: o plano completo e evidências foram arquivados no diretório de compliance interno e apontados na estratégia de testes (`docs/testing-strategy.md`).
 - **Governança Contínua**: revisões trimestrais e auditorias semestrais permanecerão como critérios obrigatórios de saída de release.
 
+### Integração com Estratégia de Testes e Quality Gates
+
+| Domínio do MVP | Controles de Privacidade/Segurança | Cenários de Teste Associados | Evidências Registradas |
+|----------------|------------------------------------|------------------------------|------------------------|
+| Autenticação, Reservas e Pagamentos | Validação de consentimento, segregação PCI, logs de auditoria para perfis sensíveis | Suites de integração verificam consentimentos, DSRs simulados e segmentação PCI (`Week 1-3` roadmap de QA) | Checklist LGPD/GDPR/PCI assinado por release e anexado ao relatório de QA (`docs/testing-strategy.md`) |
+| Inventário, Calendário e OTAs | Minimização de dados nos payloads de sincronização e retenção automatizada | Testes E2E exercitam sincronização com dados mascarados e verificações de retenção no staging | Logs de execução e relatórios de retenção anexados à ata de readiness em `docs/revisao-validacao-artefatos.md` |
+| Relatórios e Analytics | Aplicação de políticas de anonimização e exportações com red masking | Testes unitários garantem mascaramento e exportações seguem política de pseudonimização | Execução registrada no dashboard `QA-Quality` com apontamento de owners (QA Lead + Privacy Officer) |
+
+- **Integração com QA**: o roadmap de testes incorpora as verificações acima como pré-condição de saída para cada sprint; qualquer exceção deve ser aprovada pelo Privacy Officer e documentada na ata de steering.
+
 ## Testes de Aceitação com Utilizadores Piloto
 
 1. **Seleção de Pilotos**: 5-7 propriedades com diferentes perfis (boutique, hostel, hotel urbano).

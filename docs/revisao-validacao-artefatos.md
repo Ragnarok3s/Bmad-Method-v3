@@ -1,12 +1,12 @@
 # Relatório de Revisão e Validação de Artefatos
 
 ## Sumário Executivo
-- **Status Geral**: os artefatos analisados apresentam consistência e alinhamento com os objetivos do MVP descritos no roadmap, com lacunas pontuais de métricas avançadas, privacidade e documentação operacional que precisam de acompanhamento.
-- **Principais Forças**: backlog priorizado com critérios de aceite claros, plano MVP detalhado com métricas de sucesso, estratégia de testes abrangendo níveis essenciais, diretrizes UX completas e playbook operacional com cadência definida. A governança foi formalizada com owners nomeados e aprovações registradas por artefato.
+- **Status Geral**: os artefatos analisados apresentam consistência e alinhamento com os objetivos do MVP descritos no roadmap, incluindo a integração concluída das políticas de privacidade/compliance no plano MVP e na estratégia de testes.
+- **Principais Forças**: backlog priorizado com critérios de aceite claros, plano MVP detalhado com métricas de sucesso, estratégia de testes abrangendo níveis essenciais e agora com trilhas de compliance vinculadas, diretrizes UX completas e playbook operacional com cadência definida. A governança foi formalizada com owners nomeados e aprovações registradas por artefato.
 - **Riscos/Gaps Prioritários**:
-  1. Completar planos de mitigação para privacidade/compliance e alinhar dependências regulatórias, garantindo encerramento formal antes da Sprint 1.
-  2. Fechar itens pendentes de DevOps (templates, scripts) para suportar execução contínua e testes automatizados.
-  3. Executar e monitorizar as ações corretivas alinhadas ao calendário de revisão publicado.
+  1. Monitorar maturidade das métricas avançadas e preparar indicadores leading para integrações externas antes da revisão trimestral.
+  2. Garantir acompanhamento da automação de changelog nas pipelines de release e recolher feedback dos times após a primeira execução.
+  3. Executar e monitorizar as ações corretivas alinhadas ao calendário de revisão publicado, mantendo evidências versionadas.
 
 ## Nomeação de Responsáveis e Aprovação Formal dos Artefatos
 | Artefato | Owner Nomeado | Data de Aprovação | Observações |
@@ -31,8 +31,8 @@
 | Ação Corretiva | Responsável | Data Limite | Status | Próximo Checkpoint |
 | --- | --- | --- | --- | --- |
 | Nomear owners e formalizar aprovações dos artefatos estratégicos | PMO (Ana Ribeiro & Miguel Costa) | 2024-05-20 | **Concluída** | Validar aderência durante revisão de 15/07. |
-| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | **Em validação** | Evidências incorporadas nos documentos MVP/testes; formalizar encerramento e ata de aprovação antes da Sprint 1. |
-| Automatizar geração de changelog no handbook e pipeline de release | Joana Silva & Bruno Carvalho | 2024-07-26 | **Planejada** | Sprint 1: definir fluxo GitOps + script de changelog; Sprint 2: validar automação no handbook e publicar guia de uso. |
+| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | **Concluída (Semana 2)** | Planos atualizados em `docs/property-mvp-plan.md` e `docs/testing-strategy.md` com matriz de controles e evidências ligadas ao QA. Ata de aprovação arquivada na pasta de governance. |
+| Automatizar geração de changelog no handbook e pipeline de release | Joana Silva & Bruno Carvalho | 2024-07-26 | **Concluída (Semana 2)** | Script `./scripts/generate-changelog.sh` documentado no handbook e integrado ao fluxo de release com instruções para pipeline GitOps. |
 | Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
 | Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | **Concluída (Semana 1)** | Revisar evidências na cadência de steering de 01/07. |

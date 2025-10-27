@@ -44,6 +44,17 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 - **Plano Encerrado**: registrar no relatório de QA de cada release que o plano de compliance regulatório (LGPD/GDPR, PCI) foi executado dentro do cronograma do kick-off, anexando evidências de DPIA, segmentação PCI e checklist de integrações.
 - **Gate de Kick-off**: bloquear a transição para Sprint 0 até que o checklist de conformidade, o DoR/DoD aprovados e o relatório de readiness de staging estejam anexados ao `docs/revisao-validacao-artefatos.md`.
 
+### Integração com o Plano MVP
+
+| Módulo / Fluxo | Requisito de Privacidade ou Compliance | Suite de Teste | Evidência / Output |
+|----------------|----------------------------------------|----------------|--------------------|
+| Autenticação, Gestão de Reservas e Pagamentos | Consentimentos explícitos, segmentação PCI, logs de auditoria | `tests/integration/privacy/` e cenário E2E `checkout-security` | Checklist LGPD/GDPR/PCI anexado ao relatório de release + export DPIA atualizado |
+| Inventário & Sincronização OTA | Minimização de payloads, retenção e anonimização após 24 meses | Suite E2E `ota-sync` com dados mascarados e testes de retenção automatizados | Relatório de retenção publicado em `docs/revisao-validacao-artefatos.md` e métricas no dashboard QA |
+| Relatórios e Analytics | Aplicação de políticas de pseudonimização e red masking para exportações | Testes unitários `reporting_privacy.spec` + testes manuais guiados | Evidência no playbook de release, assinada pelo Privacy Officer |
+
+- **Alinhamento com MVP**: o quadro acima referencia diretamente os domínios documentados em `docs/property-mvp-plan.md`; qualquer alteração de escopo deve atualizar ambos os documentos.
+- **Evidências Automatizadas**: pipelines registram logs das suites citadas como artefatos e publicam link automático no changelog gerado via script (`./scripts/generate-changelog.sh`) para rastreabilidade.
+
 ### Cronograma de Verificações de Compliance
 
 | Semana / Marco | Atividades de QA | Evidências Necessárias | Responsáveis |
