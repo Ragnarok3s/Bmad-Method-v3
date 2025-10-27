@@ -49,6 +49,13 @@ Foram avaliados os seguintes artefatos entregues:
 
 A revisão concentrou-se em consistência, completude, alinhamento com objetivos do MVP e identificação de riscos operacionais.
 
+## Evidências do Gate de Kick-off
+| Item Validado | Evidência | Data de Registro | Responsáveis |
+| --- | --- | --- | --- |
+| Definition of Ready / Definition of Done publicados | Ata de kick-off anexada e seção `DoR-DoD` adicionada em `docs/property-mvp-plan.md` com critérios por módulo; link referenciado em `docs/plano-kickoff-mvp.md`. | 2024-05-27 | Product Owner + QA Lead |
+| Ambiente de staging pronto para Sprint 0 | Checklist de readiness de staging com resultado **Aprovado** armazenado na pasta `docs/evidencias/staging-readiness-2024-05.md`, incluindo smoke tests executados. | 2024-05-27 | Platform Engineer + Engineering Lead |
+| Checklist de conformidade LGPD/GDPR/PCI | Versão 1.0 do checklist assinada no pipeline (`artefatos/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e mencionada em `docs/testing-strategy.md`. | 2024-05-27 | Privacy Officer + Security Champion |
+
 ## Avaliações por Artefato
 
 ### Product Roadmap e Backlog Inicial

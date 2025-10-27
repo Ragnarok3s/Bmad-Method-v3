@@ -14,6 +14,18 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
 | Gestão de Reservas | Criação/edição/cancelamento de reservas; fluxos de check-in/out; gestão de hóspedes | Regras de disponibilidade aplicadas; notificações por email; auditoria de alterações | Calendário, integrações de pagamento | Conversão reservas internas ≥ 80%; redução de overbookings em 90% |
 | Relatórios Básicos | KPIs de ocupação, receita bruta, ADR; exportação CSV | Dashboards responsivos; atualização diária; filtros por propriedade | Dados de reservas e pagamentos | 100% dos gestores usam relatório semanalmente; NPS relatório ≥ 40 |
 
+## Definition of Ready (DoR) e Definition of Done (DoD)
+
+| Fluxo / Módulo | Definition of Ready | Definition of Done |
+|----------------|---------------------|--------------------|
+| Autenticação e Controlo de Acesso | Histórias com perfis/documentos de segurança identificados, fluxos de exceção descritos e dependências de identidade aprovadas pelo Security Champion. | MFA opcional configurável, logs de auditoria verificados, testes unitários ≥ 80% e checklist LGPD/GDPR atualizado com bases legais. |
+| Inventário de Propriedades & Calendário | Requisitos de sincronização com OTAs revisados com parceiros e dados de catálogo limpos em staging. | Sincronização < 2 min validada em staging, políticas de retenção aplicadas e dashboards de métricas populados. |
+| Housekeeping Móvel | Personas e jornadas confirmadas, integrações de parceiros com SLAs anexados e wireframes aprovados. | App responsivo/offline disponível em staging, monitorização ativa e documentação operacional atualizada no playbook. |
+| Pagamentos PCI | Dependências com PSP aprovadas, contratos PCI arquivados e cenários de falha mapeados. | Tokenização ativa, reconciliação diária automatizada, relatório PCI anexado ao checklist de conformidade. |
+| Reservas & Relatórios | Regras de negócio validadas com stakeholders, dados sintéticos preparados e métricas-alvo definidas. | Fluxos de check-in/out executados sem falhas críticas, exportações CSV validadas e métricas operacionais atingidas. |
+
+As evidências associadas às validações acima ficam registradas no relatório de revisão (`docs/revisao-validacao-artefatos.md`) e devem ser atualizadas a cada gate relevante.
+
 ## Integrações Prioritárias
 
 ### Pagamentos e Faturação
