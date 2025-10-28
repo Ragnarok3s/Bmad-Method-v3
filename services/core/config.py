@@ -32,6 +32,15 @@ def _split(value: str | None) -> List[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _to_int(value: str | None, default: int) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 @dataclass(slots=True)
 class ObservabilitySettings:
     """Configurações para exporters OpenTelemetry."""
@@ -79,6 +88,7 @@ class CoreSettings:
     allowed_origins: List[str] | None = None
     enable_graphql: bool = True
     observability: ObservabilitySettings = field(default_factory=ObservabilitySettings)
+    auth_session_timeout_seconds: int = 30 * 60
 
     @classmethod
     def from_environ(cls, environ: dict[str, str]) -> "CoreSettings":
@@ -89,4 +99,8 @@ class CoreSettings:
             allowed_origins=_split(environ.get("CORE_ALLOWED_ORIGINS")),
             enable_graphql=_to_bool(environ.get("CORE_ENABLE_GRAPHQL"), True),
             observability=ObservabilitySettings.from_environ(environ),
+            auth_session_timeout_seconds=_to_int(
+                environ.get("CORE_AUTH_SESSION_TIMEOUT_SECONDS"),
+                30 * 60,
+            ),
         )

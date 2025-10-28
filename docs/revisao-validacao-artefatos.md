@@ -23,6 +23,10 @@
 > **Atualização 2024-06-03**: Owners reconfirmados durante o alinhamento do checkpoint Q3, mantendo responsabilidades e datas originais.
 >
 > **Atualização 2024-07-08**: Revisão extraordinária confirmou owners, status e evidências; novos gaps adicionados ao quadro de acompanhamento para monitorar métricas leading e automação de changelog.
+>
+> **Atualização 2024-07-12**: Validação conjunta LGPD/GDPR e STRIDE concluída. Evidências documentadas em `docs/evidencias/compliance-lgpd-gdpr-stride-2024-07.md` e anexos correlatos em `artefatos/compliance/`.
+>
+> **Atualização 2024-07-15**: Checklist LGPD/GDPR e STRIDE revalidado após implementação do MFA com recuperação automática e bloqueio antiforça bruta. Execução documentada dos testes `pytest tests/integration/test_authentication.py` e inclusão de resultados de auditoria/alertas no health-check OTEL. Evidências consolidadas em `docs/evidencias/compliance-lgpd-gdpr-stride-2024-07.md#atualiza%C3%A7%C3%A3o-2024-07-15`.
 
 ## Calendário de Revisão Trimestral 2024-2025
 | Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída | Canal de Publicação |
@@ -74,7 +78,8 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 | --- | --- | --- | --- |
 | Definition of Ready / Definition of Done publicados | Ata de kick-off anexada, seção `DoR-DoD` em `docs/property-mvp-plan.md` e pacote consolidado em `docs/dor-dod-package.md` com checklist oficial. | 2024-05-27 | Product Owner + QA Lead |
 | Ambiente de staging pronto para Sprint 0 | Checklist de readiness de staging com resultado **Aprovado** armazenado na pasta `docs/evidencias/staging-readiness-2024-05.md`, incluindo smoke tests executados. | 2024-05-27 | Platform Engineer + Engineering Lead |
-| Checklist de conformidade LGPD/GDPR/PCI | Versão 1.0 do checklist assinada no pipeline (`artefatos/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e mencionada em `docs/testing-strategy.md`. | 2024-05-27 | Privacy Officer + Security Champion |
+| Checklist de conformidade LGPD/GDPR/PCI | Versão 1.1 validada em 2024-07-12, revalidada em 2024-07-15 com execução de `pytest tests/integration/test_authentication.py`, checklist atualizado (`artefatos/compliance/inventario-dados-2024-07.xlsx`), relatório técnico (`artefatos/compliance/mfa-recuperacao-detalhes.pdf`) e resumo STRIDE em `docs/evidencias/compliance-lgpd-gdpr-stride-2024-07.md`. | 2024-07-15 | Privacy Officer + Security Champion + Architecture Lead + QA Lead |
+| Fluxo MFA/recuperação auditado e monitorado | Registro de auditoria e alertas críticos publicados via `/health/otel`, anexando snapshot `artefatos/compliance/logs-auditoria-amostra-2024-07.jsonl` e relatório de execução `docs/evidencias/compliance-lgpd-gdpr-stride-2024-07.md#atualiza%C3%A7%C3%A3o-2024-07-15`. | 2024-07-15 | Security Champion + Platform Engineer |
 | SLAs operacionais com parceiros críticos | Registros de 2024-06 em `docs/evidencias/sla-operacionais-2024-06.md` e addendos de 2024-07 em `docs/evidencias/sla-operacionais-2024-07.md`, com PDFs assinados em `artefatos/sla/2024-06/` e `artefatos/sla/2024-07/`. | 2024-07-08 | Operations Manager + Platform Engineer |
 
 ## Avaliações por Artefato
@@ -138,6 +143,8 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
   - Recomenda-se adicionar mapa de navegação consolidado e plano de hand-off detalhando tokens/componentes no Figma.
 - **Mitigação Semana 1 do kick-off**: checklist de acessibilidade integrado ao plano de protótipo com responsabilidades, métricas e evidências por iteração, incluindo testes com leitores de ecrã e documentação de gaps para o quadro de ações corretivas.【F:design/hospitality-ux/prototipo-interativo.md†L33-L88】
 - **Ação sugerida**: priorizar elaboração do mapa de navegação consolidado antes da revisão Q3/2024.
+
+- **Validação LGPD/GDPR e STRIDE (2024-07-12)**: fluxos de MFA e recuperação avaliados quanto a spoofing/tampering, bloqueios configurados após tentativas sucessivas e cobertura de direitos do titular. Evidências publicadas em `docs/evidencias/compliance-lgpd-gdpr-stride-2024-07.md` e anexos correspondentes em `artefatos/compliance/*`.
 
 ## Comunicação à Equipa sobre DoR/DoD e SLAs
 - 2024-06-03: mensagem enviada nos canais de projeto confirmando que os critérios de pronto (DoR/DoD) permanecem válidos após consolidação no pacote `docs/dor-dod-package.md` e destacando responsabilidades de atualização por módulo.
