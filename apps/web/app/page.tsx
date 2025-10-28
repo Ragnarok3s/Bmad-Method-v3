@@ -207,8 +207,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
   }
 
   const occupancyVariant = getOccupancyVariant(data.occupancy.occupancyRate);
-  const alertsVariant = data.criticalAlerts.total > 0 ? 'critical' : 'success';
-  const playbooksVariant = getPlaybookVariant(data.playbookAdoption.adoptionRate);
+  const alertsVariant = data.operational.criticalAlerts.total > 0 ? 'critical' : 'success';
+  const playbooksVariant = getPlaybookVariant(data.operational.playbookAdoption.adoptionRate);
 
   return [
     {
@@ -224,8 +224,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
       key: 'alerts',
       label: 'Alertas críticos',
       state: 'ready',
-      value: numberFormatter.format(data.criticalAlerts.total),
-      description: `${data.criticalAlerts.blocked} bloqueios · ${data.criticalAlerts.overdue} atrasos`,
+      value: numberFormatter.format(data.operational.criticalAlerts.total),
+      description: `${data.operational.criticalAlerts.blocked} bloqueios · ${data.operational.criticalAlerts.overdue} atrasos`,
       variant: alertsVariant,
       testId: 'kpi-alerts'
     },
@@ -233,8 +233,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
       key: 'playbooks',
       label: 'Playbooks ativos',
       state: 'ready',
-      value: percentFormatter.format(data.playbookAdoption.adoptionRate),
-      description: `${data.playbookAdoption.totalExecutions} execuções registradas nos últimos 7 dias`,
+      value: percentFormatter.format(data.operational.playbookAdoption.adoptionRate),
+      description: `${data.operational.playbookAdoption.totalExecutions} execuções registradas nos últimos 7 dias`,
       variant: playbooksVariant,
       testId: 'kpi-playbooks'
     }
@@ -273,8 +273,8 @@ function useDashboardMetrics(): DashboardMetricsState {
 
         const isEmpty =
           data.occupancy.totalUnits === 0 &&
-          data.criticalAlerts.total === 0 &&
-          data.playbookAdoption.totalExecutions === 0;
+          data.operational.criticalAlerts.total === 0 &&
+          data.operational.playbookAdoption.totalExecutions === 0;
 
         setState({
           status: isEmpty ? 'empty' : 'success',
@@ -286,10 +286,10 @@ function useDashboardMetrics(): DashboardMetricsState {
         occupancyHistogram.record(data.occupancy.occupancyRate * 100, {
           window: 'daily'
         });
-        alertsHistogram.record(data.criticalAlerts.total, {
+        alertsHistogram.record(data.operational.criticalAlerts.total, {
           window: 'rolling'
         });
-        adoptionHistogram.record(data.playbookAdoption.adoptionRate * 100, {
+        adoptionHistogram.record(data.operational.playbookAdoption.adoptionRate * 100, {
           window: '7d'
         });
         endSpan('success');

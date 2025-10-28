@@ -13,42 +13,54 @@ from sqlalchemy.orm import Session
 
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
 
+from ..analytics import PIPELINE
 from ..domain.models import (
     Agent,
     AgentRole,
     AuditLog,
+    ExperienceSurveyResponse,
+    ExperienceSurveyTouchpoint,
     HousekeepingStatus,
     HousekeepingTask,
     OTASyncQueue,
     OTASyncStatus,
+    PartnerSLA,
     Property,
     Reservation,
     ReservationStatus,
+    SLAStatus,
     Workspace,
 )
 from ..domain.playbooks import PlaybookTemplate
 from ..domain.schemas import (
     AgentCreate,
+    CriticalAlertExample,
+    CriticalAlertSummary,
     DashboardMetricsRead,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
+    NPSSnapshot,
     OccupancySnapshot,
+    OperationalKPIEntry,
+    OperationalKPIs,
     PaginationMeta,
-    CriticalAlertSummary,
-    CriticalAlertExample,
-    PropertyCreate,
-    ReservationCreate,
-    ReservationUpdateStatus,
+    PlaybookAdoptionSummary,
     PlaybookExecutionRead,
     PlaybookExecutionRequest,
     PlaybookTemplateCreate,
-    PlaybookAdoptionSummary,
+    PropertyCreate,
+    ReservationCreate,
+    ReservationUpdateStatus,
+    SLAMetricSummary,
     WorkspaceCreate,
 )
 from ..metrics import (
     record_dashboard_alerts,
+    record_dashboard_kpi,
+    record_dashboard_nps,
     record_dashboard_occupancy,
     record_dashboard_playbook_adoption,
+    record_dashboard_sla,
     record_dashboard_request,
     record_housekeeping_scheduled,
     record_housekeeping_transition,
@@ -466,10 +478,14 @@ class OperationalMetricsService:
         self.session = session
 
     def get_overview(self, target_date: date | None = None) -> DashboardMetricsRead:
+        PIPELINE.sync(self.session)
         snapshot_date = target_date or datetime.now(timezone.utc).date()
         occupancy = self._calculate_occupancy(snapshot_date)
         alerts = self._calculate_critical_alerts()
         playbook = self._calculate_playbook_adoption()
+        nps = self._calculate_nps()
+        sla = self._calculate_sla_summary()
+        operational = self._calculate_operational_kpis(alerts, playbook)
 
         record_dashboard_occupancy(
             occupancy.occupancy_rate,
@@ -482,6 +498,18 @@ class OperationalMetricsService:
             playbook.total_executions,
             playbook.active_properties,
         )
+        record_dashboard_nps(nps.score, nps.total_responses)
+        record_dashboard_sla(sla.total, sla.breached)
+        record_dashboard_kpi(
+            "housekeeping_completion_rate",
+            operational.housekeeping_completion_rate.value,
+            operational.housekeeping_completion_rate.unit,
+        )
+        record_dashboard_kpi(
+            "ota_sync_backlog",
+            operational.ota_sync_backlog.value,
+            operational.ota_sync_backlog.unit,
+        )
 
         logger.info(
             "dashboard_metrics_computed",
@@ -490,13 +518,16 @@ class OperationalMetricsService:
                 "occupancy_rate": occupancy.occupancy_rate,
                 "critical_alerts": alerts.total,
                 "playbook_adoption_rate": playbook.adoption_rate,
+                "nps_score": nps.score,
+                "sla_breached": sla.breached,
             },
         )
 
         return DashboardMetricsRead(
             occupancy=occupancy,
-            critical_alerts=alerts,
-            playbook_adoption=playbook,
+            nps=nps,
+            sla=sla,
+            operational=operational,
         )
 
     def _calculate_occupancy(self, target_date: date) -> OccupancySnapshot:
@@ -636,4 +667,155 @@ class OperationalMetricsService:
             completed=int(completed_executions),
             adoption_rate=round(adoption_rate, 4),
             active_properties=int(active_properties),
+        )
+
+    def _calculate_nps(self) -> NPSSnapshot:
+        responses = list(PIPELINE.dataset("nps_responses"))
+
+        def _normalize(moment: datetime) -> datetime:
+            if moment.tzinfo is None:
+                return moment.replace(tzinfo=timezone.utc)
+            return moment.astimezone(timezone.utc)
+
+        normalized = [(response, _normalize(response.submitted_at)) for response in responses]
+
+        total = len(normalized)
+        promoters = sum(1 for response, _ in normalized if response.score >= 9)
+        detractors = sum(1 for response, _ in normalized if response.score <= 6)
+        passives = total - promoters - detractors
+        score = ((promoters - detractors) / total * 100) if total else 0.0
+
+        last_response_at = max((moment for _, moment in normalized), default=None)
+
+        now = datetime.now(timezone.utc)
+        last_week_cutoff = now - timedelta(days=7)
+        previous_week_cutoff = now - timedelta(days=14)
+
+        def _score(window: list[ExperienceSurveyResponse]) -> float | None:
+            if not window:
+                return None
+            window_total = len(window)
+            window_promoters = sum(1 for item in window if item.score >= 9)
+            window_detractors = sum(1 for item in window if item.score <= 6)
+            return ((window_promoters - window_detractors) / window_total) * 100
+
+        last_week_responses = [
+            response
+            for response, moment in normalized
+            if moment >= last_week_cutoff
+        ]
+        previous_week_responses = [
+            response
+            for response, moment in normalized
+            if previous_week_cutoff <= moment < last_week_cutoff
+        ]
+
+        last_week_score = _score(last_week_responses)
+        previous_week_score = _score(previous_week_responses)
+        trend = (
+            round(last_week_score - previous_week_score, 2)
+            if last_week_score is not None and previous_week_score is not None
+            else None
+        )
+
+        distribution: dict[ExperienceSurveyTouchpoint, float] = {}
+        if total:
+            for touchpoint in ExperienceSurveyTouchpoint:
+                count = sum(1 for item in responses if item.touchpoint == touchpoint)
+                distribution[touchpoint] = round((count / total) * 100, 2)
+
+        return NPSSnapshot(
+            score=round(score, 2),
+            promoters=promoters,
+            detractors=detractors,
+            passives=passives,
+            total_responses=total,
+            trend_7d=trend,
+            last_response_at=last_response_at,
+            touchpoint_distribution=distribution,
+        )
+
+    def _calculate_sla_summary(self) -> SLAMetricSummary:
+        slas: list[PartnerSLA] = list(PIPELINE.dataset("partner_slas"))
+        total = len(slas)
+        on_track = sum(1 for item in slas if item.status == SLAStatus.ON_TRACK)
+        at_risk = sum(1 for item in slas if item.status == SLAStatus.AT_RISK)
+        breached = sum(1 for item in slas if item.status == SLAStatus.BREACHED)
+
+        offenders: list[tuple[str, int]] = []
+        for item in slas:
+            if item.status != SLAStatus.BREACHED:
+                continue
+            partner_name = item.partner.name if item.partner else "Parceiro"
+            offenders.append((f"{partner_name} · {item.metric_label}", item.breach_minutes))
+        offenders.sort(key=lambda pair: pair[1], reverse=True)
+
+        return SLAMetricSummary(
+            total=total,
+            on_track=on_track,
+            at_risk=at_risk,
+            breached=breached,
+            worst_offenders=[name for name, _ in offenders[:3]],
+        )
+
+    def _calculate_operational_kpis(
+        self,
+        alerts: CriticalAlertSummary,
+        playbook: PlaybookAdoptionSummary,
+    ) -> OperationalKPIs:
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(days=7)
+
+        tasks: list[HousekeepingTask] = list(PIPELINE.dataset("housekeeping_tasks"))
+        recent_tasks: list[HousekeepingTask] = []
+        for task in tasks:
+            scheduled = task.scheduled_date
+            if scheduled.tzinfo is None:
+                scheduled = scheduled.replace(tzinfo=timezone.utc)
+            if scheduled >= cutoff:
+                recent_tasks.append(task)
+
+        total_recent = len(recent_tasks)
+        completed_recent = sum(
+            1 for task in recent_tasks if task.status == HousekeepingStatus.COMPLETED
+        )
+        completion_rate = (
+            (completed_recent / total_recent) * 100 if total_recent else 0.0
+        )
+
+        completion_status = (
+            "on_track"
+            if completion_rate >= 85
+            else "at_risk"
+            if completion_rate >= 70
+            else "breached"
+        )
+
+        ota_jobs: list[OTASyncQueue] = list(PIPELINE.dataset("ota_sync_queue"))
+        def _status_value(status: OTASyncStatus | str) -> str:
+            if isinstance(status, OTASyncStatus):
+                return status.value
+            return str(status)
+
+        backlog = sum(
+            1 for job in ota_jobs if _status_value(job.status) != OTASyncStatus.SUCCESS.value
+        )
+
+        return OperationalKPIs(
+            critical_alerts=alerts,
+            playbook_adoption=playbook,
+            housekeeping_completion_rate=OperationalKPIEntry(
+                name="Conclusão housekeeping (7d)",
+                value=round(completion_rate, 2),
+                unit="%",
+                target=85.0,
+                status=completion_status,
+            ),
+            ota_sync_backlog=OperationalKPIEntry(
+                name="Backlog integrações OTA",
+                value=float(backlog),
+                unit="jobs",
+                target=5.0,
+                status="on_track" if backlog <= 5 else "at_risk" if backlog <= 15 else "breached",
+            ),
         )

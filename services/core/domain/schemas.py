@@ -8,7 +8,13 @@ from uuid import uuid4
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
-from .models import AgentRole, HousekeepingStatus, ReservationStatus, SLAStatus
+from .models import (
+    AgentRole,
+    ExperienceSurveyTouchpoint,
+    HousekeepingStatus,
+    ReservationStatus,
+    SLAStatus,
+)
 
 
 class PropertyCreate(BaseModel):
@@ -281,10 +287,47 @@ class PlaybookAdoptionSummary(BaseModel):
     active_properties: int
 
 
-class DashboardMetricsRead(BaseModel):
-    occupancy: OccupancySnapshot
+class NPSSnapshot(BaseModel):
+    score: float
+    promoters: int
+    detractors: int
+    passives: int
+    total_responses: int
+    trend_7d: float | None = None
+    last_response_at: datetime | None = None
+    touchpoint_distribution: dict[ExperienceSurveyTouchpoint, float] = Field(
+        default_factory=dict
+    )
+
+
+class SLAMetricSummary(BaseModel):
+    total: int
+    on_track: int
+    at_risk: int
+    breached: int
+    worst_offenders: list[str] = Field(default_factory=list)
+
+
+class OperationalKPIEntry(BaseModel):
+    name: str
+    value: float
+    unit: str
+    target: float | None = None
+    status: str | None = None
+
+
+class OperationalKPIs(BaseModel):
     critical_alerts: CriticalAlertSummary
     playbook_adoption: PlaybookAdoptionSummary
+    housekeeping_completion_rate: OperationalKPIEntry
+    ota_sync_backlog: OperationalKPIEntry
+
+
+class DashboardMetricsRead(BaseModel):
+    occupancy: OccupancySnapshot
+    nps: NPSSnapshot
+    sla: SLAMetricSummary
+    operational: OperationalKPIs
 
 
 class PlaybookTemplateBase(BaseModel):

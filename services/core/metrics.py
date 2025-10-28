@@ -126,31 +126,67 @@ def record_dashboard_request(metric: str, success: bool) -> None:
     )
 
 
-def record_dashboard_occupancy(property_id: int, occupancy: float) -> None:
+def record_dashboard_occupancy(occupancy_rate: float, total_units: int, snapshot: str) -> None:
     _track_metric(
         "bmad_core_dashboard_occupancy_snapshot",
         {
-            "property_id": str(property_id),
-            "occupancy": f"{occupancy:.2f}",
+            "occupancy_rate": f"{occupancy_rate:.4f}",
+            "total_units": str(total_units),
+            "snapshot": snapshot,
         },
     )
 
 
-def record_dashboard_alerts(blocked: int, overdue: int) -> None:
+def record_dashboard_alerts(total: int, blocked: int, overdue: int) -> None:
     _track_metric(
         "bmad_core_dashboard_alerts_summary",
         {
+            "total": str(total),
             "blocked": str(blocked),
             "overdue": str(overdue),
         },
     )
 
 
-def record_dashboard_playbook_adoption(total: int, completed: int) -> None:
+def record_dashboard_playbook_adoption(
+    adoption_rate: float, total_executions: int, active_properties: int
+) -> None:
     _track_metric(
         "bmad_core_dashboard_playbook_adoption",
         {
+            "adoption_rate": f"{adoption_rate:.4f}",
+            "total_executions": str(total_executions),
+            "active_properties": str(active_properties),
+        },
+    )
+
+
+def record_dashboard_nps(score: float, responses: int) -> None:
+    _track_metric(
+        "bmad_core_dashboard_nps_snapshot",
+        {
+            "score": f"{score:.2f}",
+            "responses": str(responses),
+        },
+    )
+
+
+def record_dashboard_sla(total: int, breached: int) -> None:
+    _track_metric(
+        "bmad_core_dashboard_sla_summary",
+        {
             "total": str(total),
-            "completed": str(completed),
+            "breached": str(breached),
+        },
+    )
+
+
+def record_dashboard_kpi(name: str, value: float, unit: str) -> None:
+    _track_metric(
+        "bmad_core_dashboard_operational_kpi",
+        {
+            "name": name,
+            "value": f"{value:.2f}",
+            "unit": unit,
         },
     )

@@ -5,48 +5,114 @@ import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { useAnalytics } from '@/components/analytics/AnalyticsContext';
 
-const metricas = [
-  { nome: 'Conclusão Onboarding', valor: '82%', meta: '≥ 60%', variant: 'success' as const },
-  { nome: 'NPS interno', valor: '+34', meta: '≥ +30', variant: 'success' as const },
-  { nome: 'Adoção Playbooks', valor: '5 execuções/dia', meta: '≥ 4', variant: 'info' as const }
-];
+import { useDashboardMetrics } from './useDashboardMetrics';
 
-const iniciativas = [
-  'Exportação CSV automática para comitê executivo',
-  'Alertas de variação súbita em métricas de satisfação',
-  'Segmentação por perfil (Administrador, Colaborador, Analista)'
-];
+function formatPercent(value: number, fractionDigits = 1) {
+  return `${value.toFixed(fractionDigits)}%`;
+}
 
 export default function AnalyticsPage() {
   const { flushQueue } = useAnalytics();
+  const { status, data, error, refresh } = useDashboardMetrics();
+
+  const isLoading = status === 'idle' || status === 'loading';
+  const isEmpty = status === 'empty';
+  const hasError = status === 'error';
 
   return (
     <div>
       <SectionHeader
         subtitle="Dashboards MVP e instrumentação alinhados ao manual do usuário"
         actions={
-          <button type="button" onClick={() => console.table(flushQueue())}>
-            Exportar eventos recentes
-          </button>
+          <div className="actions">
+            <button type="button" onClick={() => console.table(flushQueue())}>
+              Exportar eventos recentes
+            </button>
+            <button type="button" onClick={() => refresh()} disabled={isLoading}>
+              Atualizar métricas
+            </button>
+          </div>
         }
       >
         Analytics & Insights
       </SectionHeader>
+
+      {hasError && <p className="state state-error">Falha ao carregar métricas: {error}</p>}
+      {isEmpty && <p className="state">Nenhum dado disponível para o período selecionado.</p>}
+
       <ResponsiveGrid columns={3}>
-        {metricas.map((metrica) => (
-          <Card key={metrica.nome} title={metrica.nome} description={`Meta: ${metrica.meta}`} accent={metrica.variant}>
-            <p className="valor">{metrica.valor}</p>
-          </Card>
-        ))}
+        <Card
+          title="Taxa de ocupação"
+          description={data ? `${data.occupancy.occupied_units}/${data.occupancy.total_units} unidades ocupadas` : '---'}
+          accent="info"
+        >
+          <p className="valor" data-testid="dashboard-metric-occupancy">
+            {data ? formatPercent(data.occupancy.occupancy_rate * 100) : isLoading ? 'Carregando…' : '--'}
+          </p>
+        </Card>
+        <Card title="NPS interno" description="Meta ≥ +30" accent="success">
+          <p className="valor" data-testid="dashboard-metric-nps">
+            {data ? data.nps.score.toFixed(1) : isLoading ? 'Carregando…' : '--'}
+          </p>
+          {data && (
+            <p className="details">{data.nps.total_responses} respostas (Δ7d {data.nps.trend_7d ?? 0} pts)</p>
+          )}
+        </Card>
+        <Card title="SLA parceiros" description="SLAs monitorados" accent="warning">
+          <p className="valor" data-testid="dashboard-metric-sla">
+            {data ? `${data.sla.breached}/${data.sla.total} em risco` : isLoading ? 'Carregando…' : '--'}
+          </p>
+          {data && data.sla.worst_offenders?.length > 0 && (
+            <ul className="details" data-testid="dashboard-sla-offenders">
+              {data.sla.worst_offenders.slice(0, 2).map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </Card>
+        <Card title="Conclusão housekeeping (7d)" description="Meta ≥ 85%" accent="info">
+          <p className="valor" data-testid="dashboard-metric-housekeeping">
+            {data
+              ? `${formatPercent(data.operational.housekeeping_completion_rate.value)}`
+              : isLoading
+                ? 'Carregando…'
+                : '--'}
+          </p>
+          {data && (
+            <p className={`status status-${data.operational.housekeeping_completion_rate.status ?? 'unknown'}`}>
+              {data.operational.housekeeping_completion_rate.status}
+            </p>
+          )}
+        </Card>
+        <Card title="Backlog integrações OTA" description="Objetivo ≤ 5" accent="critical">
+          <p className="valor" data-testid="dashboard-metric-ota">
+            {data ? data.operational.ota_sync_backlog.value.toFixed(0) : isLoading ? 'Carregando…' : '--'}
+          </p>
+          {data && (
+            <p className={`status status-${data.operational.ota_sync_backlog.status ?? 'unknown'}`}>
+              {data.operational.ota_sync_backlog.status}
+            </p>
+          )}
+        </Card>
       </ResponsiveGrid>
-      <Card title="Próximas evoluções" description="Roadmap BL-06" accent="info">
-        <ul>
-          {iniciativas.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </Card>
+
+      {data && (
+        <Card title="Alertas críticos" description="Top 3 tarefas com maior impacto" accent="critical">
+          <ul className="alerts" data-testid="dashboard-critical-alerts">
+            {(data.operational.critical_alerts.examples ?? []).map((item) => (
+              <li key={item.task_id}>
+                #{item.task_id} · propriedade {item.property_id} · {new Date(item.scheduled_date).toLocaleString()}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       <style jsx>{`
+        .actions {
+          display: flex;
+          gap: var(--space-3);
+        }
         button {
           border: none;
           border-radius: var(--radius-sm);
@@ -56,16 +122,52 @@ export default function AnalyticsPage() {
           font-weight: 600;
           cursor: pointer;
         }
+        button[disabled] {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
         .valor {
           margin: 0;
           font-size: 1.75rem;
           font-weight: 700;
         }
-        ul {
+        .details {
+          margin: 0;
+          padding-left: var(--space-5);
+          color: var(--color-neutral-2);
+          display: grid;
+          gap: var(--space-1);
+        }
+        .details li {
+          list-style: disc;
+        }
+        .alerts {
           margin: 0;
           padding-left: var(--space-5);
           display: grid;
           gap: var(--space-2);
+        }
+        .state {
+          margin-bottom: var(--space-4);
+          color: var(--color-neutral-2);
+        }
+        .state-error {
+          color: var(--color-coral);
+        }
+        .status {
+          margin: 0;
+          font-size: 0.875rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .status-on_track {
+          color: var(--color-soft-aqua);
+        }
+        .status-at_risk {
+          color: var(--color-calm-gold);
+        }
+        .status-breached {
+          color: var(--color-coral);
         }
       `}</style>
     </div>

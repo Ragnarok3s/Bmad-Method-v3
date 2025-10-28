@@ -33,10 +33,39 @@ export interface PlaybookAdoptionMetrics {
   activeProperties: number;
 }
 
-export interface DashboardMetrics {
-  occupancy: OccupancyMetric;
+export interface NpsMetric {
+  score: number;
+  totalResponses: number;
+  trend7d: number | null;
+}
+
+export interface SlaMetric {
+  total: number;
+  onTrack: number;
+  atRisk: number;
+  breached: number;
+  worstOffenders: string[];
+}
+
+export interface OperationalKpiMetric {
+  name: string;
+  value: number;
+  unit: string;
+  status: string | null;
+}
+
+export interface OperationalMetrics {
   criticalAlerts: CriticalAlertMetrics;
   playbookAdoption: PlaybookAdoptionMetrics;
+  housekeepingCompletionRate: OperationalKpiMetric;
+  otaSyncBacklog: OperationalKpiMetric;
+}
+
+export interface DashboardMetrics {
+  occupancy: OccupancyMetric;
+  nps: NpsMetric;
+  sla: SlaMetric;
+  operational: OperationalMetrics;
 }
 
 interface OccupancyDto {
@@ -69,10 +98,39 @@ interface PlaybookAdoptionDto {
   active_properties: number;
 }
 
-interface DashboardMetricsDto {
-  occupancy: OccupancyDto;
+interface NpsDto {
+  score: number;
+  total_responses: number;
+  trend_7d: number | null;
+}
+
+interface SlaDto {
+  total: number;
+  on_track: number;
+  at_risk: number;
+  breached: number;
+  worst_offenders: string[];
+}
+
+interface OperationalKpiDto {
+  name: string;
+  value: number;
+  unit: string;
+  status: string | null;
+}
+
+interface OperationalDto {
   critical_alerts: CriticalAlertSummaryDto;
   playbook_adoption: PlaybookAdoptionDto;
+  housekeeping_completion_rate: OperationalKpiDto;
+  ota_sync_backlog: OperationalKpiDto;
+}
+
+interface DashboardMetricsDto {
+  occupancy: OccupancyDto;
+  nps: NpsDto;
+  sla: SlaDto;
+  operational: OperationalDto;
 }
 
 interface GetDashboardMetricsOptions {
@@ -114,6 +172,43 @@ function mapPlaybookAdoption(dto: PlaybookAdoptionDto): PlaybookAdoptionMetrics 
   };
 }
 
+function mapNps(dto: NpsDto): NpsMetric {
+  return {
+    score: dto.score,
+    totalResponses: dto.total_responses,
+    trend7d: dto.trend_7d
+  };
+}
+
+function mapSla(dto: SlaDto): SlaMetric {
+  return {
+    total: dto.total,
+    onTrack: dto.on_track,
+    atRisk: dto.at_risk,
+    breached: dto.breached,
+    worstOffenders: dto.worst_offenders
+  };
+}
+
+function mapOperational(dto: OperationalDto): OperationalMetrics {
+  return {
+    criticalAlerts: mapCriticalAlerts(dto.critical_alerts),
+    playbookAdoption: mapPlaybookAdoption(dto.playbook_adoption),
+    housekeepingCompletionRate: {
+      name: dto.housekeeping_completion_rate.name,
+      value: dto.housekeeping_completion_rate.value,
+      unit: dto.housekeeping_completion_rate.unit,
+      status: dto.housekeeping_completion_rate.status
+    },
+    otaSyncBacklog: {
+      name: dto.ota_sync_backlog.name,
+      value: dto.ota_sync_backlog.value,
+      unit: dto.ota_sync_backlog.unit,
+      status: dto.ota_sync_backlog.status
+    }
+  };
+}
+
 export async function getDashboardMetrics(
   options: GetDashboardMetricsOptions = {}
 ): Promise<DashboardMetrics> {
@@ -139,8 +234,9 @@ export async function getDashboardMetrics(
   const payload = (await response.json()) as DashboardMetricsDto;
   return {
     occupancy: mapOccupancy(payload.occupancy),
-    criticalAlerts: mapCriticalAlerts(payload.critical_alerts),
-    playbookAdoption: mapPlaybookAdoption(payload.playbook_adoption)
+    nps: mapNps(payload.nps),
+    sla: mapSla(payload.sla),
+    operational: mapOperational(payload.operational)
   };
 }
 
