@@ -1,7 +1,8 @@
 """Endpoints REST que cobrem os módulos do MVP."""
 from __future__ import annotations
 
-from datetime import datetime
+import logging
+from datetime import date, datetime
 from typing import Iterable, TypeVar
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
@@ -16,6 +17,7 @@ from ..domain.models import AgentRole, HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
     AgentRead,
+    DashboardMetricsRead,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
@@ -29,12 +31,20 @@ from ..domain.schemas import (
     ReservationUpdateStatus,
 )
 from ..observability import instrument_application
-from ..services import AgentService, HousekeepingService, PropertyService, ReservationService
+from ..services import (
+    AgentService,
+    HousekeepingService,
+    OperationalMetricsService,
+    PropertyService,
+    ReservationService,
+)
 from ..services.partners import PartnerSLAService
+from ..metrics import record_dashboard_request
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def configure_cors(app: FastAPI, settings: CoreSettings) -> None:
@@ -56,6 +66,23 @@ def get_session(db: Database = Depends(get_database)) -> Iterable[Session]:
 async def _parse_model(request: Request, model_type: type[ModelT]) -> ModelT:
     data = await request.json()
     return model_type.model_validate(data)
+
+
+@router.get("/metrics/overview", response_model=DashboardMetricsRead)
+def get_dashboard_metrics(
+    target_date: date | None = Query(None),
+    session: Session = Depends(get_session),
+):
+    service = OperationalMetricsService(session)
+    try:
+        overview = service.get_overview(target_date)
+    except Exception:
+        record_dashboard_request("overview", False)
+        logger.exception("dashboard_metrics_failed")
+        raise
+
+    record_dashboard_request("overview", True)
+    return overview
 
 
 @router.post("/properties", response_model=PropertyRead, status_code=201)

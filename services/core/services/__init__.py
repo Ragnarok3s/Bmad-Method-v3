@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 from math import ceil
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
@@ -26,14 +26,23 @@ from ..domain.models import (
 )
 from ..domain.schemas import (
     AgentCreate,
+    DashboardMetricsRead,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
+    OccupancySnapshot,
     PaginationMeta,
+    CriticalAlertSummary,
+    CriticalAlertExample,
     PropertyCreate,
     ReservationCreate,
     ReservationUpdateStatus,
+    PlaybookAdoptionSummary,
 )
 from ..metrics import (
+    record_dashboard_alerts,
+    record_dashboard_occupancy,
+    record_dashboard_playbook_adoption,
+    record_dashboard_request,
     record_housekeeping_scheduled,
     record_housekeeping_transition,
     record_ota_enqueue,
@@ -344,3 +353,183 @@ class OTASynchronizer:
         query = select(OTASyncQueue).where(OTASyncQueue.status == OTASyncStatus.PENDING).limit(limit)
         result = self.session.execute(query)
         return list(result.scalars())
+
+
+class OperationalMetricsService:
+    """Calcula métricas agregadas para o dashboard operacional."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def get_overview(self, target_date: date | None = None) -> DashboardMetricsRead:
+        snapshot_date = target_date or datetime.now(timezone.utc).date()
+        occupancy = self._calculate_occupancy(snapshot_date)
+        alerts = self._calculate_critical_alerts()
+        playbook = self._calculate_playbook_adoption()
+
+        record_dashboard_occupancy(
+            occupancy.occupancy_rate,
+            occupancy.total_units,
+            snapshot_date.isoformat(),
+        )
+        record_dashboard_alerts(alerts.total, alerts.blocked, alerts.overdue)
+        record_dashboard_playbook_adoption(
+            playbook.adoption_rate,
+            playbook.total_executions,
+            playbook.active_properties,
+        )
+
+        logger.info(
+            "dashboard_metrics_computed",
+            extra={
+                "snapshot_date": snapshot_date.isoformat(),
+                "occupancy_rate": occupancy.occupancy_rate,
+                "critical_alerts": alerts.total,
+                "playbook_adoption_rate": playbook.adoption_rate,
+            },
+        )
+
+        return DashboardMetricsRead(
+            occupancy=occupancy,
+            critical_alerts=alerts,
+            playbook_adoption=playbook,
+        )
+
+    def _calculate_occupancy(self, target_date: date) -> OccupancySnapshot:
+        active_reservations = (
+            select(
+                Reservation.property_id,
+                func.count(Reservation.id).label("active_reservations"),
+            )
+            .where(
+                Reservation.status.in_(
+                    [ReservationStatus.CONFIRMED, ReservationStatus.CHECKED_IN]
+                )
+            )
+            .where(func.date(Reservation.check_in) <= target_date)
+            .where(func.date(Reservation.check_out) > target_date)
+            .group_by(Reservation.property_id)
+            .subquery()
+        )
+
+        rows = self.session.execute(
+            select(
+                Property.id,
+                Property.units,
+                active_reservations.c.active_reservations,
+            ).outerjoin(active_reservations, Property.id == active_reservations.c.property_id)
+        )
+
+        total_units = 0
+        occupied_units = 0
+        for row in rows:
+            units = row.units or 0
+            active = row.active_reservations or 0
+            total_units += units
+            occupied_units += min(units, active)
+
+        occupancy_rate = (occupied_units / total_units) if total_units else 0.0
+
+        return OccupancySnapshot(
+            date=target_date,
+            occupied_units=int(occupied_units),
+            total_units=int(total_units),
+            occupancy_rate=round(occupancy_rate, 4),
+        )
+
+    def _calculate_critical_alerts(self) -> CriticalAlertSummary:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        alert_rows = self.session.execute(
+            select(
+                HousekeepingTask.id,
+                HousekeepingTask.property_id,
+                HousekeepingTask.status,
+                HousekeepingTask.scheduled_date,
+            )
+            .where(
+                or_(
+                    HousekeepingTask.status == HousekeepingStatus.BLOCKED,
+                    and_(
+                        HousekeepingTask.status != HousekeepingStatus.COMPLETED,
+                        HousekeepingTask.scheduled_date < now,
+                    ),
+                )
+            )
+            .order_by(HousekeepingTask.scheduled_date.asc())
+        ).all()
+
+        blocked_ids: set[int] = set()
+        overdue_ids: set[int] = set()
+        examples_map: dict[int, CriticalAlertExample] = {}
+
+        for row in alert_rows:
+            task_id = row.id
+            status = row.status
+            scheduled_date = row.scheduled_date
+            if status == HousekeepingStatus.BLOCKED:
+                blocked_ids.add(task_id)
+            if status != HousekeepingStatus.COMPLETED and scheduled_date < now:
+                overdue_ids.add(task_id)
+            examples_map[task_id] = CriticalAlertExample(
+                task_id=task_id,
+                property_id=row.property_id,
+                status=status,
+                scheduled_date=scheduled_date,
+            )
+
+        examples = sorted(
+            examples_map.values(), key=lambda item: item.scheduled_date
+        )[:3]
+
+        return CriticalAlertSummary(
+            total=len(examples_map),
+            blocked=len(blocked_ids),
+            overdue=len(overdue_ids),
+            examples=examples,
+        )
+
+    def _calculate_playbook_adoption(self) -> PlaybookAdoptionSummary:
+        period_end = datetime.now(timezone.utc)
+        period_start = period_end - timedelta(days=7)
+        start_naive = period_start.replace(tzinfo=None)
+        end_naive = period_end.replace(tzinfo=None)
+
+        base_filters = [
+            HousekeepingTask.reservation_id.is_not(None),
+            HousekeepingTask.scheduled_date >= start_naive,
+            HousekeepingTask.scheduled_date < end_naive,
+        ]
+
+        total_executions = (
+            self.session.execute(select(func.count()).where(*base_filters)).scalar_one()
+        )
+        completed_executions = (
+            self.session.execute(
+                select(func.count()).where(
+                    *base_filters,
+                    HousekeepingTask.status == HousekeepingStatus.COMPLETED,
+                )
+            ).scalar_one()
+        )
+        active_properties = (
+            self.session.execute(
+                select(func.count(func.distinct(HousekeepingTask.property_id))).where(
+                    *base_filters
+                )
+            ).scalar_one()
+        )
+
+        adoption_rate = (
+            completed_executions / total_executions
+            if total_executions
+            else 0.0
+        )
+
+        return PlaybookAdoptionSummary(
+            period_start=period_start,
+            period_end=period_end,
+            total_executions=int(total_executions),
+            completed=int(completed_executions),
+            adoption_rate=round(adoption_rate, 4),
+            active_properties=int(active_properties),
+        )

@@ -66,6 +66,13 @@ Criar três painéis interligados (podem coexistir numa mesma workspace de BI) p
 
 > **Implementação**: iniciar com dashboards em Looker Studio ou Power BI conectados a planilhas governadas; migrar para stack definitiva assim que o data lake estiver operacional. Cada painel deve possuir card de “Estado do Gate” indicando se há impedimento para avançar para a próxima fase.
 
+## Implementação
+
+- **API Core**: o endpoint `GET /metrics/overview` agrega taxa de ocupação diária, alertas críticos de housekeeping e adoção de playbooks com base nas reservas e tarefas, registrando telemetria para cada cálculo no serviço core.【F:services/core/api/rest.py†L1-L126】【F:services/core/services/__init__.py†L220-L352】【F:services/core/metrics.py†L1-L86】
+- **Dashboard Web**: o componente `apps/web/app/page.tsx` utiliza hooks (`useDashboardMetrics` e `usePartnerSlas`) para atualizar os cards com estados de carregamento, vazio e erro, formatando percentuais e contagens em tempo real a partir da API agregada.【F:apps/web/app/page.tsx†L1-L280】
+- **Telemetria Frontend**: as consultas ao endpoint gravam spans e histogramas via `TelemetryProvider`, instrumentando fetches, taxas de ocupação e adoção de playbooks para exportação OTLP.【F:apps/web/app/page.tsx†L16-L120】【F:apps/web/telemetry/init.ts†L1-L96】
+- **Testes e2e**: o Playwright verifica que os widgets exibem dados reais (ou mensagens de vazio) ao comparar a resposta da API com o DOM quando `VERIFY_DASHBOARD_METRICS=true`, garantindo consistência em staging.【F:apps/web/e2e/dashboard-metrics.spec.ts†L1-L36】
+
 ## Cadência de Monitorização e Rituais
 - **Daily Stand-up**: revisar indicadores críticos de tecnologia (deploys, incidentes) quando houver alertas.
 - **Reunião semanal de steering**: validar métricas chave, acionar planos de mitigação e atualizar roadmap/pipeline.【F:docs/plano-kickoff-mvp.md†L69-L95】

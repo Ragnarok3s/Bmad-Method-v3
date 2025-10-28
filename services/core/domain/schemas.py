@@ -1,7 +1,7 @@
 """Esquemas de entrada e saída para a API core."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -149,3 +149,39 @@ class PartnerWebhookPayload(BaseModel):
     status: str
     elapsed_minutes: int
     occurred_at: datetime
+
+
+class OccupancySnapshot(BaseModel):
+    date: date
+    occupied_units: int
+    total_units: int
+    occupancy_rate: float
+
+
+class CriticalAlertExample(BaseModel):
+    task_id: int
+    property_id: int
+    status: HousekeepingStatus
+    scheduled_date: datetime
+
+
+class CriticalAlertSummary(BaseModel):
+    total: int
+    blocked: int
+    overdue: int
+    examples: list[CriticalAlertExample]
+
+
+class PlaybookAdoptionSummary(BaseModel):
+    period_start: datetime
+    period_end: datetime
+    total_executions: int
+    completed: int
+    adoption_rate: float
+    active_properties: int
+
+
+class DashboardMetricsRead(BaseModel):
+    occupancy: OccupancySnapshot
+    critical_alerts: CriticalAlertSummary
+    playbook_adoption: PlaybookAdoptionSummary
