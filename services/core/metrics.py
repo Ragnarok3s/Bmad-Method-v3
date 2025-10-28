@@ -6,6 +6,8 @@ from typing import Mapping
 
 from opentelemetry import metrics
 
+from .observability import mark_signal_event
+
 
 _COUNTERS_LOCK = Lock()
 _COUNTERS_INITIALIZED = False
@@ -82,14 +84,11 @@ def record_reservation_status(status: str, property_id: int) -> None:
 
 def record_housekeeping_scheduled(property_id: int, assigned_agent_id: int) -> None:
     _ensure_counters()
-    _housekeeping_scheduled.add(
-        1,
-        _stringify(
-            {
-                "property_id": property_id,
-                "assigned_agent_id": assigned_agent_id,
-            }
-        ),
+    attributes = _stringify(
+        {
+            "property_id": property_id,
+            "assigned_agent_id": assigned_agent_id,
+        }
     )
     _housekeeping_scheduled.add(1, attributes)
     _track_metric("bmad_core_housekeeping_tasks_scheduled_total", attributes)
@@ -99,15 +98,12 @@ def record_housekeeping_transition(
     property_id: int, status: str, actor_role: str
 ) -> None:
     _ensure_counters()
-    _housekeeping_transitions.add(
-        1,
-        _stringify(
-            {
-                "property_id": property_id,
-                "status": status,
-                "actor_role": actor_role,
-            }
-        ),
+    attributes = _stringify(
+        {
+            "property_id": property_id,
+            "status": status,
+            "actor_role": actor_role,
+        }
     )
     _housekeeping_transitions.add(1, attributes)
     _track_metric("bmad_core_housekeeping_status_transition_total", attributes)
@@ -115,4 +111,46 @@ def record_housekeeping_transition(
 
 def record_ota_enqueue(property_id: int, action: str) -> None:
     _ensure_counters()
-    _ota_enqueued.add(1, _stringify({"property_id": property_id, "action": action}))
+    attributes = _stringify({"property_id": property_id, "action": action})
+    _ota_enqueued.add(1, attributes)
+    _track_metric("bmad_core_ota_sync_enqueued_total", attributes)
+
+
+def record_dashboard_request(metric: str, success: bool) -> None:
+    _track_metric(
+        "bmad_core_dashboard_request_total",
+        {
+            "metric": metric,
+            "success": "true" if success else "false",
+        },
+    )
+
+
+def record_dashboard_occupancy(property_id: int, occupancy: float) -> None:
+    _track_metric(
+        "bmad_core_dashboard_occupancy_snapshot",
+        {
+            "property_id": str(property_id),
+            "occupancy": f"{occupancy:.2f}",
+        },
+    )
+
+
+def record_dashboard_alerts(blocked: int, overdue: int) -> None:
+    _track_metric(
+        "bmad_core_dashboard_alerts_summary",
+        {
+            "blocked": str(blocked),
+            "overdue": str(overdue),
+        },
+    )
+
+
+def record_dashboard_playbook_adoption(total: int, completed: int) -> None:
+    _track_metric(
+        "bmad_core_dashboard_playbook_adoption",
+        {
+            "total": str(total),
+            "completed": str(completed),
+        },
+    )
