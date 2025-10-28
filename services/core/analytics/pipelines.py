@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Iterable, List, MutableMapping, Protocol, Sequence
+from typing import Any, Dict, Iterable, MutableMapping, Protocol, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import inspect as sa_inspect, select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -68,7 +68,7 @@ class IncrementalAnalyticsPipeline:
 
     def __init__(self, sources: Sequence[AnalyticsSource]) -> None:
         self._sources = {source.name: source for source in sources}
-        self._datasets: MutableMapping[str, List[object]] = {}
+        self._datasets: MutableMapping[str, dict[tuple[Any, ...], object]] = {}
 
     @classmethod
     def default(cls) -> "IncrementalAnalyticsPipeline":
@@ -103,7 +103,10 @@ class IncrementalAnalyticsPipeline:
         )
 
     def dataset(self, source_name: str) -> Sequence[object]:
-        return self._datasets.get(source_name, [])
+        records = self._datasets.get(source_name)
+        if not records:
+            return ()
+        return tuple(records.values())
 
     def sync(self, session: Session) -> list[AnalyticsIngestionResult]:
         results: list[AnalyticsIngestionResult] = []
@@ -114,8 +117,13 @@ class IncrementalAnalyticsPipeline:
             latest_cursor: datetime | None = None
             if records:
                 latest_cursor = max(source.cursor(record) for record in records)
-                buffer = self._datasets.setdefault(name, [])
-                buffer.extend(records)
+                buffer = self._datasets.setdefault(name, {})
+                for record in records:
+                    identity = sa_inspect(record).identity
+                    if identity is None:
+                        primary_key = getattr(record, "id", None)
+                        identity = (primary_key,) if primary_key is not None else (id(record),)
+                    buffer[identity] = record
                 if state is None:
                     state = AnalyticsSyncState(source=name)
                 state.last_ingested_at = latest_cursor
@@ -131,7 +139,7 @@ class IncrementalAnalyticsPipeline:
 
     def cached_state(self) -> Dict[str, datetime | None]:
         return {
-            name: max((source.cursor(record) for record in records), default=None)
+            name: max((source.cursor(record) for record in records.values()), default=None)
             for name, records in self._datasets.items()
             for source in [self._sources[name]]
         }
