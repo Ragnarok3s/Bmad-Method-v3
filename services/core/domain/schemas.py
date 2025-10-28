@@ -13,6 +13,8 @@ from .models import (
     ExperienceSurveyTouchpoint,
     HousekeepingStatus,
     ReservationStatus,
+    ReconciliationSource,
+    ReconciliationStatus,
     SLAStatus,
 )
 
@@ -157,6 +159,21 @@ class PartnerSummary(BaseModel):
         from_attributes = True
 
 
+class PartnerSLAVersionRead(BaseModel):
+    id: int
+    sla_id: int
+    version: int
+    target_minutes: int
+    warning_minutes: int | None
+    breach_minutes: int
+    effective_from: datetime
+    effective_to: datetime | None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class PartnerSLARead(BaseModel):
     id: int
     metric: str
@@ -169,6 +186,28 @@ class PartnerSLARead(BaseModel):
     last_violation_at: datetime | None
     updated_at: datetime
     partner: PartnerSummary
+    current_version: PartnerSLAVersionRead | None = None
+    versions: list[PartnerSLAVersionRead] | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ReconciliationQueueRead(BaseModel):
+    id: int
+    property_id: int
+    reservation_id: int | None
+    channel_id: int | None
+    external_booking_id: str | None
+    source: ReconciliationSource
+    status: ReconciliationStatus
+    attempts: int
+    next_action_at: datetime | None
+    last_attempt_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    sla_version_id: int | None
+    payload: dict[str, Any]
 
     class Config:
         from_attributes = True

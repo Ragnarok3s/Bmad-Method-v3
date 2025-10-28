@@ -229,6 +229,19 @@ class OTAChannel(Base):
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
+class ReconciliationSource(str, Enum):
+    OTA = "ota"
+    DIRECT = "direct"
+    MANUAL = "manual"
+
+
+class ReconciliationStatus(str, Enum):
+    PENDING = "pending"
+    IN_REVIEW = "in_review"
+    CONFLICT = "conflict"
+    RESOLVED = "resolved"
+
+
 class OTASyncStatus(str, Enum):
     PENDING = "pending"
     IN_FLIGHT = "in_flight"
@@ -248,7 +261,39 @@ class OTASyncQueue(Base):
         SAEnum(OTASyncStatus), nullable=False, default=OTASyncStatus.PENDING
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class InventoryReconciliationQueue(Base):
+    __tablename__ = "inventory_reconciliation_queue"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reservation_id: Mapped[int | None] = mapped_column(ForeignKey("reservations.id"), nullable=True)
+    property_id: Mapped[int] = mapped_column(ForeignKey("properties.id"), nullable=False)
+    channel_id: Mapped[int | None] = mapped_column(ForeignKey("ota_channels.id"), nullable=True)
+    external_booking_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    source: Mapped[ReconciliationSource] = mapped_column(
+        SAEnum(ReconciliationSource), nullable=False, default=ReconciliationSource.OTA
+    )
+    status: Mapped[ReconciliationStatus] = mapped_column(
+        SAEnum(ReconciliationStatus), nullable=False, default=ReconciliationStatus.PENDING
+    )
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    next_action_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    sla_version_id: Mapped[int | None] = mapped_column(ForeignKey("partner_sla_versions.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    sla_version: Mapped["PartnerSLAVersion | None"] = relationship(
+        "PartnerSLAVersion",
+        back_populates="reconciliation_items",
+        foreign_keys=lambda: [InventoryReconciliationQueue.sla_version_id],
+    )
 
 
 class AuditLog(Base):
@@ -314,8 +359,60 @@ class PartnerSLA(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
+    current_version_id: Mapped[int | None] = mapped_column(
+        ForeignKey("partner_sla_versions.id"), nullable=True
+    )
 
     partner: Mapped[Partner] = relationship("Partner", back_populates="slas")
+    versions: Mapped[list["PartnerSLAVersion"]] = relationship(
+        "PartnerSLAVersion",
+        back_populates="sla",
+        order_by="PartnerSLAVersion.version",
+        cascade="all, delete-orphan",
+        foreign_keys=lambda: [PartnerSLAVersion.sla_id],
+    )
+    current_version: Mapped["PartnerSLAVersion | None"] = relationship(
+        "PartnerSLAVersion",
+        foreign_keys=[current_version_id],
+        post_update=True,
+        uselist=False,
+    )
+
+
+class PartnerSLAVersion(Base):
+    __tablename__ = "partner_sla_versions"
+    __table_args__ = (
+        UniqueConstraint("sla_id", "version", name="uq_partner_sla_version"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    sla_id: Mapped[int] = mapped_column(ForeignKey("partner_slas.id"), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    target_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    warning_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    breach_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    effective_from: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    sla: Mapped[PartnerSLA] = relationship(
+        "PartnerSLA",
+        back_populates="versions",
+        foreign_keys=lambda: [PartnerSLAVersion.sla_id],
+    )
+    reconciliation_items: Mapped[list[InventoryReconciliationQueue]] = relationship(
+        "InventoryReconciliationQueue",
+        back_populates="sla_version",
+        foreign_keys=lambda: [InventoryReconciliationQueue.sla_version_id],
+    )
 
 
 class PartnerWebhookEvent(Base):
