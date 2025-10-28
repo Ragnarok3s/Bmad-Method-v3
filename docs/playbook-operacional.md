@@ -61,6 +61,8 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
   3. Publicar métricas de consumo (visualizações, taxa de resolução sem ticket) no painel de analytics.
 - **KPIs**: Taxa de autoatendimento ≥ 40%, satisfação dos artigos ≥ 4/5.
 
+> **Referências visuais**: protótipo interativo e fluxos detalhados estão documentados em [`design/hospitality-ux/prototipo-interativo.md`](../design/hospitality-ux/prototipo-interativo.md#hand-off-2024-07-15) e [`design/hospitality-ux/user-flows.md`](../design/hospitality-ux/user-flows.md). Utilize estes materiais para ilustrar artigos novos ou atualizações da base de conhecimento.
+
 ### Central de Tickets
 
 - **Fluxo**:

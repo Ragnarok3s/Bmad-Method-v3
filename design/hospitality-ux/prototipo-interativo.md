@@ -67,3 +67,9 @@ Desenvolver protótipo navegável que cubra cenários críticos em dashboards de
 - Configurar biblioteca de componentes compartilhada no Figma/XD.
 - Definir guardrails de acesso e versões para revisão com stakeholders.
 
+## Hand-off 2024-07-15
+
+- **Checklist de acessibilidade anexado**: o checklist detalhado utilizado no hand-off final foi publicado em `design/hospitality-ux/checklist-acessibilidade-hand-off-2024-07-15.md`, incluindo evidências de contraste, navegação por teclado e uso de leitores de ecrã.
+- **Notas de gaps**: três gaps menores (foco visível no modal de confirmação, descrição alternativa de ícone de sincronização offline e coerência na ordem de leitura do dashboard mobile) foram registrados no quadro de ações corretivas (`docs/revisao-validacao-artefatos.md`) com responsáveis e prazos.
+- **Entrega para engenharia**: os protótipos finais e bibliotecas de componentes foram vinculados aos cards Jira de hand-off (`UX-HK-*`) com links permanentes para os arquivos Figma e gravações de testes assistidos.
+

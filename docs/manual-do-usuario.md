@@ -73,6 +73,8 @@ Este manual orienta administradores e colaboradores na configuração e uso diá
 - **Central de Tickets**: acompanhamento de SLAs, histórico de incidentes e integrações com ferramentas ITSM.
 - **Chat de Suporte**: canal síncrono para incidentes urgentes e dúvidas rápidas.
 - **Status Page**: monitoramento público dos serviços críticos e incidentes em andamento.
+- **Protótipo Interativo do MVP**: walkthrough dos fluxos críticos disponível em [`design/hospitality-ux/prototipo-interativo.md`](../design/hospitality-ux/prototipo-interativo.md#hand-off-2024-07-15) com links para o Figma e checklist de acessibilidade.
+- **Wireframes e Guia Visual**: documentação de referência para estados de tela e tokens em [`design/hospitality-ux/wireframes.md`](../design/hospitality-ux/wireframes.md) e [`design/hospitality-ux/guia-visual.md`](../design/hospitality-ux/guia-visual.md).
 
 ## FAQ Rápido
 
