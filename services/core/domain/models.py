@@ -1,6 +1,7 @@
 """Modelos relacionais que suportam os módulos do MVP."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 
 from enum import Enum
@@ -20,6 +21,49 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
+
+
+class Workspace(Base):
+    __tablename__ = "workspaces"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="UTC")
+    team_size: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    primary_use_case: Mapped[str] = mapped_column(String(120), nullable=False)
+    communication_channel: Mapped[str] = mapped_column(String(40), nullable=False)
+    quarterly_goal: Mapped[str | None] = mapped_column(Text, nullable=True)
+    _invite_emails: Mapped[str] = mapped_column("invite_emails", Text, nullable=False, default="[]")
+    _team_roles: Mapped[str] = mapped_column("team_roles", Text, nullable=False, default="[]")
+    enable_sandbox: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    require_mfa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    security_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    @property
+    def invite_emails(self) -> list[str]:
+        try:
+            data = json.loads(self._invite_emails or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data if isinstance(item, str)]
+
+    @invite_emails.setter
+    def invite_emails(self, value: list[str]) -> None:
+        self._invite_emails = json.dumps(value)
+
+    @property
+    def team_roles(self) -> list[str]:
+        try:
+            data = json.loads(self._team_roles or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data if isinstance(item, str)]
+
+    @team_roles.setter
+    def team_roles(self, value: list[str]) -> None:
+        self._team_roles = json.dumps(value)
 
 
 class Property(Base):

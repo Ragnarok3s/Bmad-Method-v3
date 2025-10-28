@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import date, datetime, timedelta, timezone
 from math import ceil
 
@@ -23,6 +24,7 @@ from ..domain.models import (
     Property,
     Reservation,
     ReservationStatus,
+    Workspace,
 )
 from ..domain.schemas import (
     AgentCreate,
@@ -37,6 +39,7 @@ from ..domain.schemas import (
     ReservationCreate,
     ReservationUpdateStatus,
     PlaybookAdoptionSummary,
+    WorkspaceCreate,
 )
 from ..metrics import (
     record_dashboard_alerts,
@@ -69,6 +72,53 @@ class PropertyService:
     def list(self) -> list[Property]:
         result = self.session.execute(select(Property).order_by(Property.name))
         return list(result.scalars())
+
+
+class WorkspaceService:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def _generate_slug(self, name: str) -> str:
+        base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "workspace"
+        slug = base
+        index = 1
+        while (
+            self.session.execute(select(Workspace).where(Workspace.slug == slug)).scalar_one_or_none()
+            is not None
+        ):
+            index += 1
+            slug = f"{base}-{index}"
+        return slug
+
+    def create(self, payload: WorkspaceCreate) -> Workspace:
+        normalized_name = payload.name.strip()
+        slug = self._generate_slug(normalized_name)
+        unique_roles = sorted({role.strip() for role in payload.team_roles if role.strip()})
+        workspace = Workspace(
+            name=normalized_name,
+            timezone=payload.timezone,
+            team_size=payload.team_size,
+            primary_use_case=payload.primary_use_case.strip(),
+            communication_channel=payload.communication_channel,
+            quarterly_goal=payload.quarterly_goal.strip(),
+            enable_sandbox=payload.enable_sandbox,
+            require_mfa=payload.require_mfa,
+            security_notes=payload.security_notes,
+            slug=slug,
+        )
+        workspace.invite_emails = [email.lower() for email in payload.invite_emails]
+        workspace.team_roles = unique_roles
+        self.session.add(workspace)
+        self.session.flush()
+        logger.info(
+            "workspace_created",
+            extra={
+                "workspace_id": workspace.id,
+                "slug": workspace.slug,
+                "team_size": workspace.team_size,
+            },
+        )
+        return workspace
 
 
 class AgentService:
