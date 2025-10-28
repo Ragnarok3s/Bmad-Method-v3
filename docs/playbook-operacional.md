@@ -79,6 +79,23 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
   3. Para dúvidas simples, envia snippets da base de conhecimento.
 - **Boas Práticas**: Registrar resumo da conversa no ticket associado para rastreabilidade.
 
+### Canais Oficiais e Convenções de Uso
+
+- **Slack**
+  - `#anuncios-bmad` — canal somente leitura para comunicados executivos; owner: Líder de Operações.
+  - `#ops-urgente` — acionamento de incidentes `S1/S2`; owners: Engenheiro de Plataforma on-call + Coordenador de Suporte.
+  - `#qa-devops` — sincronização semanal QA/DevOps; owners: Coordenador QA & Líder DevOps.
+  - `#squad-<nome>` — huddles diários das squads; owner: Scrum Master do respectivo squad.
+  - `#war-room` — canal temporário criado automaticamente via PagerDuty para incidentes críticos; owner rotativo do plantão.
+- **Teams**
+  - "Bmad Steering" — reunião quinzenal com ata integrada; owner: Líder de Operações.
+  - "Exec Escalation" — grupo fechado para escalonamentos nível 3; owners: Diretor de Produto e CTO.
+  - "Quality Committee" — reunião quinzenal de qualidade; owner: Gerente de Produto.
+- **Governança dos Canais**
+  - Revisão trimestral para garantir aderência ao playbook e arquivamento de canais inativos.
+  - Toda criação de novo canal deve passar por aprovação do Líder de Operações para manter taxonomia controlada.
+  - Padrão de nomenclatura: prefixos por domínio (`ops-`, `squad-`, `war-`) e descrição clara do propósito.
+
 ## Métricas de Sucesso
 
 ### Taxa de Ocupação dos Agentes
@@ -112,13 +129,35 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
 
 ## Rotinas Operacionais
 
-| Rotina | Frequência | Responsável | Saídas |
-|--------|------------|-------------|--------|
-| Revisão de SLAs | Semanal | Analista de Operações | Relatório com tickets fora do SLA e ações corretivas |
-| Comitê de Qualidade | Quinzenal | Produto + Operações | Backlog de melhorias, updates em playbooks |
-| Auditoria de Permissões | Mensal | Administrador de Workspace | Checklist atualizado, revogação de acessos |
-| Revisão de Dashboards | Mensal | Data/Analytics | Ajustes em métricas, novas visualizações |
-| Post-Mortem de Incidentes | Sob demanda | Engenheiro de Plataforma | Documento de lições aprendidas e tarefas de follow-up |
+### Rituais e Reuniões Recorrentes
+
+| Ritual | Frequência | Responsável | Participantes-Chave | Saídas | Canal Primário |
+|--------|------------|-------------|---------------------|--------|----------------|
+| Daily das Squads | Diária (dias úteis) às 9h BRT | Scrum Master de cada squad | Tech Lead, Product Owner, QA dedicado | Alinhamento diário, impedimentos sinalizados | Slack huddle `#squad-<nome>` |
+| Steering Operacional | Quinzenal às terças 10h BRT | Líder de Operações | Heads de Produto, Engenharia de Plataforma, Customer Success | Plano de ação priorizado, decisões estratégicas registradas | Reunião Teams "Bmad Steering" + ata em Confluence |
+| Sync QA/DevOps | Semanal às quintas 16h BRT | Coordenador QA & Líder DevOps | Engenheiros de Qualidade, SREs, representantes de squads | Plano de testes regressivos, matriz de deploys e saúde do pipeline | Canal Slack `#qa-devops` + board Jira |
+| Revisão de SLAs | Semanal | Analista de Operações | Customer Success, Engenharia de Plataforma | Relatório com tickets fora do SLA e ações corretivas | Dashboard Grafana + canal `#ops-sla` |
+| Comitê de Qualidade | Quinzenal | Gerente de Produto + Líder de Operações | Representantes de squads, Analytics | Backlog de melhorias, updates em playbooks | Reunião Teams "Quality Committee" |
+| Auditoria de Permissões | Mensal | Administrador de Workspace | Segurança, Engenharia de Plataforma | Checklist atualizado, revogação de acessos | Ticket Jira + canal `#seguranca` |
+| Revisão de Dashboards | Mensal | Data/Analytics | Produto, Operações | Ajustes em métricas, novas visualizações | Dashboard Looker + canal `#analytics` |
+| Post-Mortem de Incidentes | Sob demanda (em até 48h após incidente) | Engenheiro de Plataforma on-call | Operações, Produto, QA, DevOps | Documento de lições aprendidas e tarefas de follow-up | War room Teams + canal Slack `#war-room` |
+
+### Fluxo de Escalonamento Operacional
+
+1. **Detecção / Sinalização**
+   - Impedimentos levantados no daily devem ser registrados no board do squad e marcados com tag `bloqueio`.
+   - Incidentes críticos identificados fora do horário das reuniões acionam imediatamente o canal `#war-room` via PagerDuty.
+2. **Escalonamento Nível 1 (Squad)**
+   - Scrum Master avalia a remoção de impedimentos; se o bloqueio envolver dependência externa, notifica o Líder de Operações.
+   - Tempo alvo: resposta em até 2h úteis.
+3. **Escalonamento Nível 2 (Operações + Engenharia de Plataforma)**
+   - Líder de Operações convoca mini war room no canal `#ops-urgente` e envolve Tech Lead de Plataforma.
+   - Se impacto > SLA `S2`, Steering é antecipado para decisão extraordinária.
+4. **Escalonamento Nível 3 (Executivo)**
+   - Para riscos de SLA `S1` ou impacto financeiro relevante, Líder de Operações aciona Diretor de Produto e CTO via Teams "Exec Escalation".
+   - Registrar decisão e plano de mitigação na ata do Steering.
+5. **Follow-up**
+   - Resultados e aprendizados são apresentados no Steering quinzenal e incorporados aos playbooks.
 
 ## Estratégias de Expansão
 
