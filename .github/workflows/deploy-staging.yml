@@ -59,6 +59,9 @@ jobs:
         run: |
           ./scripts/test-unit.sh
           ./scripts/test-integration.sh
+      - name: Validar composição Docker e manifests K8s
+        run: |
+          ./scripts/infra/provision-dev.sh docker/k8s
 
   deploy:
     name: Promover para staging via GitOps
@@ -73,7 +76,8 @@ jobs:
       - name: Preparar pacote de manifests
         run: |
           mkdir -p artifacts/manifests
-          echo "render: argocd" > artifacts/manifests/README.md
+          kubectl kustomize design/k8s/staging > artifacts/manifests/staging.yaml
+          cp design/docker-compose.dev.yml artifacts/manifests/docker-compose.dev.yml
       - name: Publicar pacote para aprovação manual
         uses: actions/upload-artifact@v4
         with:

@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bmad-method
+commonLabels:
+  app.kubernetes.io/part-of: bmad-method
+resources:
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - postgres-deployment.yaml
+  - postgres-service.yaml
+  - redis-deployment.yaml
+  - redis-service.yaml
+  - frontend-ingress.yaml
+  - backend-ingress.yaml
+secretGenerator:
+  - name: core-app
+    literals:
+      - CORE_DATABASE_URL=postgresql+psycopg://core:core@core-db:5432/core
+      - CORE_ALLOWED_ORIGINS=http://localhost:3000
+  - name: frontend-env
+    literals:
+      - NEXT_PUBLIC_CORE_API_URL=http://localhost:8000
+  - name: core-database
+    literals:
+      - POSTGRES_DB=core
+      - POSTGRES_USER=core
+      - POSTGRES_PASSWORD=core
+generatorOptions:
+  disableNameSuffixHash: true
+images:
+  - name: ghcr.io/bmad-method/backend
+    newTag: dev
+  - name: ghcr.io/bmad-method/frontend
+    newTag: dev

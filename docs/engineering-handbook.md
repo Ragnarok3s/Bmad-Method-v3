@@ -75,6 +75,13 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 - Ambiente **staging**: reproduz topologia de produção com fixtures geradas pelo time de dados. Reset automático diário via `scripts/infra/reset-staging.sh`.
 - Acesso: provisionar via SSO corporativo com RBAC nos clusters, concedendo acesso `read-only` para squads e `admin` restrito ao time de plataforma.
 
+### Execução Rápida de Ambientes de Referência
+
+- `scripts/infra/provision-dev.sh docker` sobe o _stack_ local descrito em `design/docker-compose.dev.yml`, incluindo frontend Next.js, backend FastAPI, PostgreSQL e Redis.
+- `scripts/infra/provision-dev.sh k8s` aplica os manifests Kustomize em `design/k8s/dev` contra o cluster configurado em `KUBECONFIG`.
+- `scripts/infra/provision-dev.sh docker/k8s` executa validações (`docker compose config` e `kubectl kustomize`) para garantir que os artefatos estejam consistentes sem necessidade de subir infraestrutura.
+- O workflow `.github/workflows/deploy-staging.yml` gera o pacote `artifacts/manifests/staging.yaml` via `kubectl kustomize design/k8s/staging`, garantindo que os manifestos versionados sejam publicados automaticamente.
+
 ### Gestão de Secrets
 
 - Utilizamos `Hashicorp Vault` integrado ao GitHub Actions por meio de OIDC. Segredos são mapeados por ambiente com _namespaces_ `dev/` e `staging/`.

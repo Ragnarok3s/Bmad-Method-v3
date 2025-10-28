@@ -31,3 +31,9 @@ Este documento descreve o fluxo validado para preparar o ambiente local de desen
 - Utilize `deactivate` para sair do ambiente virtual quando necessário.
 - Reative o ambiente (`source .venv/bin/activate`) sempre que iniciar uma nova sessão de trabalho.
 - Caso surjam erros de importação, valide se a pasta `.venv` foi criada antes da instalação e se o shell atual está com o ambiente ativo.
+
+## Provisionamento Rápido com Docker Compose
+
+- Execute `./scripts/infra/provision-dev.sh docker` para subir os serviços locais definidos em `design/docker-compose.dev.yml` (frontend, backend, PostgreSQL e Redis).
+- O script utiliza `docker compose config` quando chamado com o perfil `docker/k8s`, permitindo validar o arquivo sem iniciar containers.
+- Para encerrar os serviços, utilize `docker compose -f design/docker-compose.dev.yml down` após a execução inicial.
