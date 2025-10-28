@@ -146,6 +146,10 @@ class AgentService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado")
         return agent
 
+    def list(self) -> list[Agent]:
+        result = self.session.execute(select(Agent).order_by(Agent.name))
+        return list(result.scalars())
+
 
 class ReservationService:
     def __init__(self, session: Session) -> None:

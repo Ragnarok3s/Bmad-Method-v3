@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any
 
 from uuid import uuid4
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from .models import AgentRole, HousekeepingStatus, ReservationStatus, SLAStatus
 
@@ -174,6 +175,80 @@ class PartnerWebhookPayload(BaseModel):
     status: str
     elapsed_minutes: int
     occurred_at: datetime
+
+
+class PermissionBase(BaseModel):
+    key: str = Field(min_length=3)
+    label: str = Field(min_length=1)
+    description: str | None = None
+    category: str | None = None
+
+
+class PermissionCreate(PermissionBase):
+    pass
+
+
+class PermissionUpdate(BaseModel):
+    label: str | None = None
+    description: str | None = None
+    category: str | None = None
+
+
+class PermissionRead(PermissionBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PropertySummary(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
+class RolePolicyBase(BaseModel):
+    role: AgentRole
+    name: str = Field(min_length=1)
+    persona: str | None = Field(default=None, max_length=120)
+    property_id: int | None = None
+    permissions: list[str] = Field(default_factory=list)
+    inherits: list[AgentRole] = Field(default_factory=list)
+    is_default: bool = False
+
+
+class RolePolicyCreate(RolePolicyBase):
+    pass
+
+
+class RolePolicyUpdate(BaseModel):
+    name: str | None = None
+    persona: str | None = None
+    property_id: int | None = None
+    permissions: list[str] | None = None
+    inherits: list[AgentRole] | None = None
+    is_default: bool | None = None
+
+
+class RolePolicyRead(RolePolicyBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    property: PropertySummary | None = Field(default=None, alias="property_ref")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class GovernanceAuditRead(BaseModel):
+    id: int
+    action: str
+    detail: dict[str, Any]
+    created_at: datetime
+    actor_id: int | None
 
 
 class OccupancySnapshot(BaseModel):

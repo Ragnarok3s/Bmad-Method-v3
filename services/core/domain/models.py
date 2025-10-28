@@ -103,6 +103,71 @@ class Agent(Base):
     housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="assigned_agent")
 
 
+class PermissionDefinition(Base):
+    __tablename__ = "permission_definitions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    label: Mapped[str] = mapped_column(String(160), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class RolePolicy(Base):
+    __tablename__ = "role_policies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    role: Mapped[AgentRole] = mapped_column(SAEnum(AgentRole), nullable=False)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    persona: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    property_id: Mapped[int | None] = mapped_column(ForeignKey("properties.id"), nullable=True)
+    is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    _permissions: Mapped[str] = mapped_column("permissions", Text, nullable=False, default="[]")
+    _inherits: Mapped[str] = mapped_column("inherits", Text, nullable=False, default="[]")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    property_ref: Mapped[Property | None] = relationship("Property")
+
+    __table_args__ = (
+        UniqueConstraint("role", "name", "persona", "property_id", name="uq_role_policy_scope"),
+    )
+
+    @property
+    def permissions(self) -> list[str]:
+        try:
+            data = json.loads(self._permissions or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data if isinstance(item, str)]
+
+    @permissions.setter
+    def permissions(self, value: list[str]) -> None:
+        self._permissions = json.dumps(sorted({item.strip() for item in value if item.strip()}))
+
+    @property
+    def inherits(self) -> list[str]:
+        try:
+            data = json.loads(self._inherits or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data if isinstance(item, str)]
+
+    @inherits.setter
+    def inherits(self, value: list[str]) -> None:
+        self._inherits = json.dumps(sorted({item.strip() for item in value if item.strip()}))
+
+    @property
+    def property(self) -> Property | None:  # type: ignore[override]
+        return self.property_ref
+
+
 class ReservationStatus(str, Enum):
     DRAFT = "draft"
     CONFIRMED = "confirmed"

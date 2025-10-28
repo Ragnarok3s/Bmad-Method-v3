@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timezone
-from typing import Any, Iterable, TypeVar
+from typing import Any, Iterable, TypeVar, Union
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -14,15 +14,19 @@ from pydantic import BaseModel
 from ..config import CoreSettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
-from ..domain.models import HousekeepingStatus
+from ..domain.models import Agent, HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
     AgentRead,
     DashboardMetricsRead,
+    GovernanceAuditRead,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
     HousekeepingStatusUpdate,
+    PermissionCreate,
+    PermissionRead,
+    PermissionUpdate,
     PartnerSLARead,
     PartnerWebhookPayload,
     PlaybookExecutionRead,
@@ -34,6 +38,9 @@ from ..domain.schemas import (
     ReservationCreate,
     ReservationRead,
     ReservationUpdateStatus,
+    RolePolicyCreate,
+    RolePolicyRead,
+    RolePolicyUpdate,
     WorkspaceCreate,
     WorkspaceRead,
 )
@@ -49,6 +56,7 @@ from ..services import (
 )
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
+from ..security import SecurityService
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -97,6 +105,132 @@ def get_session(db: Database = Depends(get_database)) -> Iterable[Session]:
 async def _parse_model(request: Request, model_type: type[ModelT]) -> ModelT:
     data = await request.json()
     return model_type.model_validate(data)
+
+
+def _require_actor(session: Session, request: Request) -> Agent:
+    header = request.headers.get("x-actor-id")
+    if not header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cabeçalho X-Actor-Id obrigatório",
+        )
+    try:
+        actor_id = int(header)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cabeçalho X-Actor-Id inválido",
+        ) from exc
+    actor = session.get(Agent, actor_id)
+    if not actor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agente responsável não encontrado",
+        )
+    return actor
+
+
+@router.get("/governance/permissions", response_model=list[PermissionRead])
+def list_governance_permissions(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    service = SecurityService(session)
+    return service.list_permissions(actor=actor)
+
+
+@router.post("/governance/permissions", response_model=PermissionRead, status_code=201)
+async def create_governance_permission(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, PermissionCreate)
+    service = SecurityService(session)
+    return service.create_permission(payload, actor=actor)
+
+
+@router.patch("/governance/permissions/{permission_id}", response_model=PermissionRead)
+async def update_governance_permission(
+    permission_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, PermissionUpdate)
+    service = SecurityService(session)
+    return service.update_permission(permission_id, payload, actor=actor)
+
+
+@router.delete("/governance/permissions/{permission_id}", status_code=204)
+def delete_governance_permission(
+    permission_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    service = SecurityService(session)
+    service.delete_permission(permission_id, actor=actor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/governance/roles", response_model=list[RolePolicyRead])
+def list_governance_roles(
+    request: Request,
+    persona: str | None = None,
+    property_id: int | None = None,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    service = SecurityService(session)
+    return service.list_roles(actor=actor, persona=persona, property_id=property_id)
+
+
+@router.post("/governance/roles", response_model=RolePolicyRead, status_code=201)
+async def create_governance_role(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, RolePolicyCreate)
+    service = SecurityService(session)
+    return service.create_role(payload, actor=actor)
+
+
+@router.patch("/governance/roles/{policy_id}", response_model=RolePolicyRead)
+async def update_governance_role(
+    policy_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, RolePolicyUpdate)
+    service = SecurityService(session)
+    return service.update_role(policy_id, payload, actor=actor)
+
+
+@router.delete("/governance/roles/{policy_id}", status_code=204)
+def delete_governance_role(
+    policy_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    service = SecurityService(session)
+    service.delete_role(policy_id, actor=actor)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/governance/audit", response_model=list[GovernanceAuditRead])
+def list_governance_audit(
+    request: Request,
+    limit: int = Query(50, ge=1, le=500),
+    session: Session = Depends(get_session),
+):
+    actor = _require_actor(session, request)
+    service = SecurityService(session)
+    return service.list_audit_trail(actor=actor, limit=limit)
 
 
 @router.get("/metrics/overview", response_model=DashboardMetricsRead)
@@ -172,13 +306,17 @@ def list_properties(session: Session = Depends(get_session)):
     return PropertyService(session).list()
 
 
-@router.get("/agents", response_model=AgentCatalogPage)
+@router.get("/agents", response_model=Union[AgentCatalogPage, list[AgentRead]])
 def list_agents_catalog(
     competency: list[str] = Query(default_factory=list),
     availability: list[AgentAvailability] = Query(default_factory=list),
     page: int = Query(1, ge=1),
     page_size: int = Query(6, ge=1, le=50),
+    registry: bool = Query(False),
+    session: Session = Depends(get_session),
 ):
+    if registry:
+        return AgentService(session).list()
     return list_agent_catalog(
         competencies=competency,
         availability=availability,
@@ -309,6 +447,9 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
     database = database or get_database(settings)
     app = FastAPI(title="Core Hospitality Service", version="0.1.0")
     configure_cors(app, settings)
+
+    with database.session_scope() as session:
+        SecurityService(session).ensure_bootstrap()
 
     def _get_db_override() -> Database:
         return database

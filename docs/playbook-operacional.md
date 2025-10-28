@@ -30,17 +30,37 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
 
 ### Política de Acesso dos Agentes Core
 
-- **Fonte de Verdade**: módulo `services/core/security.py` com a hierarquia `ROLE_HIERARCHY`.
-- **Papéis**:
-  - `admin`: administração completa de reservas, propriedades, agentes e integrações OTA.
-  - `property_manager`: gestão operacional das propriedades atribuídas (confirmação de reservas e agenda de housekeeping).
-  - `housekeeping`: atualização de tarefas próprias; bloqueio automático caso o agente esteja inativo.
-  - `ota`: consulta da fila de sincronização e monitorização de jobs.
-- **Processo Mensal**:
-  1. Extrair relatório de agentes ativos via API `/agents`.
-  2. Validar papéis concedidos com a planilha de RH e aplicar revogações via endpoint PATCH.
-  3. Registrar evidências na ata da auditoria de permissões (template em `docs/atas/`).
-- **Auditoria Adicional**: sempre que um alerta `PlaybookErrorRate` for disparado, confirmar que o agente executor mantém o papel mínimo necessário para a ação.
+- **Fonte de Verdade**: módulo `services/core/security.py`, que mantém o catálogo de permissões (`PermissionDefinition`) e as políticas hierárquicas (`RolePolicy`). Toda alteração passa pelos endpoints `/governance/permissions`, `/governance/roles` e possui registro automático em `/governance/audit`.
+- **Papéis e herança padrão**:
+  - `admin`: administração completa de reservas, propriedades, agentes e integrações OTA, com acesso a todas as operações de governança.
+  - `property_manager`: gestão operacional das propriedades atribuídas, consulta de políticas e exportação de auditorias.
+  - `housekeeping`: atualização das próprias tarefas e herança limitada definida nas políticas.
+  - `ota`: acesso de leitura a políticas e integrações OTA.
+- **Gestão de Permissões**:
+  1. Consultar o catálogo atual via `GET /governance/permissions` para identificar permissões disponíveis.
+  2. Ajustar papéis com `POST|PATCH /governance/roles`, sempre atribuindo owners e escopo (persona/propriedade) antes de publicar.
+  3. Validar a trilha em `GET /governance/audit` e anexar o export CSV/PDF gerado pela interface de governança à ata do steering.
+- **Processo Mensal Automatizado**:
+  1. Executar `scripts/governanca/auditar-permissoes.py --planilha <arquivo.csv>` para cruzar o cadastro do RH com a API `/agents?registry=true`.
+  2. Aplicar correções usando os endpoints `/governance/roles` e `/governance/permissions` e, quando necessário, desativar agentes via `/agents`.
+  3. Armazenar o relatório gerado pelo script (JSON ou CSV) em `docs/auditorias/<ano>/<mes>/` e registrar evidências na ata padrão (`docs/atas/`).
+- **Auditoria Adicional**: sempre que um alerta `PlaybookErrorRate` for disparado, confirmar que o executor possui apenas as permissões mínimas necessárias antes de reexecutar playbooks críticos.
+
+#### Fluxo de Exceção e Rollback
+
+1. Abrir ticket no Jira (tipo *Segurança*) com descrição da exceção solicitada e prazo de validade.
+2. Criar política temporária via `POST /governance/roles` com `is_default=false` e persona marcada como `exception::<ticket>`.
+3. Registrar aprovação do CISO ou representante de Plataforma no log de auditoria (linkado no ticket) e anexar export em PDF.
+4. Encerrar a exceção removendo a política com `DELETE /governance/roles/{id}` e confirmando o rollback no ticket. O script `auditar-permissoes.py` deve ser executado em seguida para verificar resíduos.
+
+#### Checklist STRIDE para Revisões Extraordinárias
+
+- **Spoofing**: validar MFA obrigatório e revogar credenciais compartilhadas.
+- **Tampering**: revisar histórico em `/governance/audit` e confirmar hashes de configuração no repositório (`services/core/security.py`).
+- **Repudiation**: garantir exportação e assinatura digital do relatório mensal.
+- **Information Disclosure**: verificar se perfis OTA não possuem permissões de `governance.audit.export`.
+- **Denial of Service**: confirmar limites de rate limiting nos endpoints `/governance/*` e alertas de abuso.
+- **Elevation of Privilege**: executar teste automatizado (`pytest tests/unit/test_security.py::test_role_elevation_guard`) antes de liberar exceções.
 
 ### Critérios de Priorização Operacional
 

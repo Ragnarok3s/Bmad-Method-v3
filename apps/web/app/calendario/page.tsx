@@ -26,6 +26,20 @@ const checklists = [
   }
 ];
 
+const auditorias = [
+  {
+    titulo: 'Auditoria de Permissões',
+    owner: 'Administrador de Workspace',
+    janela: 'Mensal (1ª segunda-feira)',
+    passos: [
+      'Executar scripts/governanca/auditar-permissoes.py com planilha RH',
+      'Atualizar políticas em /governanca e exportar CSV/PDF',
+      'Registrar evidências na ata padrão e confirmar rollback de exceções'
+    ],
+    stride: ['Spoofing', 'Tampering', 'Repudiation', 'Information Disclosure', 'Denial of Service', 'Elevation of Privilege']
+  }
+];
+
 export default function CalendarioPage() {
   return (
     <div>
@@ -54,6 +68,26 @@ export default function CalendarioPage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
+          </Card>
+        ))}
+      </ResponsiveGrid>
+      <SectionHeader subtitle="Responsáveis e salvaguardas das auditorias críticas">
+        Calendário de auditoria
+      </SectionHeader>
+      <ResponsiveGrid columns={1}>
+        {auditorias.map((auditoria) => (
+          <Card key={auditoria.titulo} title={auditoria.titulo} accent="warning">
+            <p>
+              <strong>Owner:</strong> {auditoria.owner} · <strong>Janela:</strong> {auditoria.janela}
+            </p>
+            <ul>
+              {auditoria.passos.map((passo) => (
+                <li key={passo}>{passo}</li>
+              ))}
+            </ul>
+            <p>
+              <strong>Checklist STRIDE:</strong> {auditoria.stride.join(', ')}
+            </p>
           </Card>
         ))}
       </ResponsiveGrid>
