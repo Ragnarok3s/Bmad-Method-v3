@@ -7,6 +7,7 @@ import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useOffline } from '@/components/offline/OfflineContext';
+import { SlaOverview } from '@/components/slas/SlaOverview';
 import {
   CoreApiError,
   getHousekeepingTasks,
@@ -15,6 +16,7 @@ import {
   PaginationMeta,
   updateHousekeepingTask
 } from '@/services/api/housekeeping';
+import { getPartnerSlas, PartnerSla } from '@/services/api/partners';
 
 const DEFAULT_PROPERTY_ID = 1;
 const DEFAULT_PAGE_SIZE = 9;
@@ -51,6 +53,9 @@ export default function HousekeepingPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [partnerSlas, setPartnerSlas] = useState<PartnerSla[]>([]);
+  const [slaLoading, setSlaLoading] = useState<boolean>(false);
+  const [slaError, setSlaError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOffline) {
@@ -94,6 +99,47 @@ export default function HousekeepingPage() {
       .finally(() => {
         if (!controller.signal.aborted) {
           setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [isOffline, lastChangedAt]);
+
+  useEffect(() => {
+    if (isOffline) {
+      setSlaLoading(false);
+      setSlaError('Monitorização de SLA indisponível em modo offline.');
+      return;
+    }
+
+    const controller = new AbortController();
+    setSlaLoading(true);
+    setSlaError(null);
+
+    getPartnerSlas({ signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted) {
+          setPartnerSlas(response);
+        }
+      })
+      .catch((apiError: unknown) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        if (apiError instanceof CoreApiError) {
+          setSlaError(
+            apiError.status >= 500
+              ? 'Não foi possível atualizar os SLAs dos parceiros. Serviço indisponível.'
+              : 'Falha ao carregar SLAs. Tente novamente mais tarde.'
+          );
+        } else {
+          setSlaError('Ocorreu um erro inesperado ao carregar os SLAs dos parceiros.');
+        }
+        setPartnerSlas([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setSlaLoading(false);
         }
       });
 
@@ -267,6 +313,52 @@ export default function HousekeepingPage() {
     });
   }, [error, handleToggleStatus, isSyncing, loading, tasks, updatingTaskId]);
 
+  const slaSection = useMemo(() => {
+    if (slaLoading) {
+      return (
+        <ResponsiveGrid columns={1}>
+          <Card
+            title="Acompanhar SLAs de parceiros"
+            description="Sincronizando indicadores de resposta e resolução."
+            accent="info"
+          >
+            <p>Carregando indicadores de SLA…</p>
+          </Card>
+        </ResponsiveGrid>
+      );
+    }
+
+    if (slaError) {
+      return (
+        <ResponsiveGrid columns={1}>
+          <Card
+            title="SLAs indisponíveis"
+            description="Consulte o time de integrações para confirmar o estado da conexão."
+            accent="critical"
+          >
+            <p>{slaError}</p>
+          </Card>
+        </ResponsiveGrid>
+      );
+    }
+
+    if (partnerSlas.length === 0) {
+      return (
+        <ResponsiveGrid columns={1}>
+          <Card
+            title="Sem SLAs configurados"
+            description="Nenhum SLA ativo foi associado aos parceiros de housekeeping."
+            accent="info"
+          >
+            <p>Atualize os cadastros de parceiros para acompanhar alertas neste painel.</p>
+          </Card>
+        </ResponsiveGrid>
+      );
+    }
+
+    return <SlaOverview slas={partnerSlas} context="housekeeping" />;
+  }, [partnerSlas, slaError, slaLoading]);
+
   const metricsBlocks = useMemo(() => {
     if (loading) {
       return [
@@ -397,6 +489,10 @@ export default function HousekeepingPage() {
             : 'Online. Sincronização automática a cada 2 minutos e sincronização manual disponível.'}
         </p>
       </Card>
+      <SectionHeader subtitle="Alertas operacionais com parceiros de apoio">
+        SLAs dos parceiros
+      </SectionHeader>
+      {slaSection}
       <SectionHeader subtitle="Atribuições priorizadas com dados do core">
         Tarefas de housekeeping
       </SectionHeader>

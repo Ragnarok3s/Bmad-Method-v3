@@ -4,6 +4,9 @@ import { Card } from '@/components/ui/Card';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { SlaOverview } from '@/components/slas/SlaOverview';
+import { CoreApiError } from '@/services/api/housekeeping';
+import { getPartnerSlas, PartnerSla } from '@/services/api/partners';
 
 const kpis = [
   { label: 'Taxa de ocupação', value: '87%', trend: '+5% vs semana anterior', variant: 'success' as const },
@@ -32,7 +35,30 @@ const priorities = [
   }
 ];
 
-export default function DashboardPage() {
+async function loadPartnerSlas(): Promise<{ data: PartnerSla[]; error: string | null }> {
+  try {
+    const data = await getPartnerSlas();
+    return { data, error: null };
+  } catch (error: unknown) {
+    if (error instanceof CoreApiError) {
+      return {
+        data: [],
+        error:
+          error.status >= 500
+            ? 'Serviço de SLAs indisponível. Tente novamente em instantes.'
+            : 'Não foi possível carregar os SLAs dos parceiros.'
+      };
+    }
+    return {
+      data: [],
+      error: 'Ocorreu um erro inesperado ao carregar os SLAs.'
+    };
+  }
+}
+
+export default async function DashboardPage() {
+  const { data: partnerSlas, error: slaError } = await loadPartnerSlas();
+
   return (
     <div className="dashboard">
       <SectionHeader subtitle="Visão agregada das operações e agentes ativos">
@@ -55,6 +81,22 @@ export default function DashboardPage() {
           </Card>
         ))}
       </ResponsiveGrid>
+      <SectionHeader subtitle="Monitorização contínua dos compromissos com parceiros">
+        SLAs críticos dos parceiros
+      </SectionHeader>
+      {partnerSlas.length > 0 ? (
+        <SlaOverview slas={partnerSlas} context="home" />
+      ) : (
+        <ResponsiveGrid columns={1}>
+          <Card
+            title="Monitorização de SLAs"
+            description="Acompanhe indicadores de resposta e resolução em tempo real."
+            accent="warning"
+          >
+            <p>{slaError ?? 'Sem dados de SLA disponíveis.'}</p>
+          </Card>
+        </ResponsiveGrid>
+      )}
       <SectionHeader subtitle="Fluxos monitorizados com métricas de adoção e satisfação">
         Destaques rápidos
       </SectionHeader>
