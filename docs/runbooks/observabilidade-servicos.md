@@ -10,8 +10,8 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
    - Frontend: confirmar `NEXT_PUBLIC_OTEL_*` expostas pelo `next.config.mjs` (collector HTTP `4318`).
    - API Core: verificar `GET /health/otel` com `status=ok` e `signals.metrics.last_event` preenchido.
 2. **Confirmar Receção de Dados**
-   - Métricas: painel Grafana `bmad-agents-001` (latência P95, throughput, erro 5xx) e `bmad-ops-002` (reservas, housekeeping, engajamento web).
-   - Logs: Kibana indexado com labels `service.name`, `deployment.environment`, `route`.
+   - Métricas: painel Grafana `bmad-agents-001` (latência P95, throughput, erro 5xx) e `bmad-ops-002` (reservas, housekeeping, engajamento web). Utilize `scripts/run-quality-gates.sh` para exportar evidências automaticamente.【F:scripts/run-quality-gates.sh†L1-L20】
+   - Logs: Grafana Explore (Loki) filtrando labels `service.name`, `deployment.environment`, `route`.
    - Traces: Tempo filtrado por `service.name = bmad-core-service` e `bmad-web-app`.
    - Smoke tests: executar `poetry run pytest -k observability_smoke` para confirmar ingestão automática.
 3. **Quality Gates**
@@ -29,9 +29,9 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
    - Confirmar se `signals.metrics.last_event` foi atualizado após chamar `record_dashboard_request`.
    - Frontend: inspecionar contador `bmad_web_page_view_total` (confirmar que o app foi acedido após deploy).
 3. **Logs/Traces**
-   - Confirmar que `services/core/observability.py` adicionou handler de logging (verificar `service.instance.id` nos logs).
+   - Confirmar que `services/core/observability.py` adicionou handler de logging (verificar `service.instance.id` nos logs Loki).
    - Validar `signals.logs.last_event` e `signals.traces.last_event` via `/health/otel`.
-   - Verificar se o Collector está encaminhando para Logstash/Tempo conforme manifestos de infra.
+   - Verificar se o Collector está encaminhando para Loki/Tempo conforme manifestos de infra (`logs -> loki`, `traces -> tempo`).
 4. **Reprocessamento**
    - Reiniciar pods com `kubectl rollout restart deploy/core-api` e `deploy/web-app` para reexecutar inicialização do OTEL.
    - Reexecutar `scripts/run-quality-gates.sh` e anexar novo artefacto.
