@@ -1,0 +1,33 @@
+# Guia de Setup Local
+
+Este documento descreve o fluxo validado para preparar o ambiente local de desenvolvimento utilizando `python -m venv` e as dependências registradas em `requirements.txt`.
+
+## Pré-requisitos
+- Python 3.12 instalado e acessível no `PATH`.
+- Ferramentas básicas de shell (bash, coreutils) disponíveis.
+
+## Passo a passo
+1. Crie o ambiente virtual na raiz do repositório:
+   ```bash
+   python -m venv .venv
+   ```
+2. Ative o ambiente virtual:
+   ```bash
+   source .venv/bin/activate
+   ```
+   > O prompt deve exibir o prefixo `(.venv)` indicando que a ativação foi bem-sucedida.
+3. Instale as dependências de desenvolvimento:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   - O comando instala `pytest`, `pytest-cov`, `bandit`, `PyYAML` e dependências auxiliares.
+   - Os artefatos são instalados dentro de `.venv/lib/python3.12/site-packages`.
+4. (Opcional) Atualize o `pip` para evitar avisos de versão:
+   ```bash
+   pip install --upgrade pip
+   ```
+
+## Pós-instalação
+- Utilize `deactivate` para sair do ambiente virtual quando necessário.
+- Reative o ambiente (`source .venv/bin/activate`) sempre que iniciar uma nova sessão de trabalho.
+- Caso surjam erros de importação, valide se a pasta `.venv` foi criada antes da instalação e se o shell atual está com o ambiente ativo.
