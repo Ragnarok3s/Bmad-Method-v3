@@ -17,6 +17,7 @@ export interface OnboardingFormValues {
     sandboxValidated: boolean;
     mfaConfigured: boolean;
     securityNotes: string;
+    supportTourCompleted: boolean;
   };
 }
 

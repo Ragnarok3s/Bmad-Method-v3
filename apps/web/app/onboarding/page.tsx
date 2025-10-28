@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { Card } from '@/components/ui/Card';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
+import { useGuidedTour } from '@/components/tour/TourContext';
 
 import { useOnboardingWizard } from './layout';
 import type { OnboardingFormValues } from './types';
@@ -266,22 +268,65 @@ function TeamStep() {
 function ReadinessStep() {
   const {
     register,
+    setValue,
+    watch,
     formState: { errors }
   } = useFormContext<OnboardingFormValues>();
+  const { startTour, hasCompleted } = useGuidedTour();
+
+  const manualSupportTour = watch('readiness.supportTourCompleted');
+  const supportTourCompleted = hasCompleted('support-knowledge-base');
+  const mergedSupportTour = supportTourCompleted || Boolean(manualSupportTour);
+
+  useEffect(() => {
+    if (supportTourCompleted) {
+      setValue('readiness.supportTourCompleted', true, { shouldDirty: true });
+    }
+  }, [setValue, supportTourCompleted]);
+
+  const sandboxField = register('readiness.sandboxValidated');
+  const mfaField = register('readiness.mfaConfigured');
+  const supportTourField = register('readiness.supportTourCompleted');
 
   return (
     <Card title="Checklist de prontidão">
       <div className="field">
         <label className="checkbox-inline">
-          <input type="checkbox" {...register('readiness.sandboxValidated')} />
+          <input type="checkbox" {...sandboxField} />
           Sandbox do playbook validado pela equipa
         </label>
       </div>
       <div className="field">
         <label className="checkbox-inline">
-          <input type="checkbox" {...register('readiness.mfaConfigured')} />
+          <input type="checkbox" {...mfaField} />
           MFA configurado para administradores
         </label>
+      </div>
+      <div className="field readiness-tour">
+        <label className="checkbox-inline">
+          <input
+            type="checkbox"
+            {...supportTourField}
+            checked={mergedSupportTour}
+            onChange={(event) => {
+              supportTourField.onChange(event);
+              setValue('readiness.supportTourCompleted', event.target.checked, { shouldDirty: true });
+            }}
+          />
+          Tour guiado do centro de suporte concluído
+        </label>
+        <p className="helper" role="status" aria-live="polite">
+          {mergedSupportTour
+            ? 'O tour foi concluído e sincronizado com a checklist de prontidão.'
+            : 'Execute o tour do centro de suporte para validar autoatendimento da equipa.'}
+        </p>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => startTour('support-knowledge-base')}
+        >
+          Abrir tour do suporte
+        </button>
       </div>
       <label className="field">
         <span>Notas adicionais de segurança</span>
@@ -331,6 +376,18 @@ function FieldStyles() {
         display: flex;
         align-items: center;
         gap: var(--space-2);
+      }
+      .readiness-tour {
+        gap: var(--space-2);
+      }
+      .readiness-tour .helper {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--color-neutral-2);
+      }
+      .readiness-tour button {
+        justify-self: start;
+        padding: var(--space-1) var(--space-3);
       }
       .error {
         color: var(--color-coral);

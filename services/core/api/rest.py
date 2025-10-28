@@ -41,6 +41,9 @@ from ..domain.schemas import (
     RolePolicyCreate,
     RolePolicyRead,
     RolePolicyUpdate,
+    KnowledgeBaseArticleRead,
+    KnowledgeBaseCatalogRead,
+    KnowledgeBaseTelemetryEvent,
     WorkspaceCreate,
     WorkspaceRead,
 )
@@ -49,6 +52,7 @@ from ..services import (
     AgentService,
     HousekeepingService,
     OperationalMetricsService,
+    KnowledgeBaseService,
     PlaybookTemplateService,
     PropertyService,
     ReservationService,
@@ -62,6 +66,8 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+knowledge_base_service = KnowledgeBaseService()
 
 
 @router.get("/health/otel")
@@ -420,6 +426,45 @@ def list_housekeeping(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get(
+    "/support/knowledge-base/catalog",
+    response_model=KnowledgeBaseCatalogRead,
+    summary="Listagem de artigos e categorias da base de conhecimento",
+)
+def get_support_knowledge_base_catalog(
+    q: str | None = Query(default=None, description="Termo de pesquisa"),
+    category: str | None = Query(default=None, description="Filtrar por categoria"),
+    limit: int = Query(default=12, ge=1, le=50, description="Número máximo de artigos"),
+):
+    return knowledge_base_service.catalog(query=q, category=category, limit=limit)
+
+
+@router.get(
+    "/support/knowledge-base/articles/{slug}",
+    response_model=KnowledgeBaseArticleRead,
+    summary="Detalhe completo de um artigo da base de conhecimento",
+)
+def get_support_knowledge_base_article(slug: str):
+    try:
+        return knowledge_base_service.get_article(slug)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artigo não encontrado") from exc
+
+
+@router.post(
+    "/support/knowledge-base/telemetry",
+    status_code=202,
+    summary="Regista eventos de uso da base de conhecimento",
+)
+async def register_support_knowledge_base_telemetry(request: Request):
+    payload = await _parse_model(request, KnowledgeBaseTelemetryEvent)
+    try:
+        knowledge_base_service.register_event(payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artigo não encontrado") from exc
+    return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
 @router.get("/partners/slas", response_model=list[PartnerSLARead])
