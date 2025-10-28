@@ -65,7 +65,7 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
 - **Fluxo**:
   1. Usuário abre ticket via portal ou e-mail.
   2. Triagem automática classifica severidade e persona.
-  3. SLA padrão: `S1` 1h resposta / 4h resolução; `S2` 4h / 1 dia; `S3` 1 dia / 3 dias (ver evidências assinadas em `docs/evidencias/sla-operacionais-2024-06.md`).
+  3. SLA padrão: `S1` 1h resposta / 4h resolução; `S2` 4h / 1 dia; `S3` 1 dia / 3 dias (ver evidências assinadas em `docs/evidencias/sla-operacionais-2024-06.md` e addendos em `docs/evidencias/sla-operacionais-2024-07.md`).
   4. Engajamento de squads específicos via roteamento automático baseado no componente afetado.
   5. Encerramento exige comunicação ao usuário, atualização da base de conhecimento e captura de NPS transacional.
 - **Automação Recomendada**: Integração ITSM ↔ plataforma para anexar logs e telemetria automaticamente.

@@ -18,13 +18,15 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
 
 | Fluxo / Módulo | Definition of Ready | Definition of Done |
 |----------------|---------------------|--------------------|
-| Autenticação e Controlo de Acesso | Histórias com perfis/documentos de segurança identificados, fluxos de exceção descritos e dependências de identidade aprovadas pelo Security Champion. | MFA opcional configurável, logs de auditoria verificados, testes unitários ≥ 80% e checklist LGPD/GDPR atualizado com bases legais. |
-| Inventário de Propriedades & Calendário | Requisitos de sincronização com OTAs revisados com parceiros e dados de catálogo limpos em staging. | Sincronização < 2 min validada em staging, políticas de retenção aplicadas e dashboards de métricas populados. |
-| Housekeeping Móvel | Personas e jornadas confirmadas, integrações de parceiros com SLAs anexados e wireframes aprovados. | App responsivo/offline disponível em staging, monitorização ativa e documentação operacional atualizada no playbook. |
-| Pagamentos PCI | Dependências com PSP aprovadas, contratos PCI arquivados e cenários de falha mapeados. | Tokenização ativa, reconciliação diária automatizada, relatório PCI anexado ao checklist de conformidade. |
-| Reservas & Relatórios | Regras de negócio validadas com stakeholders, dados sintéticos preparados e métricas-alvo definidas. | Fluxos de check-in/out executados sem falhas críticas, exportações CSV validadas e métricas operacionais atingidas. |
+| Autenticação e Controlo de Acesso | Histórias com dependências de identidade aprovadas, fluxos de exceção documentados, ameaças priorizadas na matriz STRIDE e plano de rollback definido. | MFA opcional e recovery testados, auditoria de logs revisada, alertas críticos configurados e checklist LGPD/GDPR atualizado. |
+| Inventário & Calendário | Dados de catálogo limpos em staging, integrações OTA com SLAs anexados e critérios de sincronia revistos com parceiros. | Sincronização < 2 min validada, retenção automatizada habilitada, dashboards de disponibilidade publicados. |
+| Housekeeping Móvel | Personas confirmadas, wireframes aprovados e dependências móveis (MDM, push) prontas, com riscos operacionais registrados. | App responsivo/offline em staging, monitorização ativa com SLAs de parceiros, runbook atualizado com fluxos de contingência. |
+| Pagamentos PCI | Contratos PCI arquivados, cenários de falha e de chargeback descritos, segregação de ambientes aprovada pela segurança. | Tokenização ativa, reconciliação diária automatizada, relatório PCI anexado, testes de penetração aprovados. |
+| Reservas & Relatórios | Dados sintéticos e métricas-alvo definidos, regras de negócio revisadas com stakeholders e dependências de BI mapeadas. | Fluxos de check-in/out estáveis, exportações CSV validadas, KPIs atingidos e documentação de suporte pronta. |
 
 As evidências associadas às validações acima ficam registradas no relatório de revisão (`docs/revisao-validacao-artefatos.md`) e devem ser atualizadas a cada gate relevante. A versão consolidada dos critérios e checklist está publicada em `docs/dor-dod-package.md`, que passa a ser a referência oficial para auditorias de readiness.
+
+> **Alinhamento e aprovação 2024-07-08**: Ana Ribeiro (PO) e Carlos Mendes (QA Lead) revisaram este quadro juntamente com `docs/dor-dod-package.md`, confirmando que os critérios estão sincronizados entre os documentos e permanecem válidos para o ciclo atual.
 
 ## Integrações Prioritárias
 
