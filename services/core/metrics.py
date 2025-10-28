@@ -27,6 +27,22 @@ _ota_enqueued = _METER.create_counter(
     "bmad_core_ota_sync_enqueued_total",
     description="Jobs enfileirados para sincronização OTA",
 )
+_dashboard_requests = _METER.create_counter(
+    "bmad_core_dashboard_requests_total",
+    description="Total de requisições para métricas consolidadas do dashboard",
+)
+_dashboard_occupancy_rate = _METER.create_histogram(
+    "bmad_core_dashboard_occupancy_rate",
+    description="Distribuição da taxa de ocupação retornada pelo endpoint agregado",
+)
+_dashboard_alerts_total = _METER.create_histogram(
+    "bmad_core_dashboard_critical_alerts_total",
+    description="Distribuição do número de alertas críticos reportados",
+)
+_dashboard_playbook_rate = _METER.create_histogram(
+    "bmad_core_dashboard_playbook_adoption_rate",
+    description="Distribuição da taxa de adoção de playbooks calculada",
+)
 
 
 def _stringify(attributes: Mapping[str, object] | None = None) -> dict[str, str]:
@@ -74,3 +90,38 @@ def record_housekeeping_transition(
 
 def record_ota_enqueue(property_id: int, action: str) -> None:
     _ota_enqueued.add(1, _stringify({"property_id": property_id, "action": action}))
+
+
+def record_dashboard_request(endpoint: str, success: bool) -> None:
+    _dashboard_requests.add(
+        1,
+        _stringify({"endpoint": endpoint, "success": "true" if success else "false"}),
+    )
+
+
+def record_dashboard_occupancy(rate: float, total_units: int, date: str) -> None:
+    _dashboard_occupancy_rate.record(
+        rate,
+        _stringify({"total_units": total_units, "date": date}),
+    )
+
+
+def record_dashboard_alerts(total: int, blocked: int, overdue: int) -> None:
+    _dashboard_alerts_total.record(
+        float(total),
+        _stringify({"blocked": blocked, "overdue": overdue}),
+    )
+
+
+def record_dashboard_playbook_adoption(
+    rate: float, total_executions: int, active_properties: int
+) -> None:
+    _dashboard_playbook_rate.record(
+        rate,
+        _stringify(
+            {
+                "total_executions": total_executions,
+                "active_properties": active_properties,
+            }
+        ),
+    )
