@@ -82,7 +82,9 @@ def enforce_retention_policy(
 def build_privacy_matrix(path: Path) -> List[PrivacyControl]:
     """Carrega evidências de privacidade para alimentar dashboards e gates."""
 
-    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if raw is None:
+        raw = {}
     if not isinstance(raw, dict):
         raise ValueError("o arquivo de privacidade deve conter um mapeamento YAML")
 
