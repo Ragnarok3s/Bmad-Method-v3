@@ -38,7 +38,17 @@ def summarize_coverage_trend(snapshots: Iterable[QualitySnapshot]) -> List[str]:
     if not history:
         return ["Nenhum dado de cobertura disponível."]
 
-    ordered = sorted(history, key=lambda snap: snap.build_id)
+    def _snapshot_order(snapshot: QualitySnapshot) -> tuple[int, int | str]:
+        """Define uma chave de ordenação cronológica para snapshots."""
+
+        build_id = snapshot.build_id
+        try:
+            numeric = int(build_id)
+        except (TypeError, ValueError):
+            return (1, build_id)
+        return (0, numeric)
+
+    ordered = sorted(history, key=_snapshot_order)
     summaries: List[str] = []
     for current, previous in zip(ordered, [None, *ordered[:-1]]):
         if previous is None:
