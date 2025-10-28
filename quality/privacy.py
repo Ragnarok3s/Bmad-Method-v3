@@ -7,10 +7,14 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict, Iterable, List
 
+import logging
+
 import yaml
 
 SYNTHETIC_EMAIL_DOMAIN = "example.test"
 MASK_TOKEN = "***"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -65,7 +69,11 @@ def enforce_retention_policy(
         created_at = record.get("created_at")
         if not created_at:
             continue
-        created_date = datetime.strptime(created_at, "%Y-%m-%d").date()
+        try:
+            created_date = datetime.strptime(created_at, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            logger.warning("Registro descartado devido a created_at inválido: %s", created_at)
+            continue
         if created_date >= cutoff:
             sanitized.append(record)
     return sanitized
