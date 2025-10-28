@@ -44,6 +44,15 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 - **Plano Encerrado**: registrar no relatório de QA de cada release que o plano de compliance regulatório (LGPD/GDPR, PCI) foi executado dentro do cronograma do kick-off, anexando evidências de DPIA, segmentação PCI e checklist de integrações.
 - **Gate de Kick-off**: bloquear a transição para Sprint 0 até que o checklist de conformidade, o DoR/DoD aprovados e o relatório de readiness de staging estejam anexados ao `docs/revisao-validacao-artefatos.md`.
 
+### Checklist Regulatório de QA
+
+| Etapa | Objetivo | Responsáveis | Evidência |
+|-------|----------|--------------|-----------|
+| Validação de consentimento e bases legais | Confirmar que fluxos críticos coletam consentimento e armazenam logs. | QA Lead + Privacy Officer | Registro de execução da suíte `tests/integration/privacy/consent.spec`. |
+| Revisão de DPIA | Garantir que novos riscos identificados foram avaliados. | Privacy Officer + Engineering Lead | Atualização do relatório em `docs/evidencias/dpia-inicial-2024-05.md`. |
+| Auditoria PCI | Validar segmentação de rede e mascaramento de dados de pagamento. | Security Champion | Relatório anexado à pipeline com captura de artefatos `pci-segmentation-report.pdf`. |
+| Checklist LGPD/GDPR/PCI | Marcar gates obrigatórios antes do deploy. | QA Lead + Release Manager | Checklist assinado automaticamente na pipeline (`artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`). |
+
 ### Integração com o Plano MVP
 
 | Módulo / Fluxo | Requisito de Privacidade ou Compliance | Suite de Teste | Evidência / Output |

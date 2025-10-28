@@ -55,13 +55,13 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 
 ## Governança e Aprovação do Roadmap
 
-| Papel | Responsável Nomeado | Responsabilidades-Chave | Cadência de Revisão |
-|-------|----------------------|-------------------------|---------------------|
-| Steering Executivo | Marina Lopes (Product Owner) | Validar prioridades de negócio, aprovar ajustes de escopo e comunicar decisões aos stakeholders. | Quinzenal (steering committee) e ad hoc para mudanças críticas |
-| Liderança Técnica | Rafael Monteiro (Tech Lead) | Avaliar impacto técnico das mudanças, garantir viabilidade das entregas e aprovar débitos técnicos associados. | Quinzenal, sincronizado com planning |
-| Governança de Dados | Bianca Souza (Data & Analytics Lead) | Validar implicações em métricas, fontes de dados e compliance antes de publicar alterações. | Mensal e sempre que novas métricas forem introduzidas |
+| Papel | Responsável Nomeado | Responsabilidades-Chave | Cadência de Revisão | Alinhamento com Calendário |
+|-------|----------------------|-------------------------|---------------------|---------------------------|
+| Steering Executivo | Ana Ribeiro (Product Owner) | Validar prioridades de negócio, aprovar ajustes de escopo e comunicar decisões aos stakeholders. | Quinzenal (steering committee) e checkpoints extraordinários conforme RFC. | Atualiza o roadmap após cada revisão trimestral indicada em `docs/revisao-validacao-artefatos.md`. |
+| Liderança Técnica | Miguel Costa (Product Manager) & Rafael Monteiro (Tech Lead) | Avaliar impacto técnico das mudanças, garantir viabilidade das entregas e aprovar débitos técnicos associados. | Quinzenal, sincronizado com planning e retro técnica. | Confirma readiness técnico antes das datas do calendário publicado. |
+| Governança de Dados & Compliance | Bianca Souza (Data & Analytics Lead) & Privacy Officer designado | Validar implicações em métricas, fontes de dados, privacidade e compliance antes de publicar alterações. | Mensal e sempre que novas métricas forem introduzidas ou checklist regulatório mudar. | Compartilha evidências no canal `#steering-bmad` e arquiva ata no Notion PMO. |
 
-- **Processo de alteração**: qualquer proposta de repriorização deve ser registrada como RFC no repositório do produto, receber parecer técnico e de dados em até 48h úteis e somente então seguir para aprovação final da Marina Lopes.
+- **Processo de alteração**: qualquer proposta de repriorização deve ser registrada como RFC no repositório do produto, receber parecer técnico e de dados em até 48h úteis e somente então seguir para aprovação final da Ana Ribeiro.
 - **Comunicação**: decisões aprovadas são atualizadas no roadmap e divulgadas em `#steering-bmad` com resumo do impacto e próximos passos.
 
 ## Riscos e Mitigações
@@ -74,6 +74,6 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 
 ## Aprovação
 
-- Product Owner: Marina Lopes
+- Product Owner: Ana Ribeiro
 - Tech Lead: Rafael Monteiro
-- Data Owner: Bianca Souza
+- Data & Privacy Owners: Bianca Souza e Privacy Officer designado
