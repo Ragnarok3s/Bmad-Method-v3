@@ -1,0 +1,4 @@
+Deploying platform-api:1.0.0-rc1 to staging
+Applying kustomize overlay stg
+Deployment rollout status: successfully rolled out
+Manual approval recorded by user po_squad at 2024-06-11T12:02:14Z

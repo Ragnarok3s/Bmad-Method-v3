@@ -1,0 +1,9 @@
+Comparando overlays/dev e overlays/stg
+--- overlays/dev/configmap.yaml
++++ overlays/stg/configmap.yaml
+@@
+- LOG_LEVEL=debug
++ LOG_LEVEL=info
+@@
+- FEATURE_FLAG_ALPHA=true
++ FEATURE_FLAG_ALPHA=true
