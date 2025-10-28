@@ -86,6 +86,18 @@ class HousekeepingTaskRead(BaseModel):
         from_attributes = True
 
 
+class PaginationMeta(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
+
+
+class HousekeepingTaskCollection(BaseModel):
+    items: list[HousekeepingTaskRead]
+    pagination: PaginationMeta
+
+
 class OTASyncJobRead(BaseModel):
     id: int
     property_id: int
