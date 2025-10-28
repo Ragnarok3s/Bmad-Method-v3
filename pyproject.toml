@@ -7,5 +7,8 @@ testpaths = [
 markers = [
   "unit: testes unitários de componentes isolados",
   "integration: testes de integração que validam orquestrações e requisitos de privacidade",
-  "e2e: cenários ponta a ponta que simulam fluxos completos do MVP"
+  "e2e: cenários ponta a ponta que simulam fluxos completos do MVP",
+  "reservations: cenários críticos de reservas e gestão de disponibilidade",
+  "payments: fluxos de tokenização, captura e reconciliação",
+  "ota: contratos e integrações com parceiros OTA"
 ]

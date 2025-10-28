@@ -76,6 +76,50 @@ class AgentRead(AgentCreate):
         from_attributes = True
 
 
+class AgentProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    email: EmailStr | None = None
+    role: AgentRole | None = None
+    active: bool | None = None
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class LoginResponse(BaseModel):
+    session_id: str
+    agent_id: int
+    mfa_required: bool
+    expires_at: datetime
+    session_timeout_seconds: int
+    recovery_codes_remaining: int
+
+
+class MFAVerificationRequest(BaseModel):
+    session_id: str
+    code: str
+    method: Literal["totp", "recovery"] = "totp"
+
+
+class RecoveryInitiateRequest(BaseModel):
+    email: EmailStr
+
+
+class RecoveryInitiateResponse(BaseModel):
+    email: EmailStr
+    issued_at: datetime
+    recovery_codes: list[str]
+
+
+class RecoveryCompleteRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+
 class PaymentMethodCreate(BaseModel):
     provider: PaymentProvider
     customer_reference: str
@@ -423,6 +467,35 @@ class OccupancySnapshot(BaseModel):
     occupied_units: int
     total_units: int
     occupancy_rate: float
+
+
+class KPIReportEntry(BaseModel):
+    property_id: int
+    property_name: str
+    currency: str | None = None
+    reservations: int
+    occupied_nights: int
+    available_nights: int
+    occupancy_rate: float
+    adr: float | None = None
+    revenue: float
+
+
+class KPIReportSummary(BaseModel):
+    properties_covered: int
+    total_reservations: int
+    total_occupied_nights: int
+    total_available_nights: int
+    average_occupancy_rate: float
+    revenue_breakdown: dict[str | None, float]
+
+
+class KPIReportRead(BaseModel):
+    period_start: date
+    period_end: date
+    generated_at: datetime
+    items: list[KPIReportEntry]
+    summary: KPIReportSummary
 
 
 class CriticalAlertExample(BaseModel):

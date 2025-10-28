@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 from services.core.config import CoreSettings
@@ -14,6 +15,7 @@ def build_client(tmp_path) -> TestClient:
     return TestClient(app)
 
 
+@pytest.mark.reservations
 def test_full_reservation_flow(tmp_path) -> None:
     client = build_client(tmp_path)
 
