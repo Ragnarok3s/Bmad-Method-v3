@@ -11,6 +11,12 @@ import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 
+export type TelemetryRuntime = {
+  tracerProvider: WebTracerProvider;
+  meterProvider: MeterProvider;
+  loggerProvider: LoggerProvider;
+};
+
 const DEFAULT_ENDPOINT = 'http://localhost:4318';
 
 type EndpointKind = 'traces' | 'metrics' | 'logs';
@@ -44,9 +50,9 @@ function createResource() {
   });
 }
 
-export function initTelemetry() {
+export async function initTelemetry(): Promise<TelemetryRuntime | null> {
   if (typeof window === 'undefined') {
-    return;
+    return null;
   }
 
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
@@ -109,4 +115,6 @@ export function initTelemetry() {
   });
 
   trace.getTracer('bmad.web').startSpan('telemetry.initialized').end();
+
+  return { tracerProvider, meterProvider, loggerProvider };
 }

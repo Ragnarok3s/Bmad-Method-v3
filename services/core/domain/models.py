@@ -12,6 +12,7 @@ from sqlalchemy import (
     Enum as SAEnum,
     ForeignKey,
     Integer,
+    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -339,3 +340,40 @@ class PartnerWebhookEvent(Base):
 
     partner: Mapped[Partner] = relationship("Partner", back_populates="webhook_events")
     sla: Mapped[PartnerSLA] = relationship("PartnerSLA")
+
+
+class ExperienceSurveyTouchpoint(str, Enum):
+    ONBOARDING = "onboarding"
+    OPERATIONS = "operations"
+    SUPPORT = "support"
+
+
+class ExperienceSurveyResponse(Base):
+    """Captura respostas de pesquisas de satisfação (NPS)."""
+
+    __tablename__ = "experience_survey_responses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id"), nullable=True)
+    touchpoint: Mapped[ExperienceSurveyTouchpoint] = mapped_column(
+        SAEnum(ExperienceSurveyTouchpoint), nullable=False
+    )
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    submitted_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    context: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+
+    workspace: Mapped[Workspace | None] = relationship("Workspace")
+
+
+class AnalyticsSyncState(Base):
+    """Checkpoint para ingestão incremental de fontes analíticas."""
+
+    __tablename__ = "analytics_sync_state"
+
+    source: Mapped[str] = mapped_column(String(80), primary_key=True)
+    last_ingested_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=datetime.utcnow
+    )
