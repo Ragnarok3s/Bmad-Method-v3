@@ -9,13 +9,24 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 - Painéis prontos para squads e stakeholders de negócio.
 - Alertas configuráveis com escalonamento multi-time.
 
+## Entregáveis Sprint 0
+
+| Item | Descrição | Localização |
+|------|-----------|-------------|
+| Dashboard `Saúde de Agentes` | Painel Grafana (ID `bmad-agents-001`) com latência P95, throughput e taxa de erro por ambiente. | `grafana/staging/bmad-agents-001.json` (repositório de manifests) |
+| Dashboard `Operações & Engajamento` | KPIs de onboarding concluído, automações executadas e backlog aberto. | `grafana/staging/bmad-ops-002.json` |
+| Coleta de Logs | Loki + Promtail configurados com labels `env`, `service` e `playbook`. Retenção de 14 dias. | Namespace `observability` em dev/staging |
+| Alertas Críticos | Três regras Grafana Alerting: `PlaybookErrorRate`, `PipelineFailureBurst`, `EngagementDrop`. | `grafana/alerts/staging.yaml` |
+| Runbooks Publicados | Procedimentos documentados para alarmes críticos e incidentes. | `docs/runbooks/` |
+| Integração PagerDuty | Serviço `bmad-platform-staging` com rota primária SRE e fallback Ops. | Configuração registrada em `docs/runbooks/alertas-criticos.md` |
+
 ## Logs
 
 | Camada | Ferramenta | Motivo | Implementação |
 |--------|------------|--------|---------------|
 | Aplicação | OpenTelemetry SDK + Logstash | Compatibilidade com linguagem e formatação estruturada JSON | Embutir exporters OTLP nos serviços, enviar para Logstash via Beats |
 | Pipeline | Elasticsearch | Busca e retenção de 30 dias com indexação flexível | Cluster gerenciado (Elastic Cloud) com ILM para cold storage |
-| Visualização | Kibana | Dashboards customizados e filtros por agente/playbook | Dashboards MVP pré-configurados com índices por ambiente |
+| Visualização | Kibana | Dashboards customizados e filtros por agente/playbook | Dashboards MVP pré-configurados com índices por ambiente (`kibana/dashboards/bmad-logs.ndjson`) |
 
 ## Métricas
 
@@ -23,7 +34,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 |--------|------------|--------|---------------|
 | Coleta | OpenTelemetry Collector | Gateway central para métricas, logs e traces | Implantar via Helm chart no cluster k8s |
 | Armazenamento | Prometheus + Thanos | Alta disponibilidade e retenção > 30 dias | Prometheus federado + Thanos para long-term storage |
-| Visualização | Grafana | Painéis multi-fonte e alertas avançados | Provisionar dashboards: saúde de agentes, execução de playbooks, UX | 
+| Visualização | Grafana | Painéis multi-fonte e alertas avançados | Provisionar dashboards: saúde de agentes, execução de playbooks, UX. Dashboards seed disponíveis no repositório GitOps (`grafana/staging/`). |
 
 ## Alertas
 

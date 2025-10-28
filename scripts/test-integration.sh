@@ -64,6 +64,7 @@ main() {
   fi
 
   echo "[test-integration] Nenhuma suíte de integração detectada. Configure scripts adequados para habilitar validações automatizadas." >&2
+  exit 1
 }
 
 main "$@"

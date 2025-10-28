@@ -38,6 +38,7 @@ main() {
   fi
 
   echo "[test-unit] Nenhuma suíte de testes detectada. Adicione testes unitários apropriados." >&2
+  exit 1
 }
 
 main "$@"
