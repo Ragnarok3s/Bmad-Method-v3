@@ -40,6 +40,32 @@ Estruturar um painel em três secções (Produto, Operações, Tecnologia) com o
 - **Saúde do Sistema**: indicadores de disponibilidade, latência API core e consumo de recursos (CPU/RAM) por serviço.
 - **Qualidade de Código**: cobertura de testes, contagem de falhas nos pipelines e dívida técnica aberta.
 
+### Painéis Alvo para Deploy, Cobertura de Testes e Incidentes
+Criar três painéis interligados (podem coexistir numa mesma workspace de BI) para acelerar diagnósticos e decisões go/no-go durante os sprints iniciais:
+
+1. **Painel de Deploy**
+   - **KPIs principais**: número de deploys por ambiente (staging/produção), lead time médio por deploy, taxa de sucesso/rollback e tempo médio para recuperar falhas.
+   - **Segmentações**: por serviço/microserviço, por squad e por tipo de mudança (feature, hotfix, infraestrutura).
+   - **Widgets recomendados**: funil commit→deploy, heatmap de deploys por dia/hora, tabela de deploys falhados com owner/resolução.
+   - **Fontes de dados**: logs do pipeline CI/CD, GitOps (flux/argo) e incident.io para sinalizar rollback.
+   - **Responsáveis**: Engineering Lead (curadoria dos dados) e Platform Engineer (automação de extração + alerta de anomalias).
+
+2. **Painel de Cobertura de Testes**
+   - **KPIs principais**: cobertura unitária e de integração por repositório, evolução semanal das suites críticas, número de testes instáveis (flaky) e tempo médio de execução por pipeline.
+   - **Segmentações**: por módulo/layer (backend, frontend, mobile), por branch (main vs. release candidates) e por tipo de teste.
+   - **Widgets recomendados**: gráfico de área com tendência de cobertura, matriz de calor de módulos com cobertura < limiar, tabela de suites instáveis com ações corretivas.
+   - **Fontes de dados**: relatórios do SonarQube/Codecov, resultados JUnit exportados pelos pipelines e tickets do backlog QA.
+   - **Responsáveis**: QA Lead (definição de metas e curadoria) e Engineering Chapter Leads (execução de planos de melhoria).
+
+3. **Painel de Incidentes**
+   - **KPIs principais**: incidentes abertos por severidade, MTTA (tempo até acionar) e MTTR (tempo de resolução), compliance com SLAs por sprint e reincidência.
+   - **Segmentações**: por tipo (aplicação, infraestrutura, parceiro), por squad responsável, por canal de reporte (cliente, interno).
+   - **Widgets recomendados**: gráfico de controle de MTTR, timeline com incidentes críticos e milestones, tabela de follow-up com ações pendentes/go-no-go.
+   - **Fontes de dados**: incident.io/Jira Service Management, runbooks versionados e telemetria da stack de observabilidade (logs/APM).
+   - **Responsáveis**: Operations Manager (coordenação da resposta) e Platform Engineer (integrações e qualidade dos dados).
+
+> **Implementação**: iniciar com dashboards em Looker Studio ou Power BI conectados a planilhas governadas; migrar para stack definitiva assim que o data lake estiver operacional. Cada painel deve possuir card de “Estado do Gate” indicando se há impedimento para avançar para a próxima fase.
+
 ## Cadência de Monitorização e Rituais
 - **Daily Stand-up**: revisar indicadores críticos de tecnologia (deploys, incidentes) quando houver alertas.
 - **Reunião semanal de steering**: validar métricas chave, acionar planos de mitigação e atualizar roadmap/pipeline.【F:docs/plano-kickoff-mvp.md†L69-L95】

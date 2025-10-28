@@ -59,6 +59,56 @@ As ações acima devem ser concluídas até ao final da Semana 1 para não bloqu
 - **Go/No-Go Sprint 1**: validar checklist de conformidade e readiness das integrações.
 - **Revisão Pós-Sprint 1**: decidir sobre aceleração de roadmap pós-MVP ou ajustes de capacidade.
 
+## Planeamento das Reuniões Go/No-Go
+| Gate | Janela recomendada | Participantes obrigatórios | Entradas mínimas | Critérios de decisão | Saídas esperadas |
+| --- | --- | --- | --- | --- | --- |
+| Kick-off | Dia 3 da Semana 0 (após workshops de alinhamento) | PO, Engineering Lead, QA Lead, Platform Engineer, Operations Manager, Sponsor Executivo | Ata do kick-off, checklist DoR/DoD, relatório de readiness de staging, lista de ações corretivas abertas | Todos os critérios DoR/DoD publicados e aprovados, ambientes de staging validados, backlog priorizado e owners atribuídos | Ata com decisão (Go, Go com reservas, No-Go), plano de mitigação por ação em aberto, atualização de `docs/revisao-validacao-artefatos.md` |
+| Sprint 0 | Último dia útil da Semana 2 | PO, Engineering Lead, QA Lead, Platform Engineer, Ops Manager, Security Officer | Relatório de progresso das ações corretivas, métricas de deploy e cobertura (dashboards), evidências de observabilidade mínima | 100% das ações corretivas críticas concluídas, métricas dentro dos limiares definidos, pipelines CI/CD e monitorização mínimos operacionais | Decisão formal, plano de ação para desvios menores, autorização para abrir Sprint 1 |
+| Sprint 1 | Último dia útil da Semana 4 | PO, Engineering Lead, QA Lead, Platform Engineer, Ops Manager, Customer Success Lead | Relatório Sprint 1, checklist de integrações (OTA/pagamentos), indicadores de incidentes e SLA | Integrações em staging aprovadas, incidentes críticos encerrados ou mitigados, cobertura de testes ≥ limiares acordados, sem riscos bloqueadores | Decisão formal, plano de estabilização para lançamento piloto, atualização do roadmap pós-MVP |
+
+> **Notas de Governança**: reservar tempo nas agendas com pelo menos duas semanas de antecedência; disponibilizar material de leitura até 24h antes; garantir que owners dos dashboards atualizam dados até 12h antes da reunião.
+
+## Documentação de Resultados e Planos de Ação por Gate
+- Utilizar um modelo único `docs/templates/go-no-go-gate.md` (ver secção seguinte) para registar: contexto do gate, decisão, critérios avaliados, riscos e ações.
+- Registrar decisões e ações no repositório Git imediatamente após a reunião (commit dedicado) e publicar resumo no canal de steering.
+- Bloquear o avanço de fase até que todas as ações classificadas como **bloqueadoras** estejam concluídas e verificadas pelo owner responsável.
+- Atualizar o playbook operacional com lições aprendidas e ajustes de processo antes do próximo gate.
+
+### Template de Registro do Gate
+Criar o ficheiro `docs/templates/go-no-go-gate.md` com o seguinte conteúdo mínimo:
+
+```md
+# Registro Gate Go/No-Go – <Nome do Gate>
+
+## Contexto
+- Data:
+- Participantes:
+- Objetivo do gate:
+
+## Critérios Avaliados
+| Critério | Evidências | Status (OK/Reserva/Bloqueio) | Observações |
+| --- | --- | --- | --- |
+
+## Decisão
+- Resultado: Go / Go com reservas / No-Go
+- Justificativa resumida:
+
+## Riscos e Ações
+| ID | Descrição | Owner | Due date | Tipo (Bloqueador/Seguimento) | Estado |
+| --- | --- | --- | --- | --- | --- |
+
+## Próximos Passos
+- [ ] Ação 1
+- [ ] Ação 2
+- ...
+
+## Anexos/Referências
+- Link para dashboards:
+- Documentos adicionais:
+```
+
+> Armazenar cada registro preenchido em `docs/gates/<gate>-<yyyy-mm-dd>.md` para garantir rastreabilidade histórica e facilitar auditorias futuras.
+
 ## Anexos e Referências
 - Relatório de revisão: `docs/revisao-validacao-artefatos.md`
 - Roadmap: `docs/product-roadmap.md`
