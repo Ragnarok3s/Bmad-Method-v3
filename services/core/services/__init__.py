@@ -454,6 +454,7 @@ class OTASynchronizer:
         if not job:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job não encontrado")
         job.status = OTASyncStatus.IN_FLIGHT
+        job.updated_at = datetime.utcnow()
         self.session.add(job)
         return job
 
@@ -462,6 +463,7 @@ class OTASynchronizer:
         if not job:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job não encontrado")
         job.status = OTASyncStatus.SUCCESS if success else OTASyncStatus.FAILED
+        job.updated_at = datetime.utcnow()
         self.session.add(job)
         return job
 
