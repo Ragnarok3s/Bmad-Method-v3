@@ -74,9 +74,25 @@ def enforce_retention_policy(
 def build_privacy_matrix(path: Path) -> List[PrivacyControl]:
     """Carrega evidências de privacidade para alimentar dashboards e gates."""
 
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(raw, dict):
+        raise ValueError("o arquivo de privacidade deve conter um mapeamento YAML")
+
+    entries = raw.get("controles", [])
+    if not isinstance(entries, list):
+        raise ValueError("o campo 'controles' deve ser uma lista")
+
     controls: List[PrivacyControl] = []
-    for entry in raw.get("controles", []):
+    required_fields = {"modulo", "requisito", "status", "evidencia"}
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("cada controle deve ser um mapeamento YAML")
+
+        missing_fields = required_fields.difference(entry)
+        if missing_fields:
+            missing = ", ".join(sorted(missing_fields))
+            raise ValueError(f"controle incompleto: faltam campos {missing}")
+
         controls.append(
             PrivacyControl(
                 module=entry["modulo"],
