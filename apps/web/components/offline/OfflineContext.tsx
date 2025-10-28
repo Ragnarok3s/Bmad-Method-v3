@@ -19,11 +19,25 @@ interface OfflineContextValue {
 const OfflineContext = createContext<OfflineContextValue | undefined>(undefined);
 
 export function OfflineProvider({ children }: { children: React.ReactNode }) {
-  const [isOffline, setIsOffline] = useState<boolean>(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [isOffline, setIsOffline] = useState<boolean>(false);
   const [lastChangedAt, setLastChangedAt] = useState<number | null>(null);
   const [pendingActions, setPendingActions] = useState<string[]>([]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const syncInitialStatus = () => {
+      const offline = !navigator.onLine;
+      setIsOffline(offline);
+      if (offline) {
+        setLastChangedAt(Date.now());
+      }
+    };
+
+    syncInitialStatus();
+
     const handleOnline = () => {
       setIsOffline(false);
       setLastChangedAt(Date.now());
