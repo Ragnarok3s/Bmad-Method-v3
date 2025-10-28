@@ -24,7 +24,7 @@ Estabelecer o escopo mínimo viável, integrações prioritárias, estratégia d
 | Pagamentos PCI | Dependências com PSP aprovadas, contratos PCI arquivados e cenários de falha mapeados. | Tokenização ativa, reconciliação diária automatizada, relatório PCI anexado ao checklist de conformidade. |
 | Reservas & Relatórios | Regras de negócio validadas com stakeholders, dados sintéticos preparados e métricas-alvo definidas. | Fluxos de check-in/out executados sem falhas críticas, exportações CSV validadas e métricas operacionais atingidas. |
 
-As evidências associadas às validações acima ficam registradas no relatório de revisão (`docs/revisao-validacao-artefatos.md`) e devem ser atualizadas a cada gate relevante.
+As evidências associadas às validações acima ficam registradas no relatório de revisão (`docs/revisao-validacao-artefatos.md`) e devem ser atualizadas a cada gate relevante. A versão consolidada dos critérios e checklist está publicada em `docs/dor-dod-package.md`, que passa a ser a referência oficial para auditorias de readiness.
 
 ## Integrações Prioritárias
 
