@@ -1,0 +1,4 @@
+guest_id,full_name,email,document,tax_id,created_at,booking_source
+GUEST-2101,Camila Synthetic,camila.synthetic@example.test,***2101,***9911,2024-05-10,web
+GUEST-2102,Rafael Privacy,rafael.privacy@example.test,***3321,***8820,2024-05-12,call-center
+GUEST-2103,Larissa Example,larissa.example@example.test,***4180,***7735,2024-06-03,mobile

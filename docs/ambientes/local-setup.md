@@ -37,3 +37,9 @@ Este documento descreve o fluxo validado para preparar o ambiente local de desen
 - Execute `./scripts/infra/provision-dev.sh docker` para subir os serviços locais definidos em `design/docker-compose.dev.yml` (frontend, backend, PostgreSQL e Redis).
 - O script utiliza `docker compose config` quando chamado com o perfil `docker/k8s`, permitindo validar o arquivo sem iniciar containers.
 - Para encerrar os serviços, utilize `docker compose -f design/docker-compose.dev.yml down` após a execução inicial.
+
+## Seed de Dados Sintéticos (Ambiente Dev)
+
+- Valide os datasets com `./scripts/infra/seed-dev-data.sh --mode validate` sempre que atualizar arquivos em `tests/data/seed/`.
+- Aplique o seed com `./scripts/infra/seed-dev-data.sh --mode apply` após o provisionamento; as métricas ficarão em `artifacts/seed/dev_seed.prom` para posterior upload no CI/CD.
+- Consulte o runbook `docs/runbooks/seed-data-jobs.md` para troubleshooting, owners e integrações com Grafana/PagerDuty.

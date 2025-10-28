@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKUP_DIR="${REPO_ROOT}/artifacts/backups"
+SEED_MODE="${SEED_MODE:-apply}"
 
 mkdir -p "$BACKUP_DIR"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
@@ -21,7 +22,7 @@ else
 fi
 
 if [ -f "$REPO_ROOT/scripts/infra/seed-staging-data.sh" ]; then
-  "$REPO_ROOT/scripts/infra/seed-staging-data.sh"
+  "$REPO_ROOT/scripts/infra/seed-staging-data.sh" --mode "$SEED_MODE"
 else
   echo "[reset-staging] Script seed-staging-data.sh ausente. Utilize fixtures documentadas em docs/playbook-operacional.md." >&2
 fi

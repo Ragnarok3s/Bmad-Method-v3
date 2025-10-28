@@ -25,6 +25,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 - Dashboard `QA-Quality` versionado em `grafana/staging/qa-quality-dashboard.json`, alinhado às métricas definidas em `docs/testing-strategy.md`.
 - Regras de alerta para cerimônias de QA configuradas em `grafana/alerts/qa-observability.yaml`, notificando o canal `#qa-reviews`.
 - Runbook específico para revisão de QA/observabilidade disponível em `docs/runbooks/qa-observability-review.md`.
+- Métricas de seed (`seed_job_success` e `seed_job_last_run_timestamp`) exportadas por `scripts/infra/seed-*-data.sh` e alertas dedicados em `grafana/alerts/seed-jobs.yaml`.
 
 ## Logs
 
@@ -49,6 +50,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 | Técnicos | Grafana Alerting + PagerDuty | Erros 5xx > 2% por 5 min; jobs com falha > 3x | PagerDuty rota para SRE; fallback Slack #incident |
 | Produto | Grafana + Slack | Queda > 20% no engajamento diário | Notificação no canal #product-ops e abertura de tarefa no Jira |
 | Segurança | Elastic Watcher | Tentativas de acesso suspeitas | Integração com SIEM corporativo |
+| Operacional | Grafana Alerting + Prometheus | `seed_job_success==0` por 5 min ou `seed_job_last_run_timestamp` > 6h | PagerDuty `bmad-platform-staging` + canal `#platform-ops` |
 
 ## Traços Distribuídos
 
