@@ -64,6 +64,14 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 4. Estabelecer processo de _post-incident review_ com métricas de MTTA/MTTR, incluindo verificação de cobertura de runbooks e atualização de ações corretivas em até 5 dias úteis.
 5. Consolidar resultados de revisões em relatório compartilhado no repositório GitOps e reportar riscos no steering committee.
 6. Atualizar o quadro de ações corretivas (`docs/revisao-validacao-artefatos.md`) ao final de cada revisão semanal da Semana 1 do kick-off.
+7. Formalizar revisão de custos trimestral com FinOps (liderada por Marina Lopes) e publicar resumo em `#platform-ops`.
+
+### Cadência de Revisão de Alertas e Custos
+
+- **Alertas Críticos (SRE/Plataforma)**: revisão quinzenal conduzida por Bruno Carvalho com apoio de Inês Duarte; métricas exportadas automaticamente do Grafana (`dashboard Saúde de Agentes`).
+- **Alertas de Produto**: inspeção mensal liderada por Luís Ferreira para confirmar cobertura de engajamento, com ata compartilhada no Notion do PMO.
+- **FinOps de Observabilidade**: checkpoint mensal conduzido por Marina Lopes (FinOps Analyst) com Bruno Carvalho; revisão trimestral adiciona análise de tendências de custo e recomendações de otimização.
+- **Auditoria de Runbooks**: confirmação bimestral de que runbooks possuem owners ativos e registros de execução pós-incidente arquivados no diretório `docs/runbooks/`.
 
 ## Roadmap Futuro
 

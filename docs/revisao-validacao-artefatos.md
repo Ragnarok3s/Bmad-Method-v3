@@ -21,17 +21,22 @@
 | Artefatos de UX (`design/hospitality-ux/*`) | Laura Pinto (Design Lead) | 2024-05-20 | Checklist de acessibilidade em validação conjunta com Engineering Lead e QA. |
 
 ## Calendário de Revisão Trimestral 2024-2025
-| Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída |
-| --- | --- | --- | --- | --- |
-| Q3 2024 | 2024-07-15 | Roadmap, Plano MVP, Estratégia de Testes, Artefatos de UX | Ana Ribeiro, Miguel Costa, Carlos Mendes, Laura Pinto | Plano de compliance aprovado e checklist de acessibilidade validado em staging. |
-| Q4 2024 | 2024-10-14 | Guia de Engenharia, Observability Stack, Playbook Operacional | Joana Silva, Bruno Carvalho, Luís Ferreira | Templates de PR/CODEOWNERS ativos, runbooks com owners definidos e métricas de suporte atualizadas. |
-| Q1 2025 | 2025-01-20 | Revisão integral de todos os artefatos estratégicos | PMO + Owners de cada artefato | KPIs pós-MVP atualizados, riscos mitigados ou com plano aprovado pelo steering committee. |
+| Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída | Canal de Publicação |
+| --- | --- | --- | --- | --- | --- |
+| Q3 2024 | 2024-07-15 | Roadmap, Plano MVP, Estratégia de Testes, Artefatos de UX | Ana Ribeiro, Miguel Costa, Carlos Mendes, Laura Pinto | Plano de compliance aprovado e checklist de acessibilidade validado em staging. | Ata publicada no Notion PMO + resumo em `#steering-bmad`. |
+| Q4 2024 | 2024-10-14 | Guia de Engenharia, Observability Stack, Playbook Operacional | Joana Silva, Bruno Carvalho, Luís Ferreira | Templates de PR/CODEOWNERS ativos, runbooks com owners definidos e métricas de suporte atualizadas. | Atualização no repositório (`docs/`) e broadcast no canal `#platform-ops`. |
+| Q1 2025 | 2025-01-20 | Revisão integral de todos os artefatos estratégicos | PMO + Owners de cada artefato | KPIs pós-MVP atualizados, riscos mitigados ou com plano aprovado pelo steering committee. | Relatório completo anexado ao steering committee trimestral. |
+| Q2 2025 | 2025-04-14 | Revalidação de compliance (LGPD/GDPR/PCI) e planos de continuidade | Privacy Officer, Security Champion, QA Lead | Evidências de auditoria arquivadas e ações corretivas com owners nomeados. | Checklist assinado anexado à pipeline de release e comunicado em `#compliance`. |
+
+**Publicação e Transparência**
+- O calendário é republicado após cada revisão trimestral, com links atualizados para atas e evidências em `docs/evidencias/`.
+- Mudanças emergenciais devem ser registradas como RFC, aprovadas pelo steering committee e referenciadas no quadro de ações corretivas abaixo.
 
 ## Quadro de Acompanhamento das Ações Corretivas
 | Ação Corretiva | Responsável | Data Limite | Status | Próximo Checkpoint |
 | --- | --- | --- | --- | --- |
 | Nomear owners e formalizar aprovações dos artefatos estratégicos | PMO (Ana Ribeiro & Miguel Costa) | 2024-05-20 | **Concluída** | Validar aderência durante revisão de 15/07. |
-| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | **Concluída (Semana 2)** | Planos atualizados em `docs/property-mvp-plan.md` e `docs/testing-strategy.md` com matriz de controles e evidências ligadas ao QA. Ata de aprovação arquivada na pasta de governance. |
+| Integrar requisitos de privacidade e checklist regulatório no MVP e estratégia de testes | Miguel Costa & Carlos Mendes | 2024-07-12 | **Concluída (Semana 2)** | Planos atualizados em `docs/property-mvp-plan.md` e `docs/testing-strategy.md` com matriz de controles e checklist anexado ao pipeline (`artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`). |
 | Automatizar geração de changelog no handbook e pipeline de release | Joana Silva & Bruno Carvalho | 2024-07-26 | **Concluída (Semana 2)** | Script `./scripts/generate-changelog.sh` documentado no handbook e integrado ao fluxo de release com instruções para pipeline GitOps. |
 | Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |

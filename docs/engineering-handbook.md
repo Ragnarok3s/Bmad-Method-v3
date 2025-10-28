@@ -28,6 +28,14 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 3. **Testes de Integração (opcional)**: reutiliza `./scripts/test-integration.sh`, priorizando `npm run test:integration` ou `pytest -m integration` quando configurados.
 4. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
 
+### Templates e Scripts Padronizados
+
+- **Template de Pull Request**: localizado em `.github/pull_request_template.md`, inclui checklist de testes (unitários, integração, E2E) e confirmação de checklist regulatório.
+- **CODEOWNERS**: arquivo `.github/CODEOWNERS` distribui responsabilidade de revisão por domínio (produto, plataforma, QA, compliance).
+- **Scripts de Teste**: `./scripts/test-unit.sh` e `./scripts/test-integration.sh` detectam automaticamente projetos Node.js/Python e falham em caso de ausência de suites; qualquer novo módulo deve expor comando padrão (`npm test`, `pytest -m integration`).
+- **Script de Changelog**: `./scripts/generate-changelog.sh` gera changelog estruturado; ver seção abaixo para integração na pipeline.
+- **Checklist de Release**: armazenado em `docs/playbook-operacional.md` (seção Operações) e referenciado nas pipelines `release`.
+
 ### Deploy Automatizado
 
 - Configurar pipeline separado `deploy.yml` (futuro) disparado em tags `v*`.
@@ -43,7 +51,7 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
   2. Reverter commit no repositório GitOps, aguardar sincronização do ArgoCD e validar métricas críticas (latência, erros 5xx) em Grafana.
   3. Atualizar runbook correspondente com causa raiz e follow-up no steering committee.
 - **Backups de Estado**: snapshots de bases de dados gerenciadas antes de cada deploy de release, com retenção mínima de 7 dias.
-- **Auditoria**: registrar ID da release e hash do commit na ata do steering committee pós-deploy para rastreabilidade.
+- **Auditoria**: registrar ID da release e hash do commit na ata do steering committee pós-deploy para rastreabilidade, anexando checklist de conformidade (`artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e link do changelog gerado.
 
 ## Convenções de Commit
 

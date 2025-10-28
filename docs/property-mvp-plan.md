@@ -55,6 +55,15 @@ As evidências associadas às validações acima ficam registradas no relatório
 - **Avaliações de Impacto**: executar DPIA inicial antes do go-live e reavaliar a cada mudança de escopo, registrando riscos residuais e planos de mitigação.
 - **Conformidade PCI-DSS**: garantir segmentação da zona de pagamentos, com testes de intrusão semestrais e revisão de contratos com PSPs.
 
+### Checklist Regulatório do MVP
+
+| Item | Descrição | Responsável | Evidência |
+|------|-----------|-------------|-----------|
+| Mapeamento de dados pessoais | Inventário de atributos por módulo com base legal e tempo de retenção. | Privacy Officer + Product Owner | Matriz publicada em `artifacts/compliance/matriz-dados-lgpd-v1.0.xlsx`. |
+| DPIA inicial | Avaliação de impacto com mitigação dos riscos altos identificados. | Privacy Officer + Engineering Lead | Relatório arquivado em `docs/evidencias/dpia-inicial-2024-05.md`. |
+| Segmentação PCI | Documento de arquitetura PCI e inventário de ativos críticos. | Security Champion + Platform Engineer | Diagrama assinado na ata de segurança da Semana 3. |
+| Checklist LGPD/GDPR/PCI por release | Lista de verificação a ser marcada antes de cada deploy. | QA Lead + Privacy Officer | Checklist integrado à pipeline (`artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`). |
+
 ### Plano de Compliance Regulatório Encerrado
 
 | Entregável | Responsável | Prazo | Status | Observações |
