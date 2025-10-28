@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: '/observabilidade', label: 'Observabilidade' },
   { href: '/governanca', label: 'Governança' },
   { href: '/analytics', label: 'Analytics' },
-  { href: '/suporte', label: 'Base de Conhecimento' },
+  { href: '/support/knowledge-base', label: 'Base de Conhecimento' },
   { href: '/mobile/housekeeping', label: 'App Housekeeping' },
   { href: '/mobile/gestor', label: 'App Gestor' }
 ] as const;

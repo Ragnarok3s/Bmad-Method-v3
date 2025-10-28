@@ -17,6 +17,10 @@ _reservation_status_updates = None
 _housekeeping_scheduled = None
 _housekeeping_transitions = None
 _ota_enqueued = None
+_knowledge_base_views = None
+_knowledge_base_completions = None
+_knowledge_base_searches = None
+_knowledge_base_snippets = None
 
 
 def _ensure_counters() -> None:
@@ -55,6 +59,22 @@ def _ensure_counters() -> None:
         _ota_enqueued = meter.create_counter(
             "bmad_core_ota_sync_enqueued_total",
             description="Jobs enfileirados para sincronização OTA",
+        )
+        _knowledge_base_views = meter.create_counter(
+            "bmad_core_knowledge_base_article_view_total",
+            description="Visualizações de artigos da base de conhecimento",
+        )
+        _knowledge_base_completions = meter.create_counter(
+            "bmad_core_knowledge_base_article_completion_total",
+            description="Conclusões declaradas de artigos da base de conhecimento",
+        )
+        _knowledge_base_searches = meter.create_counter(
+            "bmad_core_knowledge_base_search_total",
+            description="Pesquisas realizadas na base de conhecimento",
+        )
+        _knowledge_base_snippets = meter.create_counter(
+            "bmad_core_knowledge_base_snippet_usage_total",
+            description="Snippets aplicados a partir da base de conhecimento",
         )
 
         _COUNTERS_INITIALIZED = True
@@ -179,6 +199,50 @@ def record_dashboard_sla(total: int, breached: int) -> None:
             "breached": str(breached),
         },
     )
+
+
+def record_knowledge_base_article_view(article_id: str, category_id: str) -> None:
+    _ensure_counters()
+    attributes = _stringify({"article_id": article_id, "category_id": category_id})
+    _knowledge_base_views.add(1, attributes)
+    _track_metric("bmad_core_knowledge_base_article_view_total", attributes)
+
+
+def record_knowledge_base_article_completion(
+    article_id: str,
+    category_id: str,
+    duration_seconds: float | None = None,
+) -> None:
+    _ensure_counters()
+    attributes = {"article_id": article_id, "category_id": category_id}
+    if duration_seconds is not None:
+        attributes["duration_seconds"] = f"{duration_seconds:.1f}"
+    stringified = _stringify(attributes)
+    _knowledge_base_completions.add(1, stringified)
+    _track_metric("bmad_core_knowledge_base_article_completion_total", stringified)
+
+
+def record_knowledge_base_search(query: str, hits: int, category_id: str | None) -> None:
+    _ensure_counters()
+    normalized_query = query.strip().lower()
+    if len(normalized_query) > 80:
+        normalized_query = normalized_query[:80]
+    attributes = _stringify(
+        {
+            "query": normalized_query or "*",
+            "hits": hits,
+            "category_id": category_id or "all",
+        }
+    )
+    _knowledge_base_searches.add(1, attributes)
+    _track_metric("bmad_core_knowledge_base_search_total", attributes)
+
+
+def record_knowledge_base_snippet(article_id: str, surface: str) -> None:
+    _ensure_counters()
+    attributes = _stringify({"article_id": article_id, "surface": surface})
+    _knowledge_base_snippets.add(1, attributes)
+    _track_metric("bmad_core_knowledge_base_snippet_usage_total", attributes)
 
 
 def record_dashboard_kpi(name: str, value: float, unit: str) -> None:

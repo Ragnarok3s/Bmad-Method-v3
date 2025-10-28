@@ -57,7 +57,8 @@ const defaultValues: OnboardingFormValues = {
   readiness: {
     sandboxValidated: true,
     mfaConfigured: true,
-    securityNotes: ''
+    securityNotes: '',
+    supportTourCompleted: false
   }
 };
 

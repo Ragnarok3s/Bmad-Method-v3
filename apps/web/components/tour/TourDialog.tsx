@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { useGuidedTour } from './TourContext';
 
 export function TourDialog() {
-  const { isOpen, close, next, previous, steps, currentIndex } = useGuidedTour();
+  const { isOpen, close, next, previous, steps, currentIndex, activeStep } = useGuidedTour();
   const titleId = useId();
   const descriptionId = useId();
-  const activeStep = steps[currentIndex];
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const primaryButtonRef = useRef<HTMLButtonElement | null>(null);
+  const liveRegionRef = useRef<HTMLParagraphElement | null>(null);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -16,36 +18,95 @@ export function TourDialog() {
         event.preventDefault();
         close();
       }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        next();
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        previous();
+      }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [close, isOpen]);
+  }, [close, isOpen, next, previous]);
+
+  useEffect(() => {
+    if (isOpen && primaryButtonRef.current) {
+      primaryButtonRef.current.focus();
+    }
+  }, [isOpen, currentIndex]);
+
+  useEffect(() => {
+    if (!isOpen || !activeStep?.target) {
+      return;
+    }
+    const element = document.querySelector<HTMLElement>(activeStep.target);
+    if (!element) {
+      return;
+    }
+    const previousAriaDescribedBy = element.getAttribute('aria-describedby');
+    const nextDescription = previousAriaDescribedBy
+      ? `${previousAriaDescribedBy} ${descriptionId}`.trim()
+      : descriptionId;
+    element.setAttribute('data-tour-highlighted', 'true');
+    element.setAttribute('aria-describedby', nextDescription);
+    return () => {
+      element.removeAttribute('data-tour-highlighted');
+      if (previousAriaDescribedBy) {
+        element.setAttribute('aria-describedby', previousAriaDescribedBy);
+      } else {
+        element.removeAttribute('aria-describedby');
+      }
+    };
+  }, [activeStep, descriptionId, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !dialogRef.current) {
+      return;
+    }
+    dialogRef.current.scrollIntoView({ block: 'center' });
+  }, [isOpen, currentIndex]);
 
   if (!isOpen || !activeStep) {
     return null;
   }
 
+  const isLastStep = currentIndex >= steps.length - 1;
+  const handleFinish = () => close({ markCompleted: true });
+
   return (
-    <div className="tour-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId}>
+    <div
+      ref={dialogRef}
+      className="tour-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
       <div className="tour-content">
-        <p className="tour-step-counter">Passo {currentIndex + 1} de {steps.length}</p>
+        <p className="tour-step-counter">
+          Passo {currentIndex + 1} de {steps.length}
+        </p>
         <h2 id={titleId}>{activeStep.title}</h2>
-        <p id={descriptionId}>{activeStep.description}</p>
-        <div className="tour-actions">
+        <p id={descriptionId} ref={liveRegionRef} aria-live="polite">
+          {activeStep.description}
+        </p>
+        <div className="tour-actions" role="group" aria-label="Navegação do tour guiado">
           <button type="button" onClick={previous} disabled={currentIndex === 0}>
             Anterior
           </button>
-          {currentIndex < steps.length - 1 ? (
-            <button type="button" onClick={next}>
+          {!isLastStep ? (
+            <button type="button" onClick={next} ref={primaryButtonRef}>
               Próximo
             </button>
           ) : (
-            <button type="button" onClick={close}>
+            <button type="button" onClick={handleFinish} ref={primaryButtonRef}>
               Concluir tour
             </button>
           )}
         </div>
-        <button className="tour-close" type="button" onClick={close} aria-label="Fechar tour guiado">
+        <button className="tour-close" type="button" onClick={() => close()} aria-label="Fechar tour guiado">
           ×
         </button>
       </div>
@@ -63,7 +124,7 @@ export function TourDialog() {
           position: relative;
           background: #fff;
           border-radius: var(--radius-md);
-          max-width: 520px;
+          max-width: 540px;
           width: 100%;
           padding: var(--space-5);
           box-shadow: var(--shadow-card);
@@ -86,8 +147,6 @@ export function TourDialog() {
           border: none;
           cursor: pointer;
           font-weight: 600;
-        }
-        .tour-actions button:first-of-type {
           background: transparent;
           color: var(--color-deep-blue);
           border: 1px solid var(--color-deep-blue);
@@ -109,6 +168,12 @@ export function TourDialog() {
           font-size: 1.5rem;
           cursor: pointer;
           color: var(--color-neutral-2);
+        }
+        :global([data-tour-highlighted='true']) {
+          outline: 3px solid var(--color-soft-aqua);
+          outline-offset: 4px;
+          border-radius: var(--radius-sm);
+          transition: outline 0.2s ease;
         }
         @media (max-width: 768px) {
           .tour-overlay {

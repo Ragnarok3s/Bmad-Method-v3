@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from uuid import uuid4
 
@@ -198,6 +198,64 @@ class PermissionUpdate(BaseModel):
     label: str | None = None
     description: str | None = None
     category: str | None = None
+
+
+class KnowledgeBaseSnippetRead(BaseModel):
+    id: str
+    label: str
+    content: str
+    surface: str
+    recommended_playbook: str | None = None
+
+
+class KnowledgeBaseArticleSummary(BaseModel):
+    id: str
+    slug: str
+    title: str
+    excerpt: str
+    category_id: str
+    category_name: str
+    reading_time_minutes: int
+    tags: list[str]
+    updated_at: datetime
+    stage: str
+    snippet_preview: str | None = None
+
+
+class KnowledgeBaseArticleRead(KnowledgeBaseArticleSummary):
+    content: str
+    action_snippets: list[KnowledgeBaseSnippetRead]
+    related_playbooks: list[str]
+    persona: str | None = None
+    use_case: str | None = None
+
+
+class KnowledgeBaseCategoryRead(BaseModel):
+    id: str
+    name: str
+    description: str
+    total_articles: int
+    top_tags: list[str] = Field(default_factory=list)
+
+
+class KnowledgeBaseQueryInfo(BaseModel):
+    term: str | None = None
+    total_hits: int = Field(ge=0)
+
+
+class KnowledgeBaseCatalogRead(BaseModel):
+    categories: list[KnowledgeBaseCategoryRead]
+    articles: list[KnowledgeBaseArticleSummary]
+    query: KnowledgeBaseQueryInfo
+
+
+class KnowledgeBaseTelemetryEvent(BaseModel):
+    event: Literal['search', 'article_view', 'article_complete', 'snippet_copy']
+    slug: str | None = None
+    query: str | None = None
+    hits: int | None = Field(default=None, ge=0)
+    surface: str | None = None
+    duration_seconds: float | None = Field(default=None, ge=0.0)
 
 
 class PermissionRead(PermissionBase):
