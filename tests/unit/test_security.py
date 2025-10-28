@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 import pytest
 
 from services.core.domain.models import Agent, AgentRole, Base
-from services.core.security import SecurityService, assert_permission, get_effective_permissions
+from services.core.security import (
+    SecurityService,
+    assert_permission,
+    assert_role,
+    get_effective_permissions,
+)
 from services.core.domain.schemas import PermissionCreate, RolePolicyCreate
 
 
@@ -114,3 +119,30 @@ def test_custom_policy_grants_permission() -> None:
     # Sem contexto da propriedade, permissão não deve aparecer
     effective_global = get_effective_permissions(session, manager)
     assert 'reservations.override' not in effective_global
+
+
+def test_property_scoped_role_inheritance_reaches_assertions() -> None:
+    session = build_session()
+    service = SecurityService(session)
+    service.ensure_bootstrap()
+
+    admin = create_agent(session, AgentRole.ADMIN, 'delegator@example.com')
+    manager = create_agent(session, AgentRole.PROPERTY_MANAGER, 'regional@example.com')
+
+    service.create_role(
+        RolePolicyCreate(
+            role=AgentRole.PROPERTY_MANAGER,
+            name='Gestor Regional',
+            persona='operacional',
+            property_id=21,
+            permissions=[],
+            inherits=[AgentRole.ADMIN],
+            is_default=False,
+        ),
+        actor=admin,
+    )
+
+    with pytest.raises(HTTPException):
+        assert_role(manager, {AgentRole.ADMIN}, session=session)
+
+    assert_role(manager, {AgentRole.ADMIN}, session=session, property_id=21)
