@@ -4,9 +4,10 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
+from math import ceil
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
@@ -25,7 +26,9 @@ from .domain.models import (
 )
 from .domain.schemas import (
     AgentCreate,
+    HousekeepingTaskCollection,
     HousekeepingTaskCreate,
+    PaginationMeta,
     PropertyCreate,
     ReservationCreate,
     ReservationUpdateStatus,
@@ -263,10 +266,56 @@ class HousekeepingService:
         self.session.flush()
         return task
 
-    def list_for_property(self, property_id: int) -> list[HousekeepingTask]:
-        query = select(HousekeepingTask).where(HousekeepingTask.property_id == property_id).order_by(HousekeepingTask.scheduled_date)
-        result = self.session.execute(query)
-        return list(result.scalars())
+    def list_for_property(
+        self,
+        property_id: int,
+        *,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        status_filter: HousekeepingStatus | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> HousekeepingTaskCollection:
+        property_obj = self.session.get(Property, property_id)
+        if not property_obj:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propriedade não encontrada")
+
+        page = max(page, 1)
+        page_size = max(1, min(page_size, 100))
+
+        filters = [HousekeepingTask.property_id == property_id]
+        if start_date:
+            filters.append(HousekeepingTask.scheduled_date >= start_date)
+        if end_date:
+            filters.append(HousekeepingTask.scheduled_date <= end_date)
+        if status_filter:
+            filters.append(HousekeepingTask.status == status_filter)
+
+        base_query = select(HousekeepingTask).where(*filters)
+        count_subquery = select(HousekeepingTask.id).where(*filters).subquery()
+        total = self.session.execute(select(func.count()).select_from(count_subquery)).scalar_one()
+
+        total_pages = ceil(total / page_size) if total else 0
+        if total_pages and page > total_pages:
+            page = total_pages
+
+        offset = (page - 1) * page_size if total else 0
+        items_query = (
+            base_query.order_by(HousekeepingTask.scheduled_date, HousekeepingTask.id)
+            .offset(offset)
+            .limit(page_size)
+        )
+        items = list(self.session.execute(items_query).scalars())
+
+        return HousekeepingTaskCollection(
+            items=items,
+            pagination=PaginationMeta(
+                page=page,
+                page_size=page_size,
+                total=total,
+                total_pages=total_pages,
+            ),
+        )
 
 
 class OTASynchronizer:

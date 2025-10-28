@@ -1,9 +1,10 @@
 """Endpoints REST que cobrem os módulos do MVP."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Iterable, TypeVar
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,7 @@ from ..domain.models import AgentRole, HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
     AgentRead,
+    HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
     HousekeepingStatusUpdate,
@@ -141,10 +143,28 @@ async def update_housekeeping_task(
     return service.update_status(task_id, payload.status, actor)
 
 
-@router.get("/properties/{property_id}/housekeeping", response_model=list[HousekeepingTaskRead])
-def list_housekeeping(property_id: int, session: Session = Depends(get_session)):
+@router.get(
+    "/properties/{property_id}/housekeeping",
+    response_model=HousekeepingTaskCollection,
+)
+def list_housekeeping(
+    property_id: int,
+    session: Session = Depends(get_session),
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    status: HousekeepingStatus | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+):
     service = HousekeepingService(session)
-    return service.list_for_property(property_id)
+    return service.list_for_property(
+        property_id,
+        start_date=start_date,
+        end_date=end_date,
+        status_filter=status,
+        page=page,
+        page_size=page_size,
+    )
 
 
 def create_app(settings: CoreSettings | None = None, database: Database | None = None) -> FastAPI:
