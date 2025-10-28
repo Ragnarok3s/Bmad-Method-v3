@@ -21,6 +21,8 @@
 | Artefatos de UX (`design/hospitality-ux/*`) | Laura Pinto (Design Lead) | 2024-05-20 | Checklist de acessibilidade em validação conjunta com Engineering Lead e QA. |
 
 > **Atualização 2024-06-03**: Owners reconfirmados durante o alinhamento do checkpoint Q3, mantendo responsabilidades e datas originais.
+>
+> **Atualização 2024-07-08**: Revisão extraordinária confirmou owners, status e evidências; novos gaps adicionados ao quadro de acompanhamento para monitorar métricas leading e automação de changelog.
 
 ## Calendário de Revisão Trimestral 2024-2025
 | Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída | Canal de Publicação |
@@ -46,6 +48,10 @@
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
 | Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | **Concluída (Semana 1)** | Revisar evidências na cadência de steering de 01/07. |
 | Formalizar SLAs com parceiros operacionais e arquivar evidências | Luís Ferreira & Bruno Carvalho | 2024-06-03 | **Concluída (Checkpoint Q3)** | Registro e anexos em `docs/evidencias/sla-operacionais-2024-06.md`; validação de cumprimento em 15/07. |
+| Atualizar addendos de SLA pós-revisão de julho e publicar evidências | Luís Ferreira & Bruno Carvalho | 2024-07-08 | **Concluída (Checkpoint Q3)** | Addendos arquivados em `docs/evidencias/sla-operacionais-2024-07.md` e pasta `artefatos/sla/2024-07/`. |
+| Definir indicadores leading para integrações externas e métricas avançadas | Ana Ribeiro & Bruno Carvalho | 2024-07-22 | **Em andamento** | Revisão parcial agendada para o steering de 15/07; consolidar métricas no dashboard OTA. |
+| Validar automação de changelog nas pipelines de release com feedback das squads | Joana Silva & Bruno Carvalho | 2024-07-19 | **Em andamento** | Teste piloto previsto para pipeline de 12/07; recolher feedback na retro da Sprint 0. |
+| Garantir versionamento contínuo das evidências de compliance e ações corretivas no repositório | PMO (Ana Ribeiro & Miguel Costa) | 2024-07-15 | **Em andamento** | Checklist de publicação atualizado; confirmar anexos no gate Kick-off. |
 
 ## Escopo da Revisão
 Foram avaliados os seguintes artefatos entregues:
@@ -66,7 +72,7 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 | Definition of Ready / Definition of Done publicados | Ata de kick-off anexada, seção `DoR-DoD` em `docs/property-mvp-plan.md` e pacote consolidado em `docs/dor-dod-package.md` com checklist oficial. | 2024-05-27 | Product Owner + QA Lead |
 | Ambiente de staging pronto para Sprint 0 | Checklist de readiness de staging com resultado **Aprovado** armazenado na pasta `docs/evidencias/staging-readiness-2024-05.md`, incluindo smoke tests executados. | 2024-05-27 | Platform Engineer + Engineering Lead |
 | Checklist de conformidade LGPD/GDPR/PCI | Versão 1.0 do checklist assinada no pipeline (`artefatos/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e mencionada em `docs/testing-strategy.md`. | 2024-05-27 | Privacy Officer + Security Champion |
-| SLAs operacionais com parceiros críticos | Registro de reunião e anexos de assinatura em `docs/evidencias/sla-operacionais-2024-06.md`, com PDFs assinados em `artefatos/sla/2024-06/`. | 2024-06-03 | Operations Manager + Platform Engineer |
+| SLAs operacionais com parceiros críticos | Registros de 2024-06 em `docs/evidencias/sla-operacionais-2024-06.md` e addendos de 2024-07 em `docs/evidencias/sla-operacionais-2024-07.md`, com PDFs assinados em `artefatos/sla/2024-06/` e `artefatos/sla/2024-07/`. | 2024-07-08 | Operations Manager + Platform Engineer |
 
 ## Avaliações por Artefato
 

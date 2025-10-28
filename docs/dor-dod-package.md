@@ -23,7 +23,9 @@ Centralizar os critérios oficiais de pronto utilizados pelo time de produto/eng
 - [x] Link referenciado em `docs/plano-kickoff-mvp.md` e `docs/revisao-validacao-artefatos.md`.
 - [x] Evidências anexadas na pasta `docs/evidencias/` e nos relatórios de revisão.
 - [x] Owners confirmados: Ana Ribeiro (PO) e Carlos Mendes (QA Lead).
-- [ ] Próxima revisão agendada para Q3 2024 (checkpoint 2024-07-15).
+- [x] Próxima revisão agendada para Q3 2024 (checkpoint 2024-07-15) com convite enviado ao steering committee.
+
+> **Assinatura 2024-07-08**: Ana Ribeiro (PO) e Carlos Mendes (QA Lead) confirmaram alinhamento deste pacote com o quadro de critérios publicado em `docs/property-mvp-plan.md`, mantendo-o como fonte oficial para auditorias DoR/DoD.
 
 ## Histórico de Atualizações
 | Data | Responsáveis | Mudanças |

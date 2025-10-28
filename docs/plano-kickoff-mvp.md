@@ -68,6 +68,18 @@ As ações acima devem ser concluídas até ao final da Semana 1 para não bloqu
 
 > **Notas de Governança**: reservar tempo nas agendas com pelo menos duas semanas de antecedência; disponibilizar material de leitura até 24h antes; garantir que owners dos dashboards atualizam dados até 12h antes da reunião.
 
+### Checklist Go/No-Go Kick-off – Atualização 2024-07-08
+
+| Critério | Evidência | Status |
+| --- | --- | --- |
+| DoR/DoD consolidados e assinados pelo PO/QA | `docs/dor-dod-package.md` + `docs/property-mvp-plan.md` (atualização 2024-07-08) | OK |
+| Readiness de staging e smoke tests | `docs/evidencias/staging-readiness-2024-05.md` | OK |
+| SLAs críticos assinados e addendos de capacidade publicados | `docs/evidencias/sla-operacionais-2024-06.md` + `docs/evidencias/sla-operacionais-2024-07.md` | OK |
+| Indicadores leading para integrações externas definidos | Quadro de ações corretivas em `docs/revisao-validacao-artefatos.md` | Reserva |
+| Automação de changelog validada com squads | Quadro de ações corretivas em `docs/revisao-validacao-artefatos.md` | Reserva |
+
+> **Comunicação 2024-07-08**: Resultado "Go com reservas" e próximos passos foram publicados no canal `#steering-bmad`, destacando o acompanhamento dos indicadores leading e o teste piloto da automação de changelog.
+
 ## Documentação de Resultados e Planos de Ação por Gate
 - Utilizar um modelo único `docs/templates/go-no-go-gate.md` (ver secção seguinte) para registar: contexto do gate, decisão, critérios avaliados, riscos e ações.
 - Registrar decisões e ações no repositório Git imediatamente após a reunião (commit dedicado) e publicar resumo no canal de steering.
