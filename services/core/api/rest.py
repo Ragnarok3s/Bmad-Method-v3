@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
-from ..config import CoreSettings
+from ..config import CoreSettings, PaymentGatewaySettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
 from ..domain.models import Agent, HousekeepingStatus
@@ -56,6 +56,7 @@ from ..domain.schemas import (
     WorkspaceRead,
 )
 from ..observability import get_observability_status, instrument_application
+from ..payments import PaymentGatewayNotConfiguredError, PaymentService
 from ..services import (
     AgentService,
     HousekeepingService,
@@ -130,6 +131,34 @@ def get_session(db: Database = Depends(get_database)) -> Iterable[Session]:
 async def _parse_model(request: Request, model_type: type[ModelT]) -> ModelT:
     data = await request.json()
     return model_type.model_validate(data)
+
+
+def _get_payment_settings(request: Request) -> PaymentGatewaySettings | None:
+    return getattr(request.app.state, "payment_settings", None)
+
+
+def _build_payment_service(request: Request, session: Session) -> PaymentService | None:
+    payment_settings = _get_payment_settings(request)
+    if not payment_settings:
+        return None
+    try:
+        return PaymentService(session, payment_settings)
+    except PaymentGatewayNotConfiguredError:
+        logger.warning(
+            "payment_gateway_not_configured",
+            extra={"provider": payment_settings.provider},
+        )
+        return None
+
+
+def _get_reservation_service(request: Request, session: Session) -> ReservationService:
+    payment_settings = _get_payment_settings(request)
+    payment_service = _build_payment_service(request, session)
+    return ReservationService(
+        session,
+        payment_service=payment_service,
+        payment_settings=None if payment_service else payment_settings,
+    )
 
 
 def _require_actor(session: Session, request: Request) -> Agent:
@@ -479,13 +508,17 @@ async def create_reservation(
     payload = await _parse_model(request, ReservationCreate)
     if property_id != payload.property_id:
         raise HTTPException(status_code=400, detail="property_id inconsistente")
-    service = ReservationService(session)
+    service = _get_reservation_service(request, session)
     return service.create(payload)
 
 
 @router.get("/properties/{property_id}/reservations", response_model=list[ReservationRead])
-def list_reservations(property_id: int, session: Session = Depends(get_session)):
-    service = ReservationService(session)
+def list_reservations(
+    property_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    service = _get_reservation_service(request, session)
     return service.list_for_property(property_id)
 
 
@@ -496,7 +529,7 @@ async def update_reservation_status(
     session: Session = Depends(get_session),
 ):
     payload = await _parse_model(request, ReservationUpdateStatus)
-    service = ReservationService(session)
+    service = _get_reservation_service(request, session)
     return service.update_status(reservation_id, payload)
 
 
@@ -616,6 +649,43 @@ async def reconcile_partner_webhook(
     return service.reconcile_webhook(payload)
 
 
+@router.post("/payments/reconciliation", status_code=202)
+def trigger_payment_reconciliation(
+    request: Request, session: Session = Depends(get_session)
+) -> dict[str, Any]:
+    payment_service = _build_payment_service(request, session)
+    if not payment_service:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Integração de pagamentos não configurada",
+        )
+    log_entry = payment_service.run_daily_reconciliation()
+    return {
+        "status": log_entry.status.value,
+        "total_intents": log_entry.total_intents,
+        "discrepancies": log_entry.discrepancies,
+        "notes": log_entry.notes,
+        "ran_at": log_entry.ran_at,
+    }
+
+
+@router.post("/payments/webhooks/{provider}", status_code=202)
+async def receive_payment_webhook(
+    provider: str,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> dict[str, str]:
+    payload = await request.json()
+    payment_service = _build_payment_service(request, session)
+    if not payment_service:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Integração de pagamentos não configurada",
+        )
+    event = payment_service.handle_webhook_event(provider, payload)
+    return {"status": event.status.value, "event_type": event.event_type}
+
+
 def create_app(settings: CoreSettings | None = None, database: Database | None = None) -> FastAPI:
     settings = settings or CoreSettings()
     database = database or get_database(settings)
@@ -631,6 +701,7 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
     app.dependency_overrides[get_database] = _get_db_override
     app.state.auth_session_timeout = timedelta(seconds=settings.auth_session_timeout_seconds)
     app.state.core_settings = settings
+    app.state.payment_settings = settings.payments
     app.include_router(router)
     instrument_application(app)
     return app

@@ -21,6 +21,12 @@ _knowledge_base_views = None
 _knowledge_base_completions = None
 _knowledge_base_searches = None
 _knowledge_base_snippets = None
+_payment_tokenized = None
+_payment_preauthorized = None
+_payment_captured = None
+_payment_failed = None
+_invoices_issued = None
+_payment_reconciliations = None
 
 
 def _ensure_counters() -> None:
@@ -30,6 +36,16 @@ def _ensure_counters() -> None:
     global _housekeeping_scheduled
     global _housekeeping_transitions
     global _ota_enqueued
+    global _knowledge_base_views
+    global _knowledge_base_completions
+    global _knowledge_base_searches
+    global _knowledge_base_snippets
+    global _payment_tokenized
+    global _payment_preauthorized
+    global _payment_captured
+    global _payment_failed
+    global _invoices_issued
+    global _payment_reconciliations
 
     if _COUNTERS_INITIALIZED:
         return
@@ -75,6 +91,30 @@ def _ensure_counters() -> None:
         _knowledge_base_snippets = meter.create_counter(
             "bmad_core_knowledge_base_snippet_usage_total",
             description="Snippets aplicados a partir da base de conhecimento",
+        )
+        _payment_tokenized = meter.create_counter(
+            "bmad_core_payments_tokenized_total",
+            description="Métodos de pagamento tokenizados",
+        )
+        _payment_preauthorized = meter.create_counter(
+            "bmad_core_payments_preauthorized_total",
+            description="Pré autorizações registradas",
+        )
+        _payment_captured = meter.create_counter(
+            "bmad_core_payments_captured_total",
+            description="Capturas de pagamento efetuadas",
+        )
+        _payment_failed = meter.create_counter(
+            "bmad_core_payments_failed_total",
+            description="Falhas em pagamentos",
+        )
+        _invoices_issued = meter.create_counter(
+            "bmad_core_invoices_issued_total",
+            description="Faturas emitidas automaticamente",
+        )
+        _payment_reconciliations = meter.create_counter(
+            "bmad_core_payments_reconciliation_total",
+            description="Execuções de reconciliação de pagamentos",
         )
 
         _COUNTERS_INITIALIZED = True
@@ -243,6 +283,72 @@ def record_knowledge_base_snippet(article_id: str, surface: str) -> None:
     attributes = _stringify({"article_id": article_id, "surface": surface})
     _knowledge_base_snippets.add(1, attributes)
     _track_metric("bmad_core_knowledge_base_snippet_usage_total", attributes)
+
+
+def record_payment_tokenized(provider: str, property_id: int) -> None:
+    _ensure_counters()
+    attributes = _stringify({"provider": provider, "property_id": property_id})
+    _payment_tokenized.add(1, attributes)
+    _track_metric("bmad_core_payments_tokenized_total", attributes)
+
+
+def record_payment_preauthorized(provider: str, property_id: int, amount_minor: int) -> None:
+    _ensure_counters()
+    attributes = _stringify(
+        {
+            "provider": provider,
+            "property_id": property_id,
+            "amount_minor": amount_minor,
+        }
+    )
+    _payment_preauthorized.add(1, attributes)
+    _track_metric("bmad_core_payments_preauthorized_total", attributes)
+
+
+def record_payment_capture(provider: str, property_id: int, amount_minor: int) -> None:
+    _ensure_counters()
+    attributes = _stringify(
+        {
+            "provider": provider,
+            "property_id": property_id,
+            "amount_minor": amount_minor,
+        }
+    )
+    _payment_captured.add(1, attributes)
+    _track_metric("bmad_core_payments_captured_total", attributes)
+
+
+def record_payment_failure(provider: str, property_id: int) -> None:
+    _ensure_counters()
+    attributes = _stringify({"provider": provider, "property_id": property_id})
+    _payment_failed.add(1, attributes)
+    _track_metric("bmad_core_payments_failed_total", attributes)
+
+
+def record_invoice_issued(property_id: int, amount_minor: int, currency_code: str) -> None:
+    _ensure_counters()
+    attributes = _stringify(
+        {
+            "property_id": property_id,
+            "amount_minor": amount_minor,
+            "currency": currency_code,
+        }
+    )
+    _invoices_issued.add(1, attributes)
+    _track_metric("bmad_core_invoices_issued_total", attributes)
+
+
+def record_payment_reconciliation(status: str, total: int, discrepancies: int) -> None:
+    _ensure_counters()
+    attributes = _stringify(
+        {
+            "status": status,
+            "total_intents": total,
+            "discrepancies": discrepancies,
+        }
+    )
+    _payment_reconciliations.add(1, attributes)
+    _track_metric("bmad_core_payments_reconciliation_total", attributes)
 
 
 def record_dashboard_kpi(name: str, value: float, unit: str) -> None:

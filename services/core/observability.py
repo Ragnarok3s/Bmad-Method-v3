@@ -54,6 +54,8 @@ class _RuntimeState:
 
 
 _STATE = _RuntimeState()
+_AUDIT_LOGGER = logging.getLogger("bmad.core.audit")
+_ALERT_LOGGER = logging.getLogger("bmad.core.alerts")
 
 
 def _now() -> datetime:
@@ -79,6 +81,39 @@ def mark_signal_event(
     state.last_event_name = name
     state.last_event_attributes = _stringify_attributes(attributes)
     state.last_event_at = _now()
+
+
+def record_audit_event(
+    action: str,
+    *,
+    actor_id: int | None = None,
+    detail: str | None = None,
+    severity: str = "info",
+) -> None:
+    attributes = {
+        "action": action,
+        "actor_id": actor_id,
+        "detail": detail,
+        "severity": severity,
+    }
+    mark_signal_event("logs", f"audit:{action}", attributes)
+    level = getattr(logging, severity.upper(), logging.INFO)
+    _AUDIT_LOGGER.log(level, "audit_event", extra=attributes)
+
+
+def record_critical_alert(
+    name: str,
+    detail: str | None = None,
+    *,
+    context: Mapping[str, Any] | None = None,
+    severity: str = "critical",
+) -> None:
+    attributes: dict[str, Any] = {"name": name, "detail": detail, "severity": severity}
+    if context:
+        attributes["context"] = {str(key): str(value) for key, value in context.items()}
+    mark_signal_event("logs", f"alert:{name}", attributes)
+    level = getattr(logging, severity.upper(), logging.ERROR)
+    _ALERT_LOGGER.log(level, "critical_alert", extra=attributes)
 
 
 class _TelemetryLoggingHandler(LoggingHandler):

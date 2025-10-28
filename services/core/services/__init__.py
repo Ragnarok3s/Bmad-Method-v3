@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import json
 import logging
 import re
 from datetime import date, datetime, timedelta, timezone
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
 
 from ..analytics import PIPELINE
+from ..config import PaymentGatewaySettings
 from ..domain.models import (
     Agent,
     AgentRole,
@@ -70,6 +72,11 @@ from ..metrics import (
 )
 from ..security import assert_role
 from .automation import AutomationService
+from ..payments import (
+    PaymentGatewayNotConfiguredError,
+    PaymentProcessingError,
+    PaymentService,
+)
 
 
 logger = logging.getLogger("bmad.core.services")
@@ -164,8 +171,28 @@ class AgentService:
 
 
 class ReservationService:
-    def __init__(self, session: Session) -> None:
+    def __init__(
+        self,
+        session: Session,
+        *,
+        payment_service: PaymentService | None = None,
+        payment_settings: PaymentGatewaySettings | None = None,
+    ) -> None:
         self.session = session
+        self._payment_service = payment_service
+        self._payment_settings = payment_settings
+
+    def _get_payment_service(self) -> PaymentService | None:
+        if self._payment_service:
+            return self._payment_service
+        if not self._payment_settings:
+            return None
+        try:
+            self._payment_service = PaymentService(self.session, self._payment_settings)
+        except PaymentGatewayNotConfiguredError:
+            logger.warning("payment_service_unavailable", extra={"provider": self._payment_settings.provider})
+            self._payment_settings = None
+        return self._payment_service
 
     def _check_conflict(self, property_id: int, check_in: datetime, check_out: datetime) -> None:
         query = (
@@ -185,10 +212,41 @@ class ReservationService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propriedade não encontrada")
         self._check_conflict(payload.property_id, payload.check_in, payload.check_out)
 
-        reservation = Reservation(**payload.model_dump())
+        data = payload.model_dump(exclude={"payment"})
+        reservation = Reservation(**data)
         reservation.status = ReservationStatus.CONFIRMED
+        if payload.payment:
+            reservation.total_amount_minor = payload.payment.amount_minor
+            reservation.currency_code = payload.payment.currency.upper()
+            reservation.capture_on_check_in = payload.payment.capture_on_check_in
         self.session.add(reservation)
         self.session.flush()
+
+        if payload.payment:
+            payment_service = self._get_payment_service()
+            if payment_service:
+                try:
+                    method = payment_service.tokenize_payment_method(
+                        reservation, payload.payment.method
+                    )
+                    payment_service.preauthorize(reservation, payload.payment, method)
+                except PaymentProcessingError as exc:
+                    logger.error(
+                        "payment_preauthorization_failed",
+                        extra={
+                            "reservation_id": reservation.id,
+                            "provider": payload.payment.method.provider.value,
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="Falha ao pré-autorizar pagamento",
+                    ) from exc
+            else:
+                logger.warning(
+                    "payment_service_missing",
+                    extra={"reservation_id": reservation.id},
+                )
 
         self._log_event(reservation, actor, "reservation_created")
         self._enqueue_sync(reservation, "create")
@@ -210,6 +268,32 @@ class ReservationService:
         reservation.status = payload.status
         self.session.add(reservation)
         self.session.flush()
+        if (
+            payload.status == ReservationStatus.CHECKED_IN
+            and reservation.capture_on_check_in
+        ):
+            payment_service = self._get_payment_service()
+            if payment_service:
+                try:
+                    payment_service.capture_for_check_in(reservation)
+                    self.session.flush()
+                except PaymentProcessingError as exc:
+                    logger.error(
+                        "payment_capture_error",
+                        extra={
+                            "reservation_id": reservation.id,
+                            "provider": reservation.payment_intents[0].provider.value if reservation.payment_intents else None,
+                        },
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_502_BAD_GATEWAY,
+                        detail="Falha ao capturar pagamento na entrada",
+                    ) from exc
+            else:
+                logger.warning(
+                    "payment_capture_skipped",
+                    extra={"reservation_id": reservation.id},
+                )
         self._log_event(reservation, actor, f"reservation_status_{payload.status.value}")
         self._enqueue_sync(reservation, "update_status")
         record_reservation_status(payload.status.value, reservation.property_id)

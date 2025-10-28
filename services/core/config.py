@@ -81,6 +81,44 @@ class ObservabilitySettings:
 
 
 @dataclass(slots=True)
+class PaymentGatewaySettings:
+    """Configura integrações de PSP como Stripe ou Adyen."""
+
+    provider: str = "stripe"
+    api_key: str = ""
+    merchant_account: str | None = None
+    webhook_secret: str | None = None
+    reconciliation_hour_utc: int = 2
+    sla_threshold_seconds: int = 300
+    allow_tokenization: bool = True
+
+    @classmethod
+    def from_environ(cls, environ: dict[str, str]) -> "PaymentGatewaySettings":
+        provider = environ.get("CORE_PAYMENTS_PROVIDER", cls.provider)
+        api_key = environ.get("CORE_PAYMENTS_API_KEY", "")
+        merchant_account = environ.get("CORE_PAYMENTS_MERCHANT_ACCOUNT")
+        webhook_secret = environ.get("CORE_PAYMENTS_WEBHOOK_SECRET")
+        reconciliation_hour = _to_int(
+            environ.get("CORE_PAYMENTS_RECONCILIATION_HOUR"), cls.reconciliation_hour_utc
+        )
+        sla_threshold = _to_int(
+            environ.get("CORE_PAYMENTS_SLA_THRESHOLD_SECONDS"), cls.sla_threshold_seconds
+        )
+        allow_tokenization = _to_bool(
+            environ.get("CORE_PAYMENTS_ALLOW_TOKENIZATION"), cls.allow_tokenization
+        )
+        return cls(
+            provider=provider.lower(),
+            api_key=api_key,
+            merchant_account=merchant_account,
+            webhook_secret=webhook_secret,
+            reconciliation_hour_utc=max(0, min(reconciliation_hour, 23)),
+            sla_threshold_seconds=max(60, sla_threshold),
+            allow_tokenization=allow_tokenization,
+        )
+
+
+@dataclass(slots=True)
 class CoreSettings:
     """Agrupa as configurações necessárias para a API core."""
 
@@ -89,6 +127,7 @@ class CoreSettings:
     enable_graphql: bool = True
     observability: ObservabilitySettings = field(default_factory=ObservabilitySettings)
     auth_session_timeout_seconds: int = 30 * 60
+    payments: PaymentGatewaySettings = field(default_factory=PaymentGatewaySettings)
 
     @classmethod
     def from_environ(cls, environ: dict[str, str]) -> "CoreSettings":
@@ -103,4 +142,5 @@ class CoreSettings:
                 environ.get("CORE_AUTH_SESSION_TIMEOUT_SECONDS"),
                 30 * 60,
             ),
+            payments=PaymentGatewaySettings.from_environ(environ),
         )
