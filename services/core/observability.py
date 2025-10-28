@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, Mapping
 
 from opentelemetry import metrics, trace
 from opentelemetry._logs import set_logger_provider
@@ -16,13 +18,97 @@ from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import OTELResourceDetector, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 from .config import ObservabilitySettings
 
 
 _CONFIGURED = False
+
+
+@dataclass
+class _SignalState:
+    expected: bool
+    configured: bool = False
+    exporter: str | None = None
+    endpoint: str | None = None
+    last_event_name: str | None = None
+    last_event_attributes: Mapping[str, str] | None = None
+    last_event_at: datetime | None = None
+
+
+@dataclass
+class _RuntimeState:
+    resource: Mapping[str, Any] = field(default_factory=dict)
+    collector_endpoint: str | None = None
+    insecure: bool = True
+    headers: tuple[str, ...] = ()
+    signals: Dict[str, _SignalState] = field(
+        default_factory=lambda: {
+            "traces": _SignalState(expected=False),
+            "metrics": _SignalState(expected=False),
+            "logs": _SignalState(expected=False),
+        }
+    )
+
+
+_STATE = _RuntimeState()
+
+
+def _now() -> datetime:
+    return datetime.now(tz=timezone.utc)
+
+
+def _stringify_attributes(attributes: Mapping[str, Any] | None) -> Mapping[str, str]:
+    if not attributes:
+        return {}
+    return {str(key): str(value) for key, value in attributes.items()}
+
+
+def mark_signal_event(
+    signal: str,
+    name: str,
+    attributes: Mapping[str, Any] | None = None,
+) -> None:
+    """Regista a última atividade conhecida para o sinal indicado."""
+
+    state = _STATE.signals.get(signal)
+    if not state or not state.expected:
+        return
+    state.last_event_name = name
+    state.last_event_attributes = _stringify_attributes(attributes)
+    state.last_event_at = _now()
+
+
+class _TelemetryLoggingHandler(LoggingHandler):
+    """Envia logs via OTLP e regista atividade para health-check."""
+
+    def emit(self, record: logging.LogRecord) -> None:  # noqa: D401
+        mark_signal_event(
+            "logs",
+            record.name,
+            {
+                "level": record.levelname,
+                "message": record.getMessage(),
+            },
+        )
+        super().emit(record)
+
+
+class _TelemetrySpanProcessor(BatchSpanProcessor):
+    """Span processor que rastreia spans exportados via OTLP."""
+
+    def on_end(self, span: ReadableSpan) -> None:  # noqa: D401
+        mark_signal_event(
+            "traces",
+            span.name,
+            {
+                "span.kind": span.kind.name,
+                "status": span.status.status_code.name,
+            },
+        )
+        super().on_end(span)
 
 
 def _build_resource(settings: ObservabilitySettings) -> Resource:
@@ -51,25 +137,45 @@ def _exporter_kwargs(settings: ObservabilitySettings) -> dict[str, Any]:
 def configure_observability(settings: ObservabilitySettings) -> None:
     """Inicializa providers de métricas, traces e logs para o serviço."""
 
-    global _CONFIGURED
+    global _CONFIGURED, _STATE
     if _CONFIGURED:
         return
 
     resource = _build_resource(settings)
     exporter_args = _exporter_kwargs(settings)
 
+    _STATE = _RuntimeState(
+        resource={key: str(value) for key, value in resource.attributes.items()},
+        collector_endpoint=settings.otlp_endpoint,
+        insecure=settings.insecure,
+        headers=tuple(sorted(settings.otlp_headers.keys())),
+        signals={
+            "traces": _SignalState(expected=settings.enable_traces),
+            "metrics": _SignalState(expected=settings.enable_metrics),
+            "logs": _SignalState(expected=settings.enable_logs),
+        },
+    )
+
     if settings.enable_traces:
         tracer_provider = TracerProvider(resource=resource)
         tracer_provider.add_span_processor(
-            BatchSpanProcessor(OTLPSpanExporter(**exporter_args))
+            _TelemetrySpanProcessor(OTLPSpanExporter(**exporter_args))
         )
         trace.set_tracer_provider(tracer_provider)
+        trace_provider_state = _STATE.signals["traces"]
+        trace_provider_state.configured = True
+        trace_provider_state.exporter = "otlp_grpc"
+        trace_provider_state.endpoint = settings.otlp_endpoint
 
     if settings.enable_metrics:
         metric_exporter = OTLPMetricExporter(**exporter_args)
         reader = PeriodicExportingMetricReader(metric_exporter)
         meter_provider = MeterProvider(resource=resource, metric_readers=[reader])
         metrics.set_meter_provider(meter_provider)
+        metric_state = _STATE.signals["metrics"]
+        metric_state.configured = True
+        metric_state.exporter = "otlp_grpc"
+        metric_state.endpoint = settings.otlp_endpoint
 
     if settings.enable_logs:
         logger_provider = LoggerProvider(resource=resource)
@@ -77,13 +183,61 @@ def configure_observability(settings: ObservabilitySettings) -> None:
             BatchLogRecordProcessor(OTLPLogExporter(**exporter_args))
         )
         set_logger_provider(logger_provider)
-        handler = LoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+        handler = _TelemetryLoggingHandler(
+            level=logging.INFO, logger_provider=logger_provider
+        )
         root_logger = logging.getLogger()
         root_logger.addHandler(handler)
         if root_logger.level == logging.NOTSET:
             root_logger.setLevel(logging.INFO)
+        log_state = _STATE.signals["logs"]
+        log_state.configured = True
+        log_state.exporter = "otlp_grpc"
+        log_state.endpoint = settings.otlp_endpoint
 
     _CONFIGURED = True
+
+
+def get_observability_status() -> dict[str, Any]:
+    """Devolve snapshot da configuração OTEL (usado pelos health-checks)."""
+
+    signals: Dict[str, dict[str, Any]] = {}
+    ready = True
+    active = True
+    for name, state in _STATE.signals.items():
+        last_event = None
+        if state.last_event_name:
+            last_event = {
+                "name": state.last_event_name,
+                "attributes": dict(state.last_event_attributes or {}),
+                "observed_at": state.last_event_at.isoformat()
+                if state.last_event_at
+                else None,
+            }
+        expected_and_missing = state.expected and not state.configured
+        expected_and_inactive = state.expected and not state.last_event_at
+        ready = ready and not expected_and_missing
+        active = active and not expected_and_inactive
+        signals[name] = {
+            "expected": state.expected,
+            "configured": state.configured,
+            "exporter": state.exporter,
+            "endpoint": state.endpoint,
+            "last_event": last_event,
+        }
+
+    return {
+        "configured": _CONFIGURED,
+        "ready": ready,
+        "active": active,
+        "collector": {
+            "endpoint": _STATE.collector_endpoint,
+            "insecure": _STATE.insecure,
+            "headers": list(_STATE.headers),
+        },
+        "resource": dict(_STATE.resource),
+        "signals": signals,
+    }
 
 
 def instrument_application(app) -> None:
