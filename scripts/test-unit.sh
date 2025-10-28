@@ -9,7 +9,7 @@ JUNIT_DIR="$ARTIFACT_DIR/junit"
 mkdir -p "$COVERAGE_DIR" "$JUNIT_DIR"
 
 run_pytest_unit() {
-  if compgen -G "$ROOT_DIR/tests/**/*.py" > /dev/null; then
+  if find "$ROOT_DIR/tests" -type f -name "*.py" -print -quit 2>/dev/null | grep -q '.'; then
     echo "[test-unit] Executando pytest com cobertura"
     export COVERAGE_FILE="$COVERAGE_DIR/.coverage.unit"
     (\
