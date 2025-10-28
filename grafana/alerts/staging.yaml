@@ -1,0 +1,152 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Bmad Core Observability
+    folder: Operações
+    interval: 1m
+    rules:
+      - uid: playbook-error-rate
+        title: PlaybookErrorRate
+        condition: C
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                sum(rate(http_server_duration_count{service_name="bmad-core-service", http_response_status_code=~"5..", deployment_environment="staging"}[5m]))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: B
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                sum(rate(http_server_duration_count{service_name="bmad-core-service", deployment_environment="staging"}[5m]))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: B > 0 and (A / B) > 0.02
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: sre
+          playbook: platform
+        annotations:
+          summary: "Erro 5xx acima de 2% em staging"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+        for: 5m
+        noDataState: Alerting
+        execErrState: Alerting
+      - uid: pipeline-failure-burst
+        title: PipelineFailureBurst
+        condition: C
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                increase(ci_pipeline_failures_total{pipeline="staging"}[10m])
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: A > 3
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: devops
+          playbook: ci
+        annotations:
+          summary: "Pipelines falharam mais de 3 vezes nos últimos 10 minutos"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+        for: 2m
+        noDataState: NoData
+        execErrState: Alerting
+      - uid: engagement-drop
+        title: EngagementDrop
+        condition: C
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                sum(increase(bmad_web_page_view_total{deployment_environment="staging"}[30m]))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: B
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                sum(increase(bmad_web_page_view_total{deployment_environment="staging"}[1h])) / 2
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: B > 0 and (A < (B * 0.8))
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: product-ops
+          playbook: engagement
+        annotations:
+          summary: "Queda de 20% no engajamento web vs média da última hora"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+        for: 10m
+        noDataState: NoData
+        execErrState: Alerting
+receivers:
+  - name: staging-critical
+    slack_configs:
+      - channel: "#incident"
+        title: "[Observability] {{ .CommonLabels.alertname }}"
+        text: "{{ .CommonAnnotations.summary }}"
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: "{{ pagerduty.BmadPlatformStaging }}"
+        severity: critical
+        description: "{{ .CommonLabels.alertname }} em {{ .CommonLabels.playbook }}"
+policies:
+  - orgId: 1
+    receiver: staging-critical
+    routes:
+      - matchers:
+          - "team=sre"
+        receiver: staging-critical
+      - matchers:
+          - "team=devops"
+        receiver: staging-critical
+      - matchers:
+          - "team=product-ops"
+        receiver: staging-critical

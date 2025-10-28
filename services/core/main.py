@@ -9,10 +9,12 @@ from .api.rest import create_app
 from .config import CoreSettings
 from .database import get_database
 from .domain.models import Base
+from .observability import configure_observability
 
 
 def build_application(settings: CoreSettings | None = None) -> FastAPI:
     settings = settings or CoreSettings()
+    configure_observability(settings.observability)
     database = get_database(settings)
     database.create_all(Base)
 

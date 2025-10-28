@@ -66,6 +66,7 @@ Configurar a base tecnológica necessária para acelerar o desenvolvimento cont�
   - [x] Dashboard inicial com métricas chave publicado (`grafana/staging/bmad-agents-001.json`).
   - [x] Logs centralizados com retenção de 14 dias (stack Loki + Promtail documentada).
   - [x] Alertas básicos (erro crítico, falha de deploy) configurados (`grafana/alerts/staging.yaml`).
+  - [x] Quality gates coletam evidências (`scripts/run-quality-gates.sh` → `artifacts/observability/manifest.json`).
 - **Governança:**
   - [x] Atas e calendário publicados (`docs/atas/calendario-rituais.md`).
   - [x] Matriz RACI atualizada (`docs/playbook-operacional.md`).

@@ -20,6 +20,8 @@ Descrever o fluxo de resposta para os alertas críticos configurados na Sprint 0
 2. **Coleta de Evidências**
    - Consultar dashboards Grafana `bmad-agents-001` e `bmad-ops-002`.
    - Correlacionar com logs no Kibana (`kibana/dashboards/bmad-logs.ndjson`).
+   - Validar traces recentes no Tempo (`tempo/explore?var-service=bmad-core-service`).
+   - Usar o runbook `docs/runbooks/observabilidade-servicos.md` para checklist completo.
 3. **Mitigação Imediata**
    - Erros 5xx: aplicar rollback conforme `docs/runbooks/rollback-staging.md`.
    - PipelineFailureBurst: congelar merges (colocar etiqueta `ci-blocked`) e validar fila de jobs no GitHub Actions.
@@ -36,6 +38,13 @@ Descrever o fluxo de resposta para os alertas críticos configurados na Sprint 0
 - MTTA (tempo até reconhecimento) < 5 minutos.
 - MTTR (tempo de recuperação) < 45 minutos.
 - 0 alertas perdidos sem actionables.
+
+## Métricas & Consultas de Referência
+
+- **Latência P95**: `histogram_quantile(0.95, sum(rate(http_server_duration_bucket{service_name="bmad-core-service"}[5m])) by (le))`
+- **Erro 5xx**: `sum(rate(http_server_duration_count{http_response_status_code=~"5.."}[5m]))`
+- **Reservas Confirmadas**: `sum(increase(bmad_core_reservations_confirmed_total[15m]))`
+- **Engajamento Web**: `sum(increase(bmad_web_page_view_total[15m])) by (route)`
 
 ## Links Úteis
 - Grafana Staging: `https://grafana.staging.bmad-method.internal`
