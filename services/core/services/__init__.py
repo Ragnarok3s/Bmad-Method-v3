@@ -26,6 +26,7 @@ from ..domain.models import (
     ReservationStatus,
     Workspace,
 )
+from ..domain.playbooks import PlaybookTemplate
 from ..domain.schemas import (
     AgentCreate,
     DashboardMetricsRead,
@@ -38,6 +39,9 @@ from ..domain.schemas import (
     PropertyCreate,
     ReservationCreate,
     ReservationUpdateStatus,
+    PlaybookExecutionRead,
+    PlaybookExecutionRequest,
+    PlaybookTemplateCreate,
     PlaybookAdoptionSummary,
     WorkspaceCreate,
 )
@@ -53,6 +57,7 @@ from ..metrics import (
     record_reservation_status,
 )
 from ..security import assert_role
+from .automation import AutomationService
 
 
 logger = logging.getLogger("bmad.core.services")
@@ -202,6 +207,7 @@ class ReservationService:
         )
         return reservation
 
+
     def list_for_property(self, property_id: int) -> list[Reservation]:
         query = select(Reservation).where(Reservation.property_id == property_id).order_by(Reservation.check_in)
         result = self.session.execute(query)
@@ -275,6 +281,50 @@ class ReservationService:
             detail=f"Status atual: {reservation.status.value}",
         )
         self.session.add(log)
+
+
+class PlaybookTemplateService:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def list(self) -> list[PlaybookTemplate]:
+        result = self.session.execute(select(PlaybookTemplate).order_by(PlaybookTemplate.name))
+        return list(result.scalars())
+
+    def create(self, payload: PlaybookTemplateCreate) -> PlaybookTemplate:
+        template = PlaybookTemplate(
+            name=payload.name.strip(),
+            summary=payload.summary.strip(),
+        )
+        template.tags = payload.tags
+        template.steps = payload.steps
+        self.session.add(template)
+        self.session.flush()
+        logger.info(
+            "playbook_template_created",
+            extra={"playbook_id": template.id, "name": template.name},
+        )
+        return template
+
+    def get(self, playbook_id: int) -> PlaybookTemplate:
+        template = self.session.get(PlaybookTemplate, playbook_id)
+        if not template:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Playbook não encontrado")
+        return template
+
+    def execute(
+        self,
+        playbook_id: int,
+        payload: PlaybookExecutionRequest,
+    ) -> PlaybookExecutionRead:
+        template = self.get(playbook_id)
+        automation = AutomationService(self.session)
+        result = automation.execute(
+            template,
+            initiated_by=payload.initiated_by,
+            context=payload.context,
+        )
+        return result
 
 
 class HousekeepingService:

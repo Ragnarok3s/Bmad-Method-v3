@@ -24,6 +24,10 @@ from ..domain.schemas import (
     HousekeepingStatusUpdate,
     PartnerSLARead,
     PartnerWebhookPayload,
+    PlaybookExecutionRead,
+    PlaybookExecutionRequest,
+    PlaybookTemplateCreate,
+    PlaybookTemplateRead,
     PropertyCreate,
     PropertyRead,
     ReservationCreate,
@@ -37,6 +41,7 @@ from ..services import (
     AgentService,
     HousekeepingService,
     OperationalMetricsService,
+    PlaybookTemplateService,
     PropertyService,
     ReservationService,
     WorkspaceService,
@@ -96,6 +101,37 @@ async def create_property(
     payload = await _parse_model(request, PropertyCreate)
     service = PropertyService(session)
     return service.create(payload)
+
+
+@router.get("/playbooks", response_model=list[PlaybookTemplateRead])
+def list_playbooks(session: Session = Depends(get_session)):
+    service = PlaybookTemplateService(session)
+    return service.list()
+
+
+@router.post("/playbooks", response_model=PlaybookTemplateRead, status_code=201)
+async def create_playbook(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    payload = await _parse_model(request, PlaybookTemplateCreate)
+    service = PlaybookTemplateService(session)
+    return service.create(payload)
+
+
+@router.post(
+    "/playbooks/{playbook_id}/execute",
+    response_model=PlaybookExecutionRead,
+    status_code=202,
+)
+async def execute_playbook(
+    playbook_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    payload = await _parse_model(request, PlaybookExecutionRequest)
+    service = PlaybookTemplateService(session)
+    return service.execute(playbook_id, payload)
 
 
 @router.post("/workspaces", response_model=WorkspaceRead, status_code=201)
