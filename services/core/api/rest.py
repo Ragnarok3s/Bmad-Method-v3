@@ -24,6 +24,7 @@ from ..domain.schemas import (
     ReservationRead,
     ReservationUpdateStatus,
 )
+from ..observability import instrument_application
 from ..services import AgentService, HousekeepingService, PropertyService, ReservationService
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -157,4 +158,5 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
 
     app.dependency_overrides[get_database] = _get_db_override
     app.include_router(router)
+    instrument_application(app)
     return app

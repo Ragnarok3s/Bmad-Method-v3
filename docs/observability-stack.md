@@ -26,6 +26,9 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 - Regras de alerta para cerimônias de QA configuradas em `grafana/alerts/qa-observability.yaml`, notificando o canal `#qa-reviews`.
 - Runbook específico para revisão de QA/observabilidade disponível em `docs/runbooks/qa-observability-review.md`.
 - Métricas de seed (`seed_job_success` e `seed_job_last_run_timestamp`) exportadas por `scripts/infra/seed-*-data.sh` e alertas dedicados em `grafana/alerts/seed-jobs.yaml`.
+- Instrumentação backend publicada em `services/core/observability.py` e métricas de domínio em `services/core/metrics.py`.
+- Telemetria do frontend inicializada via `apps/web/components/telemetry/TelemetryProvider.tsx` e `apps/web/telemetry/init.ts`.
+- Dashboards novos (`grafana/staging/bmad-agents-001.json`, `grafana/staging/bmad-ops-002.json`) e alertas `grafana/alerts/staging.yaml` alinhados aos serviços core/web.
 
 ## Logs
 
@@ -56,6 +59,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 
 - Instrumentar backend com OpenTelemetry (HTTP, gRPC, DB). Exportar para Tempo (Grafana) para análise de latência.
 - Correlacionar traceID com logs e eventos de playbooks.
+- Frontend publica spans e métricas de engajamento via OTLP HTTP, correlacionadas pelo atributo `service.name=bmad-web-app`.
 
 ## Governança de Observabilidade
 

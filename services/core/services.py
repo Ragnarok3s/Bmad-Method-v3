@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime
 
 from fastapi import HTTPException, status
@@ -29,7 +30,17 @@ from .domain.schemas import (
     ReservationCreate,
     ReservationUpdateStatus,
 )
+from .metrics import (
+    record_housekeeping_scheduled,
+    record_housekeeping_transition,
+    record_ota_enqueue,
+    record_reservation_confirmed,
+    record_reservation_status,
+)
 from .security import assert_role
+
+
+logger = logging.getLogger("bmad.core.services")
 
 
 class PropertyService:
@@ -40,6 +51,7 @@ class PropertyService:
         property_obj = Property(**payload.model_dump())
         self.session.add(property_obj)
         self.session.flush()
+        logger.info("property_created", extra={"property_id": property_obj.id})
         return property_obj
 
     def list(self) -> list[Property]:
@@ -55,6 +67,10 @@ class AgentService:
         agent = Agent(**payload.model_dump())
         self.session.add(agent)
         self.session.flush()
+        logger.info(
+            "agent_created",
+            extra={"agent_id": agent.id, "role": agent.role.value},
+        )
         return agent
 
     def get(self, agent_id: int) -> Agent:
@@ -93,6 +109,15 @@ class ReservationService:
 
         self._log_event(reservation, actor, "reservation_created")
         self._enqueue_sync(reservation, "create")
+        record_reservation_confirmed(property_obj.id)
+        logger.info(
+            "reservation_confirmed",
+            extra={
+                "reservation_id": reservation.id,
+                "property_id": property_obj.id,
+                "actor_id": actor.id if actor else None,
+            },
+        )
         return reservation
 
     def update_status(self, reservation_id: int, payload: ReservationUpdateStatus, actor: Agent | None = None) -> Reservation:
@@ -104,6 +129,15 @@ class ReservationService:
         self.session.flush()
         self._log_event(reservation, actor, f"reservation_status_{payload.status.value}")
         self._enqueue_sync(reservation, "update_status")
+        record_reservation_status(payload.status.value, reservation.property_id)
+        logger.info(
+            "reservation_status_updated",
+            extra={
+                "reservation_id": reservation.id,
+                "status": payload.status.value,
+                "actor_id": actor.id if actor else None,
+            },
+        )
         return reservation
 
     def list_for_property(self, property_id: int) -> list[Reservation]:
@@ -161,6 +195,15 @@ class ReservationService:
             status=OTASyncStatus.PENDING,
         )
         self.session.add(job)
+        record_ota_enqueue(reservation.property_id, action)
+        logger.info(
+            "ota_job_enqueued",
+            extra={
+                "reservation_id": reservation.id,
+                "property_id": reservation.property_id,
+                "action": action,
+            },
+        )
 
     def _log_event(self, reservation: Reservation, actor: Agent | None, action: str) -> None:
         log = AuditLog(
@@ -185,6 +228,15 @@ class HousekeepingService:
         task = HousekeepingTask(**payload.model_dump())
         self.session.add(task)
         self.session.flush()
+        record_housekeeping_scheduled(task.property_id, actor.id)
+        logger.info(
+            "housekeeping_task_scheduled",
+            extra={
+                "task_id": task.id,
+                "property_id": task.property_id,
+                "actor_id": actor.id,
+            },
+        )
         return task
 
     def update_status(self, task_id: int, status_update: HousekeepingStatus, actor: Agent) -> HousekeepingTask:
@@ -198,6 +250,15 @@ class HousekeepingService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tarefa pertence a outro agente")
 
         task.status = status_update
+        record_housekeeping_transition(task.property_id, status_update.value, actor.role.value)
+        logger.info(
+            "housekeeping_task_status_updated",
+            extra={
+                "task_id": task.id,
+                "status": status_update.value,
+                "actor_id": actor.id,
+            },
+        )
         self.session.add(task)
         self.session.flush()
         return task

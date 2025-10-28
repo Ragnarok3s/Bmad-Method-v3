@@ -12,6 +12,19 @@ Este manual orienta administradores e colaboradores na configuração e uso diá
 | **Colaborador** | Executa playbooks, consulta base de conhecimento, reporta incidentes. | Biblioteca de Playbooks, Base de Conhecimento, Chat de Suporte. |
 | **Analista de Operações** | Monitora KPIs, gera relatórios, ajusta SLAs de suporte. | Painel de Analytics, Ferramentas de Observabilidade, Central de Tickets. |
 
+### Matriz de Permissões de Agentes
+
+O backend implementa uma hierarquia de papéis alinhada ao módulo `services/core/security.py`. Cada agente recebe um `role` e herdará os privilégios indicados abaixo.
+
+| Papel | Pode Executar | Escopo Herdado |
+|-------|---------------|----------------|
+| **admin** | Criar/editar propriedades e reservas, aprovar tarefas de housekeeping, gerir agentes e integrações OTA. | Todos os papéis subordinados. |
+| **property_manager** | Confirmar reservas, agendar tarefas de housekeeping, ajustar status de tarefas do seu inventário. | Housekeeping. |
+| **housekeeping** | Atualizar status das próprias tarefas, consultar agenda diária. | — |
+| **ota** | Consultar fila de sincronização OTA e estado das reservas publicadas. | — |
+
+> **Auditoria Mensal:** O administrador deve rever a lista de agentes ativos em Configurações → Acesso & Permissões, garantindo que colaboradores inativos sejam desativados e que os papéis acima estejam coerentes com a função real.
+
 ## Onboarding Inicial
 
 1. **Convite e Acesso**

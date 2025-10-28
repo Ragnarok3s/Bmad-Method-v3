@@ -28,6 +28,20 @@ Guiar as equipes de operações, suporte e produto na execução diária da plat
 
 Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = Informado.
 
+### Política de Acesso dos Agentes Core
+
+- **Fonte de Verdade**: módulo `services/core/security.py` com a hierarquia `ROLE_HIERARCHY`.
+- **Papéis**:
+  - `admin`: administração completa de reservas, propriedades, agentes e integrações OTA.
+  - `property_manager`: gestão operacional das propriedades atribuídas (confirmação de reservas e agenda de housekeeping).
+  - `housekeeping`: atualização de tarefas próprias; bloqueio automático caso o agente esteja inativo.
+  - `ota`: consulta da fila de sincronização e monitorização de jobs.
+- **Processo Mensal**:
+  1. Extrair relatório de agentes ativos via API `/agents`.
+  2. Validar papéis concedidos com a planilha de RH e aplicar revogações via endpoint PATCH.
+  3. Registrar evidências na ata da auditoria de permissões (template em `docs/atas/`).
+- **Auditoria Adicional**: sempre que um alerta `PlaybookErrorRate` for disparado, confirmar que o agente executor mantém o papel mínimo necessário para a ação.
+
 ### Critérios de Priorização Operacional
 
 1. **Impacto em SLA e experiência do cliente (40%)**
@@ -129,6 +143,16 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
   - Pipeline para enviar respostas para ferramenta de analytics.
   - Dashboard com tendência mensal e segmentação por persona.
 - **Meta Inicial**: NPS ≥ 35 no pós-onboarding e ≥ 45 no suporte.
+
+### Telemetria Integrada (OpenTelemetry)
+
+- **Backend Core**: métricas e traces exportados via OTLP gRPC para o Collector, conforme configuração `CORE_OTEL_*`.
+- **Frontend Web**: inicialização automática no `TelemetryProvider`, enviando page views e logs para o Collector HTTP (`/v1/*`).
+- **Dashboards Associados**:
+  - `grafana/staging/bmad-agents-001.json` — latência P95, throughput e taxa de erro 5xx.
+  - `grafana/staging/bmad-ops-002.json` — reservas confirmadas, tarefas de housekeeping e engajamento web.
+- **Alertas Críticos**: regras em `grafana/alerts/staging.yaml` publicam `PlaybookErrorRate`, `PipelineFailureBurst` e `EngagementDrop` no PagerDuty/Slack.
+- **Runbooks**: processo detalhado de resposta em `docs/runbooks/alertas-criticos.md` e checklist de observabilidade em `docs/runbooks/observabilidade-servicos.md`.
 
 ## Rotinas Operacionais
 
