@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timezone
 
 from enum import Enum
+from typing import Any
 
 from sqlalchemy import (
     Boolean,
@@ -102,6 +103,59 @@ class Agent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="assigned_agent")
+    credentials: Mapped["AgentCredential | None"] = relationship(
+        "AgentCredential",
+        back_populates="agent",
+        uselist=False,
+    )
+
+
+class AgentCredential(Base):
+    __tablename__ = "agent_credentials"
+
+    agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), primary_key=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    mfa_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    mfa_enrolled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    _recovery_codes: Mapped[str] = mapped_column("recovery_codes", Text, nullable=False, default="[]")
+    failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    agent: Mapped[Agent] = relationship("Agent", back_populates="credentials")
+
+    @property
+    def recovery_codes(self) -> list[str]:
+        try:
+            data = json.loads(self._recovery_codes or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data]
+
+    @recovery_codes.setter
+    def recovery_codes(self, value: list[str]) -> None:
+        self._recovery_codes = json.dumps(list(value))
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    last_active_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    method: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+    agent: Mapped[Agent] = relationship("Agent")
 
 
 class PermissionDefinition(Base):
@@ -189,10 +243,199 @@ class Reservation(Base):
     )
     check_in: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     check_out: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    total_amount_minor: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    currency_code: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    capture_on_check_in: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     property: Mapped[Property] = relationship("Property", back_populates="reservations")
     audit_events: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="reservation")
+    payment_intents: Mapped[list["PaymentIntent"]] = relationship(
+        "PaymentIntent",
+        back_populates="reservation",
+        cascade="all, delete-orphan",
+    )
+    invoices: Mapped[list["Invoice"]] = relationship(
+        "Invoice",
+        back_populates="reservation",
+        cascade="all, delete-orphan",
+    )
+
+
+class PaymentProvider(str, Enum):
+    STRIPE = "stripe"
+    ADYEN = "adyen"
+
+
+class PaymentMethodStatus(str, Enum):
+    ACTIVE = "active"
+    REVOKED = "revoked"
+
+
+class PaymentIntentStatus(str, Enum):
+    PREAUTHORIZED = "preauthorized"
+    CAPTURED = "captured"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
+class PaymentTransactionType(str, Enum):
+    AUTHORIZATION = "authorization"
+    CAPTURE = "capture"
+    REFUND = "refund"
+    VOID = "void"
+
+
+class PaymentTransactionStatus(str, Enum):
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    PENDING = "pending"
+
+
+class InvoiceStatus(str, Enum):
+    ISSUED = "issued"
+    SENT = "sent"
+    PAID = "paid"
+    VOID = "void"
+
+
+class PaymentReconciliationStatus(str, Enum):
+    SUCCESS = "success"
+    WARN = "warn"
+    FAILED = "failed"
+
+
+class PaymentWebhookStatus(str, Enum):
+    RECEIVED = "received"
+    PROCESSED = "processed"
+    FAILED = "failed"
+
+
+class PaymentMethod(Base):
+    __tablename__ = "payment_methods"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reservation_id: Mapped[int | None] = mapped_column(ForeignKey("reservations.id"), nullable=True)
+    provider: Mapped[PaymentProvider] = mapped_column(SAEnum(PaymentProvider), nullable=False)
+    customer_reference: Mapped[str] = mapped_column(String(120), nullable=False)
+    guest_email: Mapped[str] = mapped_column(String(120), nullable=False)
+    token: Mapped[str] = mapped_column(String(255), nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[PaymentMethodStatus] = mapped_column(
+        SAEnum(PaymentMethodStatus), nullable=False, default=PaymentMethodStatus.ACTIVE
+    )
+    details: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    reservation: Mapped[Reservation | None] = relationship("Reservation")
+
+
+class PaymentIntent(Base):
+    __tablename__ = "payment_intents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reservation_id: Mapped[int] = mapped_column(ForeignKey("reservations.id"), nullable=False)
+    payment_method_id: Mapped[int | None] = mapped_column(ForeignKey("payment_methods.id"), nullable=True)
+    provider: Mapped[PaymentProvider] = mapped_column(SAEnum(PaymentProvider), nullable=False)
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency_code: Mapped[str] = mapped_column(String(3), nullable=False)
+    status: Mapped[PaymentIntentStatus] = mapped_column(
+        SAEnum(PaymentIntentStatus), nullable=False, default=PaymentIntentStatus.PREAUTHORIZED
+    )
+    provider_reference: Mapped[str] = mapped_column(String(120), nullable=False)
+    context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    captured_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    reservation: Mapped[Reservation] = relationship(
+        "Reservation", back_populates="payment_intents"
+    )
+    payment_method: Mapped[PaymentMethod | None] = relationship("PaymentMethod")
+    transactions: Mapped[list["PaymentTransaction"]] = relationship(
+        "PaymentTransaction",
+        back_populates="intent",
+        cascade="all, delete-orphan",
+    )
+
+
+class PaymentTransaction(Base):
+    __tablename__ = "payment_transactions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    intent_id: Mapped[int] = mapped_column(ForeignKey("payment_intents.id"), nullable=False)
+    transaction_type: Mapped[PaymentTransactionType] = mapped_column(
+        SAEnum(PaymentTransactionType), nullable=False
+    )
+    status: Mapped[PaymentTransactionStatus] = mapped_column(
+        SAEnum(PaymentTransactionStatus), nullable=False, default=PaymentTransactionStatus.PENDING
+    )
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    raw_response: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    intent: Mapped[PaymentIntent] = relationship("PaymentIntent", back_populates="transactions")
+
+
+class Invoice(Base):
+    __tablename__ = "invoices"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reservation_id: Mapped[int] = mapped_column(ForeignKey("reservations.id"), nullable=False)
+    amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
+    currency_code: Mapped[str] = mapped_column(String(3), nullable=False)
+    status: Mapped[InvoiceStatus] = mapped_column(
+        SAEnum(InvoiceStatus), nullable=False, default=InvoiceStatus.ISSUED
+    )
+    issued_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    reservation: Mapped[Reservation] = relationship("Reservation", back_populates="invoices")
+
+
+class PaymentReconciliationLog(Base):
+    __tablename__ = "payment_reconciliation_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ran_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    status: Mapped[PaymentReconciliationStatus] = mapped_column(
+        SAEnum(PaymentReconciliationStatus), nullable=False
+    )
+    total_intents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    discrepancies: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class PaymentWebhookEvent(Base):
+    __tablename__ = "payment_webhook_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    provider: Mapped[PaymentProvider] = mapped_column(SAEnum(PaymentProvider), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[PaymentWebhookStatus] = mapped_column(
+        SAEnum(PaymentWebhookStatus), nullable=False, default=PaymentWebhookStatus.RECEIVED
+    )
+    reservation_id: Mapped[int | None] = mapped_column(ForeignKey("reservations.id"), nullable=True)
+    intent_id: Mapped[int | None] = mapped_column(ForeignKey("payment_intents.id"), nullable=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    reservation: Mapped[Reservation | None] = relationship("Reservation")
+    intent: Mapped[PaymentIntent | None] = relationship("PaymentIntent")
 
 
 class HousekeepingStatus(str, Enum):

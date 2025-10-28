@@ -12,6 +12,10 @@ from .models import (
     AgentRole,
     ExperienceSurveyTouchpoint,
     HousekeepingStatus,
+    InvoiceStatus,
+    PaymentIntentStatus,
+    PaymentMethodStatus,
+    PaymentProvider,
     ReservationStatus,
     ReconciliationSource,
     ReconciliationStatus,
@@ -72,12 +76,67 @@ class AgentRead(AgentCreate):
         from_attributes = True
 
 
+class PaymentMethodCreate(BaseModel):
+    provider: PaymentProvider
+    customer_reference: str
+    payment_method_nonce: str
+    guest_email: EmailStr | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class PaymentMethodRead(BaseModel):
+    id: int
+    provider: PaymentProvider
+    customer_reference: str
+    guest_email: EmailStr
+    status: PaymentMethodStatus
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PaymentAuthorizationRequest(BaseModel):
+    method: PaymentMethodCreate
+    amount_minor: int = Field(ge=0)
+    currency: str = Field(min_length=3, max_length=3)
+    capture_on_check_in: bool = True
+    metadata: dict[str, Any] | None = None
+
+
+class PaymentIntentRead(BaseModel):
+    id: int
+    provider: PaymentProvider
+    amount_minor: int
+    currency_code: str
+    status: PaymentIntentStatus
+    provider_reference: str
+    created_at: datetime
+    captured_at: datetime | None
+
+    class Config:
+        from_attributes = True
+
+
+class InvoiceRead(BaseModel):
+    id: int
+    amount_minor: int
+    currency_code: str
+    status: InvoiceStatus
+    issued_at: datetime
+    due_at: datetime | None
+
+    class Config:
+        from_attributes = True
+
+
 class ReservationCreate(BaseModel):
     property_id: int
     guest_name: str
     guest_email: EmailStr
     check_in: datetime
     check_out: datetime
+    payment: PaymentAuthorizationRequest | None = None
 
 
 class ReservationRead(BaseModel):
@@ -88,7 +147,12 @@ class ReservationRead(BaseModel):
     status: ReservationStatus
     check_in: datetime
     check_out: datetime
+    total_amount_minor: int | None
+    currency_code: str | None
+    capture_on_check_in: bool
     created_at: datetime
+    payment_intents: list[PaymentIntentRead] | None = None
+    invoices: list[InvoiceRead] | None = None
 
     class Config:
         from_attributes = True

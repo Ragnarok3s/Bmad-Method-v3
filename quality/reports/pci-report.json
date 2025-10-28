@@ -1,0 +1,17 @@
+{
+  "generated_at": "2025-10-28T23:32:27.272597Z",
+  "summary": {
+    "network_segmentation": "passed",
+    "penetration_test": "passed_with_warnings"
+  },
+  "findings": {
+    "network_segmentation": [
+      "Isolamento de segmento de pagamento validado",
+      "Firewall interno com regras explícitas para tráfego PCI"
+    ],
+    "penetration_test": [
+      "Nenhuma vulnerabilidade crítica identificada",
+      "Alertas de rate limiting acionados durante fuzzing"
+    ]
+  }
+}

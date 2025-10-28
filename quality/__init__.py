@@ -8,6 +8,11 @@ from .privacy import (
     mask_personal_identifiers,
 )
 from .onboarding import run_onboarding_quality_flow
+from .pci import (
+    generate_pci_report,
+    run_network_segmentation_simulation,
+    run_penetration_test_simulation,
+)
 
 __all__ = [
     "calculate_error_budget",
@@ -17,4 +22,7 @@ __all__ = [
     "is_record_synthetic",
     "mask_personal_identifiers",
     "run_onboarding_quality_flow",
+    "generate_pci_report",
+    "run_network_segmentation_simulation",
+    "run_penetration_test_simulation",
 ]
