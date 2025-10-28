@@ -1,0 +1,4 @@
+item_id,item_nome,stakeholders_consultados,dependencias_validacoes,evidencia_link,data_validacao
+BL-01,Onboarding,"Ana Ribeiro (PO); Laura Pinto (Design Lead); Rafael Monteiro (Tech Lead)","Design hand-off aprovado; APIs de cadastro estáveis com smoke tests em staging","docs/evidencias/dor-sprint1-validacoes.md#bl-01-onboarding",2024-07-16
+BL-04,Observabilidade Fundacional,"Bruno Carvalho (Platform Engineer); Rafael Monteiro (Tech Lead); Bianca Souza (Data & Analytics Lead)","Dashboards seed e alertas base publicados; SLAs operacionais anexados","docs/evidencias/dor-sprint1-validacoes.md#bl-04-observabilidade-fundacional",2024-07-16
+BL-05,"Governança (Perfis Básicos)","Ana Ribeiro (PO); Rafael Monteiro (Tech Lead); Carlos Mendes (QA Lead)","Critérios de acesso validados; runbooks de gestão de acesso publicados","docs/evidencias/dor-sprint1-validacoes.md#bl-05-governança-perfis-básicos",2024-07-16
