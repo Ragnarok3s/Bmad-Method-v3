@@ -27,6 +27,7 @@ from .domain.schemas import (
     HousekeepingTaskCreate,
     PropertyCreate,
     ReservationCreate,
+    ReservationRead,
     ReservationUpdateStatus,
 )
 from .security import assert_role
@@ -106,11 +107,11 @@ class ReservationService:
         self._enqueue_sync(reservation, "update_status")
         return reservation
 
-    def list_for_property(self, property_id: int) -> list[Reservation]:
+    def list_for_property(self, property_id: int) -> list[ReservationRead]:
         query = select(Reservation).where(Reservation.property_id == property_id).order_by(Reservation.check_in)
         result = self.session.execute(query)
         reservations = list(result.scalars())
-        masked = []
+        masked: list[ReservationRead] = []
         for reservation in reservations:
             sanitized = mask_personal_identifiers(
                 {
@@ -121,8 +122,11 @@ class ReservationService:
                     "passport": "",
                 }
             )
-            reservation.guest_email = sanitized["email"]
-            masked.append(reservation)
+            masked.append(
+                ReservationRead.model_validate(reservation).model_copy(
+                    update={"guest_email": sanitized["email"]}
+                )
+            )
         return masked
 
     def enforce_retention(self, retention_days: int) -> int:
@@ -137,9 +141,18 @@ class ReservationService:
         ]
         filtered = enforce_retention_policy(serialized, retention_days)
         filtered_ids = {item["id"] for item in filtered}
+        expired_ids = {reservation.id for reservation in reservations if reservation.id not in filtered_ids}
+
+        if not expired_ids:
+            return 0
+
+        logs_query = select(AuditLog).where(AuditLog.reservation_id.in_(expired_ids))
+        for audit_log in self.session.execute(logs_query).scalars():
+            self.session.delete(audit_log)
+
         removed = 0
         for reservation in reservations:
-            if reservation.id not in filtered_ids:
+            if reservation.id in expired_ids:
                 self.session.delete(reservation)
                 removed += 1
         return removed

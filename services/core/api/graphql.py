@@ -6,6 +6,7 @@ from strawberry.fastapi import GraphQLRouter
 
 from ..database import Database
 from ..domain.models import HousekeepingTask, Property, Reservation
+from ..domain.schemas import ReservationRead
 from ..services import HousekeepingService, PropertyService, ReservationService
 
 
@@ -13,7 +14,7 @@ def _property_to_type(model: Property) -> "PropertyType":
     return PropertyType(id=model.id, name=model.name, timezone=model.timezone, units=model.units)
 
 
-def _reservation_to_type(model: Reservation) -> "ReservationType":
+def _reservation_to_type(model: Reservation | ReservationRead) -> "ReservationType":
     return ReservationType(
         id=model.id,
         property_id=model.property_id,
