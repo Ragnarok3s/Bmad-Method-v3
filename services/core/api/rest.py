@@ -29,6 +29,8 @@ from ..domain.schemas import (
     ReservationCreate,
     ReservationRead,
     ReservationUpdateStatus,
+    WorkspaceCreate,
+    WorkspaceRead,
 )
 from ..observability import instrument_application
 from ..services import (
@@ -37,6 +39,7 @@ from ..services import (
     OperationalMetricsService,
     PropertyService,
     ReservationService,
+    WorkspaceService,
 )
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
@@ -92,6 +95,16 @@ async def create_property(
 ):
     payload = await _parse_model(request, PropertyCreate)
     service = PropertyService(session)
+    return service.create(payload)
+
+
+@router.post("/workspaces", response_model=WorkspaceRead, status_code=201)
+async def create_workspace(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    payload = await _parse_model(request, WorkspaceCreate)
+    service = WorkspaceService(session)
     return service.create(payload)
 
 

@@ -23,6 +23,29 @@ class PropertyRead(PropertyCreate):
         from_attributes = True
 
 
+class WorkspaceCreate(BaseModel):
+    name: str = Field(min_length=1)
+    timezone: str = "UTC"
+    team_size: int = Field(ge=1)
+    primary_use_case: str = Field(min_length=1)
+    communication_channel: str
+    quarterly_goal: str = Field(min_length=1)
+    invite_emails: list[EmailStr] = Field(default_factory=list)
+    team_roles: list[str] = Field(min_length=1)
+    enable_sandbox: bool = True
+    require_mfa: bool = True
+    security_notes: str | None = None
+
+
+class WorkspaceRead(WorkspaceCreate):
+    id: int
+    slug: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class AgentCreate(BaseModel):
     name: str
     email: EmailStr
