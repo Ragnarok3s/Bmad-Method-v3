@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from services.core.config import CoreSettings, PaymentGatewaySettings
 from services.core.database import Database
 from services.core.domain.models import (
@@ -27,6 +29,7 @@ def setup_database(db_url: str, provider: str = "stripe") -> tuple[Database, Pay
     return database, settings.payments
 
 
+@pytest.mark.payments
 def test_reservation_payment_lifecycle(tmp_path) -> None:
     db_url = f"sqlite:///{tmp_path}/payments.db"
     database, payment_settings = setup_database(db_url)

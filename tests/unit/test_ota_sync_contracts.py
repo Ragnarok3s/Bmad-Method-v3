@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from sqlalchemy import select
 
 from services.core.config import CoreSettings
@@ -28,6 +30,7 @@ def setup_database(db_url: str) -> Database:
     return database
 
 
+@pytest.mark.ota
 def test_booking_ingestion_under_sla_creates_job(tmp_path) -> None:
     database = setup_database(f"sqlite:///{tmp_path}/ota_ingest.db")
     now = datetime.now(timezone.utc)
@@ -66,6 +69,7 @@ def test_booking_ingestion_under_sla_creates_job(tmp_path) -> None:
         assert sla.current_minutes == 2
 
 
+@pytest.mark.ota
 def test_airbnb_ingestion_breach_goes_to_reconciliation(tmp_path) -> None:
     database = setup_database(f"sqlite:///{tmp_path}/ota_ingest_conflict.db")
     now = datetime.now(timezone.utc)
@@ -96,6 +100,7 @@ def test_airbnb_ingestion_breach_goes_to_reconciliation(tmp_path) -> None:
         assert result.sla_version_id is not None
 
 
+@pytest.mark.ota
 def test_expedia_return_within_sla_marks_success(tmp_path) -> None:
     database = setup_database(f"sqlite:///{tmp_path}/ota_return.db")
     now = datetime.now(timezone.utc)

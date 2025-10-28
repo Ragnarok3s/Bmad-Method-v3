@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import json
 import logging
 import re
 from datetime import date, datetime, timedelta, timezone
@@ -77,6 +76,8 @@ from ..payments import (
     PaymentProcessingError,
     PaymentService,
 )
+
+from .knowledge_base import KnowledgeBaseService
 
 
 logger = logging.getLogger("bmad.core.services")

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Iterable, TypeVar, Union
+from typing import Any, Iterable, Literal, TypeVar, Union
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
+from ..analytics.reports import generate_kpi_report, kpi_report_to_csv
 from ..config import CoreSettings, PaymentGatewaySettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
@@ -22,6 +23,9 @@ from ..domain.schemas import (
     AgentRead,
     DashboardMetricsRead,
     GovernanceAuditRead,
+    KPIReportEntry,
+    KPIReportRead,
+    KPIReportSummary,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
@@ -400,6 +404,72 @@ def get_dashboard_metrics(
 
     record_dashboard_request("overview", True)
     return overview
+
+
+@router.get("/reports/kpis", response_model=KPIReportRead)
+def get_kpi_reports(
+    session: Session = Depends(get_session),
+    start_date: date | None = Query(None),
+    end_date: date | None = Query(None),
+    property_id: list[int] = Query(default_factory=list),
+    format: Literal["json", "csv"] = Query("json"),
+):
+    resolved_end = end_date or date.today()
+    resolved_start = start_date or (resolved_end - timedelta(days=29))
+
+    try:
+        report = generate_kpi_report(
+            session,
+            resolved_start,
+            resolved_end,
+            property_ids=property_id or None,
+        )
+    except ValueError as error:
+        record_dashboard_request("reports.kpi", False)
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    if format.lower() == "csv":
+        csv_payload = kpi_report_to_csv(report)
+        record_dashboard_request("reports.kpi", True)
+        filename = (
+            f"kpi-report-{report.period_start.isoformat()}-{report.period_end.isoformat()}.csv"
+        )
+        return Response(
+            content=csv_payload,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    payload = KPIReportRead(
+        period_start=report.period_start,
+        period_end=report.period_end,
+        generated_at=report.generated_at,
+        items=[
+            KPIReportEntry(
+                property_id=row.property_id,
+                property_name=row.property_name,
+                currency=row.currency,
+                reservations=row.reservations,
+                occupied_nights=row.occupied_nights,
+                available_nights=row.available_nights,
+                occupancy_rate=row.occupancy_rate,
+                adr=row.adr,
+                revenue=row.revenue,
+            )
+            for row in report.items
+        ],
+        summary=KPIReportSummary(
+            properties_covered=report.properties_covered,
+            total_reservations=report.total_reservations,
+            total_occupied_nights=report.total_occupied_nights,
+            total_available_nights=report.total_available_nights,
+            average_occupancy_rate=report.average_occupancy_rate,
+            revenue_breakdown=report.revenue_breakdown(),
+        ),
+    )
+
+    record_dashboard_request("reports.kpi", True)
+    return payload
 
 
 @router.post("/properties", response_model=PropertyRead, status_code=201)
