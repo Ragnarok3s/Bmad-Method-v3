@@ -34,6 +34,29 @@ class PartnerSLAService:
         sla = self._get_sla(partner.id, payload.metric)
 
         event = self._upsert_event(partner, sla, payload)
+
+        current_updated_at = sla.updated_at
+        if current_updated_at and current_updated_at.tzinfo is None:
+            current_updated_at = current_updated_at.replace(tzinfo=timezone.utc)
+
+        if current_updated_at and payload.occurred_at <= current_updated_at:
+            logger.warning(
+                "partner_webhook_out_of_order",
+                extra={
+                    "partner": partner.slug,
+                    "metric": sla.metric,
+                    "status": sla.status.value,
+                    "event_id": payload.event_id,
+                    "occurred_at": payload.occurred_at.isoformat(),
+                    "current_sla_timestamp": current_updated_at.isoformat(),
+                },
+            )
+            event.resolved_sla_status = sla.status
+            event.processed_at = datetime.now(timezone.utc)
+            self.session.add(event)
+            self.session.flush()
+            return sla
+
         sla.current_minutes = payload.elapsed_minutes
         sla.updated_at = payload.occurred_at
 

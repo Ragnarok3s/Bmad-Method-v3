@@ -150,7 +150,8 @@ def test_partner_sla_webhook_reconciliation(tmp_path) -> None:
         },
     )
     assert on_track_response.status_code == 202
-    assert on_track_response.json()["status"] == "on_track"
+    on_track_body = on_track_response.json()
+    assert on_track_body["status"] == "on_track"
 
     at_risk_response = client.post(
         "/partners/webhooks/reconcile",
@@ -181,6 +182,33 @@ def test_partner_sla_webhook_reconciliation(tmp_path) -> None:
     breached_body = breached_response.json()
     assert breached_body["status"] == "breached"
     assert breached_body["last_violation_at"] is not None
+
+    stale_response = client.post(
+        "/partners/webhooks/reconcile",
+        json={
+            "event_id": "evt-sla-004",
+            "partner_slug": "airlaundry",
+            "metric": "pickup_window",
+            "status": "delivered",
+            "elapsed_minutes": 120,
+            "occurred_at": (now - timedelta(minutes=3)).isoformat(),
+        },
+    )
+    assert stale_response.status_code == 202
+    stale_body = stale_response.json()
+    assert stale_body["status"] == "on_track"
+    assert stale_body["current_minutes"] == on_track_body["current_minutes"]
+    stale_updated_at = datetime.fromisoformat(
+        stale_body["updated_at"].replace("Z", "+00:00")
+    )
+    if stale_updated_at.tzinfo is None:
+        stale_updated_at = stale_updated_at.replace(tzinfo=timezone.utc)
+    on_track_updated_at = datetime.fromisoformat(
+        on_track_body["updated_at"].replace("Z", "+00:00")
+    )
+    if on_track_updated_at.tzinfo is None:
+        on_track_updated_at = on_track_updated_at.replace(tzinfo=timezone.utc)
+    assert stale_updated_at == on_track_updated_at
 
     list_response = client.get("/partners/slas")
     assert list_response.status_code == 200
