@@ -5,3 +5,6 @@ artifacts/
 .eggs/
 *.egg-info/
 .pytest_cache/
+node_modules/
+apps/web/.next/
+apps/web/out/
