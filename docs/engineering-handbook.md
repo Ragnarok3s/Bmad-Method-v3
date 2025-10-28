@@ -10,6 +10,17 @@ Este guia descreve convenções de branching, automações de CI/CD e práticas 
 - **Branches de Hotfix**: `hotfix/<descricao-curta>`, criadas a partir de `main` para correções críticas. Após merge em `main`, aplicar cherry-pick para `develop`.
 - **Branches de Release**: `release/<versao>` usadas para hardening do MVP e preparação de notas de release. Devem executar checklist de regressão manual.
 
+### Proteções e Políticas de Branch
+
+- Arquivo `.github/settings.yml` aplica proteção automática para `main` e `develop` com _branch protection rules_ via Probot Settings.
+- Requisitos mínimos em ambos os ramos:
+  - Reviews obrigatórios com aprovação de CODEOWNERS (`2` para `main`, `1` para `develop`).
+  - Resolução de conversas pendentes e _dismiss_ automático para revisões obsoletas.
+  - Histórico linear obrigatório e commits assinados (`required_signatures: true`).
+  - Status check `CI` obrigatório com execução bem-sucedida.
+- `main` exige aprovação da pessoa que realizou o último push (`require_last_push_approval`) para evitar merges sem duplo-check.
+- Somente _squash merge_ está habilitado; branches são deletadas automaticamente após merge para manter o repositório limpo.
+
 ## Fluxo de Pull Requests
 
 1. Abrir PRs pequenos (< 500 linhas) com descrição objetiva, checklist de testes e referência ao item de backlog.
@@ -24,9 +35,12 @@ Este guia descreve convenções de branching, automações de CI/CD e práticas 
 Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main` e `develop`:
 
 1. **Lint & Static Analysis**: roda `github/super-linter` para garantir padrões em Markdown, YAML e scripts.
-2. **Testes Unitários**: executa `./scripts/test-unit.sh`, que detecta suites Node.js e Python e falha em caso de erro nos testes.
-3. **Testes de Integração (opcional)**: reutiliza `./scripts/test-integration.sh`, priorizando `npm run test:integration` ou `pytest -m integration` quando configurados.
-4. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
+2. **Preparação de Dependências**: `actions/setup-node` (com cache `npm`) e `actions/setup-python` (cache `pip`) reduzem o tempo de execução. Dependências são instaladas apenas quando `package.json` ou `requirements.txt` estão presentes.
+3. **Testes Unitários**: executa `./scripts/test-unit.sh`, que detecta suites Node.js e Python e falha em caso de ausência de testes configurados.
+4. **Testes de Integração**: roda `./scripts/test-integration.sh`; a ausência de suíte configurada resulta em falha explícita para reforçar cobertura mínima.
+5. **Empacotamento Artefatos**: prepara pacotes de documentação gerada e envia para artefatos do GitHub Actions.
+
+> **Caching**: os caches de `npm` e `pip` utilizam `package-lock.json` e `requirements.txt` como chaves. Atualize os arquivos de lock/requirements sempre que adicionar dependências.
 
 ### Templates e Scripts Padronizados
 
@@ -38,9 +52,10 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 
 ### Deploy Automatizado
 
-- Configurar pipeline separado `deploy.yml` (futuro) disparado em tags `v*`.
-- Deploy utiliza GitOps com ArgoCD; pipeline faz commit em repositório de manifests.
-- Gate manual de aprovação do time de produto antes de promover para produção.
+- Workflow `.github/workflows/deploy-staging.yml` executa em `main` e via `workflow_dispatch`, reutilizando os scripts obrigatórios antes de preparar artefatos de deploy.
+- Deploy utiliza GitOps com ArgoCD; o job `Promover para staging via GitOps` gera pacote em `artifacts/manifests/` para aprovação manual. A sincronização final ocorre via commit no repositório de manifests.
+- Configure o ambiente `staging` no GitHub com aprovadores obrigatórios (produto + plataforma) para liberar o job de deploy.
+- Próximo passo: adicionar pipeline separado `deploy.yml` disparado em tags `v*` para produção com gate manual do time de produto.
 
 ### Rollback e Versionamento de Infraestrutura
 
@@ -52,6 +67,20 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
   3. Atualizar runbook correspondente com causa raiz e follow-up no steering committee.
 - **Backups de Estado**: snapshots de bases de dados gerenciadas antes de cada deploy de release, com retenção mínima de 7 dias.
 - **Auditoria**: registrar ID da release e hash do commit na ata do steering committee pós-deploy para rastreabilidade, anexando checklist de conformidade (`artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e link do changelog gerado.
+
+### Ambientes de Desenvolvimento e Staging
+
+- Manifestos de desenvolvimento e staging ficam versionados em `scripts/infra/` (ver guia abaixo) com instruções para Docker Compose/Kubernetes.
+- Ambiente **dev**: voltado para squads, utiliza imagens `:latest` e dados sintéticos reduzidos. Provisionamento via `scripts/infra/provision-dev.sh` (manual) ou pipeline interna.
+- Ambiente **staging**: reproduz topologia de produção com fixtures geradas pelo time de dados. Reset automático diário via `scripts/infra/reset-staging.sh`.
+- Acesso: provisionar via SSO corporativo com RBAC nos clusters, concedendo acesso `read-only` para squads e `admin` restrito ao time de plataforma.
+
+### Gestão de Secrets
+
+- Utilizamos `Hashicorp Vault` integrado ao GitHub Actions por meio de OIDC. Segredos são mapeados por ambiente com _namespaces_ `dev/` e `staging/`.
+- Todos os secrets de pipeline devem ser referenciados por `secrets.<NAME>`; é proibido definir valores inline nos workflows.
+- Rotação trimestral documentada em `docs/runbooks/gestao-de-secrets.md`, incluindo responsáveis e procedimentos de auditoria.
+- Para desenvolvimento local, utilize `vault kv get dev/<servico>` com token de curta duração emitido pelo SSO.
 
 ## Convenções de Commit
 

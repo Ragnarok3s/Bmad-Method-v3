@@ -24,6 +24,7 @@ Guiar as equipes de operações, suporte e produto na execução diária da plat
 | Rotinas de feedback com clientes | C | C | I | C | **R/A** | C |
 | Aplicação do checklist de acessibilidade nos fluxos operacionais | **C**onsultado | A | R | I | I | **R**esponsável |
 | Revisão trimestral do quadro de ações corretivas | **R/A** | C | C | C | I | C |
+| Gestão de secrets e conformidade | **A**provador | I | **R**esponsável | C | I | I |
 
 Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = Informado.
 
@@ -158,6 +159,14 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
    - Registrar decisão e plano de mitigação na ata do Steering.
 5. **Follow-up**
    - Resultados e aprendizados são apresentados no Steering quinzenal e incorporados aos playbooks.
+
+### Comunicação de Incidentes
+
+1. **Detecção**: alertas automáticos (Grafana/PagerDuty) ou tickets `S1/S2` acionam `#incident` com resumo inicial.
+2. **War Room**: PagerDuty cria canal `#war-room` e agenda call no Teams. Engenheiro de Plataforma on-call lidera conforme `docs/runbooks/alertas-criticos.md`.
+3. **Atualizações**: status report a cada 15 minutos durante a mitigação. Customer Success replica mensagens para clientes afetados.
+4. **Encerramento**: após recuperação, atualizar ticket e publicar ata `docs/atas/ata-incident-<data>.md` com métricas MTTA/MTTR.
+5. **Follow-up**: ações corretivas entram no quadro de débitos técnicos e são acompanhadas no Steering quinzenal.
 
 ## Estratégias de Expansão
 

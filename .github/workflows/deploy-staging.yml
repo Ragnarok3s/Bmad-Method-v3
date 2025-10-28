@@ -1,0 +1,45 @@
+name: CD Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: staging-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prechecks:
+    name: Validar build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validar scripts obrigatórios
+        run: |
+          ./scripts/test-unit.sh
+          ./scripts/test-integration.sh
+
+  deploy:
+    name: Promover para staging via GitOps
+    needs: prechecks
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.bmad-method.internal
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Preparar pacote de manifests
+        run: |
+          mkdir -p artifacts/manifests
+          echo "render: argocd" > artifacts/manifests/README.md
+      - name: Publicar pacote para aprovação manual
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-manifests
+          path: artifacts/manifests
+      - name: Placeholder de sincronização GitOps
+        run: |
+          echo "Repositório de manifests deve receber commit via pipeline externa após aprovação manual."

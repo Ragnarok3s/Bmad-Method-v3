@@ -55,21 +55,21 @@ Configurar a base tecnológica necessária para acelerar o desenvolvimento cont�
 
 ## Checklists de Readiness
 - **Infraestrutura:**
-  - [ ] Ambientes dev/staging disponíveis e testados.
-  - [ ] Scripts de provisionamento versionados em `scripts/infra/` (criar diretório se necessário).
-  - [ ] Secrets armazenados com rotação configurada.
+  - [x] Ambientes dev/staging disponíveis e testados (scripts `scripts/infra/provision-dev.sh` e `scripts/infra/reset-staging.sh`).
+  - [x] Scripts de provisionamento versionados em `scripts/infra/` (criar diretório se necessário).
+  - [x] Secrets armazenados com rotação configurada (ver `docs/runbooks/gestao-de-secrets.md`).
 - **CI/CD:**
-  - [ ] Execução automática de `scripts/test-unit.sh` em cada PR.
-  - [ ] Execução automática de `scripts/test-integration.sh` no merge para branch principal.
-  - [ ] Pipeline de deploy para staging com etapa manual e rollback.
+  - [x] Execução automática de `scripts/test-unit.sh` em cada PR (`.github/workflows/ci.yml`).
+  - [x] Execução automática de `scripts/test-integration.sh` no merge para branch principal (`CI` + `CD Staging`).
+  - [x] Pipeline de deploy para staging com etapa manual e rollback (workflow `CD Staging` + runbook `docs/runbooks/rollback-staging.md`).
 - **Observabilidade:**
-  - [ ] Dashboard inicial com métricas chave publicado.
-  - [ ] Logs centralizados com retenção de 14 dias.
-  - [ ] Alertas básicos (erro crítico, falha de deploy) configurados.
+  - [x] Dashboard inicial com métricas chave publicado (`grafana/staging/bmad-agents-001.json`).
+  - [x] Logs centralizados com retenção de 14 dias (stack Loki + Promtail documentada).
+  - [x] Alertas básicos (erro crítico, falha de deploy) configurados (`grafana/alerts/staging.yaml`).
 - **Governança:**
-  - [ ] Atas e calendário publicados.
-  - [ ] Matriz RACI atualizada.
-  - [ ] Canal de incidentes configurado e comunicado.
+  - [x] Atas e calendário publicados (`docs/atas/calendario-rituais.md`).
+  - [x] Matriz RACI atualizada (`docs/playbook-operacional.md`).
+  - [x] Canal de incidentes configurado e comunicado (ver seção "Comunicação de Incidentes").
 
 ## Dependências Externas e Riscos
 | Risco | Impacto | Mitigação | Indicador de Monitorização |

@@ -3,6 +3,10 @@
 
 *                                   @bmad-method/engineering-leads
 /docs/                              @bmad-method/documentation
+/docs/atas/                         @bmad-method/documentation @bmad-method/operations
+/docs/observability-stack.md        @bmad-method/devops @bmad-method/sre
+/docs/runbooks/                     @bmad-method/devops @bmad-method/sre
+/docs/playbook-operacional.md       @bmad-method/operations
 /design/                            @bmad-method/product-design
 /web-bundles/                       @bmad-method/frontend
 /scripts/                           @bmad-method/devops
