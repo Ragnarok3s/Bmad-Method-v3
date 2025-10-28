@@ -20,6 +20,8 @@ from ..domain.schemas import (
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
     HousekeepingStatusUpdate,
+    PartnerSLARead,
+    PartnerWebhookPayload,
     PropertyCreate,
     PropertyRead,
     ReservationCreate,
@@ -28,6 +30,7 @@ from ..domain.schemas import (
 )
 from ..observability import instrument_application
 from ..services import AgentService, HousekeepingService, PropertyService, ReservationService
+from ..services.partners import PartnerSLAService
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -165,6 +168,26 @@ def list_housekeeping(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get("/partners/slas", response_model=list[PartnerSLARead])
+def list_partner_slas(session: Session = Depends(get_session)):
+    service = PartnerSLAService(session)
+    return service.list_slas()
+
+
+@router.post(
+    "/partners/webhooks/reconcile",
+    response_model=PartnerSLARead,
+    status_code=202,
+)
+async def reconcile_partner_webhook(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    payload = await _parse_model(request, PartnerWebhookPayload)
+    service = PartnerSLAService(session)
+    return service.reconcile_webhook(payload)
 
 
 def create_app(settings: CoreSettings | None = None, database: Database | None = None) -> FastAPI:

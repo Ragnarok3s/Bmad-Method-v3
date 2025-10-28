@@ -1,11 +1,20 @@
 """Modelos relacionais que suportam os módulos do MVP."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from enum import Enum
 
-from sqlalchemy import Boolean, DateTime, Enum as SAEnum, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum as SAEnum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -22,7 +31,9 @@ class Property(Base):
     address: Mapped[str] = mapped_column(Text, nullable=True)
 
     units: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
 
     reservations: Mapped[list["Reservation"]] = relationship("Reservation", back_populates="property", cascade="all, delete-orphan")
     housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="property", cascade="all, delete-orphan")
@@ -142,3 +153,80 @@ class AuditLog(Base):
 
     reservation: Mapped[Reservation | None] = relationship("Reservation", back_populates="audit_events")
     agent: Mapped[Agent | None] = relationship("Agent")
+
+
+class Partner(Base):
+    __tablename__ = "partners"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    slug: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
+    category: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    slas: Mapped[list["PartnerSLA"]] = relationship(
+        "PartnerSLA",
+        back_populates="partner",
+        cascade="all, delete-orphan",
+    )
+    webhook_events: Mapped[list["PartnerWebhookEvent"]] = relationship(
+        "PartnerWebhookEvent",
+        back_populates="partner",
+        cascade="all, delete-orphan",
+    )
+
+
+class SLAStatus(str, Enum):
+    ON_TRACK = "on_track"
+    AT_RISK = "at_risk"
+    BREACHED = "breached"
+
+
+class PartnerSLA(Base):
+    __tablename__ = "partner_slas"
+    __table_args__ = (
+        UniqueConstraint("partner_id", "metric", name="uq_partner_metric"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    partner_id: Mapped[int] = mapped_column(ForeignKey("partners.id"), nullable=False)
+    metric: Mapped[str] = mapped_column(String(120), nullable=False)
+    metric_label: Mapped[str] = mapped_column(String(160), nullable=False)
+    target_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    warning_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    breach_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    current_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    status: Mapped[SLAStatus] = mapped_column(
+        SAEnum(SLAStatus), nullable=False, default=SLAStatus.ON_TRACK
+    )
+    last_violation_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+
+    partner: Mapped[Partner] = relationship("Partner", back_populates="slas")
+
+
+class PartnerWebhookEvent(Base):
+    __tablename__ = "partner_webhook_events"
+    __table_args__ = (
+        UniqueConstraint("partner_id", "external_id", name="uq_partner_webhook"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    partner_id: Mapped[int] = mapped_column(ForeignKey("partners.id"), nullable=False)
+    sla_id: Mapped[int] = mapped_column(ForeignKey("partner_slas.id"), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(120), nullable=False)
+    metric: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[str] = mapped_column(String(60), nullable=False)
+    payload: Mapped[str] = mapped_column(Text, nullable=False)
+    elapsed_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    resolved_sla_status: Mapped[SLAStatus | None] = mapped_column(SAEnum(SLAStatus), nullable=True)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    partner: Mapped[Partner] = relationship("Partner", back_populates="webhook_events")
+    sla: Mapped[PartnerSLA] = relationship("PartnerSLA")

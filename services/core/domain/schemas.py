@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
-from .models import AgentRole, HousekeepingStatus, ReservationStatus
+from .models import AgentRole, HousekeepingStatus, ReservationStatus, SLAStatus
 
 
 class PropertyCreate(BaseModel):
@@ -113,3 +113,39 @@ class OTASyncJobRead(BaseModel):
 
 class HousekeepingStatusUpdate(BaseModel):
     status: HousekeepingStatus
+
+
+class PartnerSummary(BaseModel):
+    id: int
+    name: str
+    slug: str
+    category: str | None
+
+    class Config:
+        from_attributes = True
+
+
+class PartnerSLARead(BaseModel):
+    id: int
+    metric: str
+    metric_label: str
+    target_minutes: int
+    warning_minutes: int | None
+    breach_minutes: int
+    current_minutes: int | None
+    status: SLAStatus
+    last_violation_at: datetime | None
+    updated_at: datetime
+    partner: PartnerSummary
+
+    class Config:
+        from_attributes = True
+
+
+class PartnerWebhookPayload(BaseModel):
+    event_id: str
+    partner_slug: str
+    metric: str
+    status: str
+    elapsed_minutes: int
+    occurred_at: datetime

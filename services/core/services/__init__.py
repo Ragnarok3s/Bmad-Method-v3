@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
 
-from .domain.models import (
+from ..domain.models import (
     Agent,
     AgentRole,
     AuditLog,
@@ -24,7 +24,7 @@ from .domain.models import (
     Reservation,
     ReservationStatus,
 )
-from .domain.schemas import (
+from ..domain.schemas import (
     AgentCreate,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
@@ -33,14 +33,14 @@ from .domain.schemas import (
     ReservationCreate,
     ReservationUpdateStatus,
 )
-from .metrics import (
+from ..metrics import (
     record_housekeeping_scheduled,
     record_housekeeping_transition,
     record_ota_enqueue,
     record_reservation_confirmed,
     record_reservation_status,
 )
-from .security import assert_role
+from ..security import assert_role
 
 
 logger = logging.getLogger("bmad.core.services")

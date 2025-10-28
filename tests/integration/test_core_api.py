@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 
 from services.core.config import CoreSettings
+from services.core.database import get_database
+from services.core.domain.models import Partner, PartnerSLA, SLAStatus
 from services.core.main import build_application
 
 
@@ -86,3 +88,106 @@ def test_full_reservation_flow(tmp_path) -> None:
     gql_response = client.post("/graphql", json=graphql_query)
     assert gql_response.status_code == 200
     assert gql_response.json()["data"]["properties"][0]["name"] == "Residencial Porto"
+
+
+def test_partner_sla_webhook_reconciliation(tmp_path) -> None:
+    client = build_client(tmp_path)
+    database = client.app.dependency_overrides[get_database]()
+
+    with database.session_scope() as session:
+        laundry = Partner(name="AirLaundry", slug="airlaundry", category="lavandaria")
+        maintenance = Partner(name="FixItNow", slug="fixitnow", category="manutencao")
+        ota = Partner(name="Partner OTA Hub", slug="partner-ota-hub", category="ota")
+        session.add_all([laundry, maintenance, ota])
+        session.flush()
+
+        session.add_all(
+            [
+                PartnerSLA(
+                    partner_id=laundry.id,
+                    metric="pickup_window",
+                    metric_label="Janela de recolha",
+                    target_minutes=45,
+                    warning_minutes=60,
+                    breach_minutes=90,
+                    current_minutes=45,
+                    status=SLAStatus.ON_TRACK,
+                ),
+                PartnerSLA(
+                    partner_id=maintenance.id,
+                    metric="repair_dispatch",
+                    metric_label="Despacho manutenção",
+                    target_minutes=60,
+                    warning_minutes=75,
+                    breach_minutes=90,
+                    current_minutes=60,
+                    status=SLAStatus.ON_TRACK,
+                ),
+                PartnerSLA(
+                    partner_id=ota.id,
+                    metric="api_availability",
+                    metric_label="Disponibilidade API",
+                    target_minutes=15,
+                    warning_minutes=30,
+                    breach_minutes=45,
+                    current_minutes=10,
+                    status=SLAStatus.ON_TRACK,
+                ),
+            ]
+        )
+
+    now = datetime.now(timezone.utc)
+
+    on_track_response = client.post(
+        "/partners/webhooks/reconcile",
+        json={
+            "event_id": "evt-sla-001",
+            "partner_slug": "airlaundry",
+            "metric": "pickup_window",
+            "status": "delivered",
+            "elapsed_minutes": 38,
+            "occurred_at": now.isoformat(),
+        },
+    )
+    assert on_track_response.status_code == 202
+    assert on_track_response.json()["status"] == "on_track"
+
+    at_risk_response = client.post(
+        "/partners/webhooks/reconcile",
+        json={
+            "event_id": "evt-sla-002",
+            "partner_slug": "fixitnow",
+            "metric": "repair_dispatch",
+            "status": "delivered",
+            "elapsed_minutes": 72,
+            "occurred_at": (now + timedelta(minutes=5)).isoformat(),
+        },
+    )
+    assert at_risk_response.status_code == 202
+    assert at_risk_response.json()["status"] == "at_risk"
+
+    breached_response = client.post(
+        "/partners/webhooks/reconcile",
+        json={
+            "event_id": "evt-sla-003",
+            "partner_slug": "partner-ota-hub",
+            "metric": "api_availability",
+            "status": "failed",
+            "elapsed_minutes": 58,
+            "occurred_at": (now + timedelta(minutes=10)).isoformat(),
+        },
+    )
+    assert breached_response.status_code == 202
+    breached_body = breached_response.json()
+    assert breached_body["status"] == "breached"
+    assert breached_body["last_violation_at"] is not None
+
+    list_response = client.get("/partners/slas")
+    assert list_response.status_code == 200
+    payload = list_response.json()
+    statuses = {item["partner"]["slug"]: item for item in payload}
+
+    assert statuses["airlaundry"]["status"] == "on_track"
+    assert statuses["fixitnow"]["status"] == "at_risk"
+    assert statuses["partner-ota-hub"]["status"] == "breached"
+    assert statuses["partner-ota-hub"]["metric_label"] == "Disponibilidade API"
