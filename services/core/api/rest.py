@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime
-from typing import Iterable, TypeVar
+from datetime import date, datetime, timezone
+from typing import Any, Iterable, TypeVar
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,7 +37,7 @@ from ..domain.schemas import (
     WorkspaceCreate,
     WorkspaceRead,
 )
-from ..observability import instrument_application
+from ..observability import get_observability_status, instrument_application
 from ..services import (
     AgentService,
     HousekeepingService,
@@ -54,6 +54,28 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+@router.get("/health/otel")
+def get_otel_health() -> dict[str, Any]:
+    """Health-check dos sinais exportados via OpenTelemetry."""
+
+    snapshot = get_observability_status()
+    status = "ok" if snapshot["ready"] else "degraded"
+    if status == "ok" and not snapshot["active"]:
+        status = "warming"
+
+    observed_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    return {
+        "status": status,
+        "observed_at": observed_at,
+        "ready": snapshot["ready"],
+        "active": snapshot["active"],
+        "collector": snapshot["collector"],
+        "resource": snapshot["resource"],
+        "signals": snapshot["signals"],
+    }
 
 
 def configure_cors(app: FastAPI, settings: CoreSettings) -> None:

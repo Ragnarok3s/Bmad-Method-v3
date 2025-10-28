@@ -177,46 +177,40 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": false,
-          "text": "prometheus",
-          "value": "prometheus"
-        },
-        "hide": 0,
-        "label": "Data source",
         "name": "datasource",
+        "type": "datasource",
+        "label": "Prometheus",
+        "hide": 0,
         "query": "prometheus",
-        "refresh": 2,
-        "type": "datasource"
+        "regex": "prometheus-.*",
+        "refresh": 1,
+        "current": {
+          "selected": true,
+          "text": "Prometheus Staging",
+          "value": "prometheus-staging"
+        }
       },
       {
-        "current": {
-          "selected": false,
-          "text": "staging",
-          "value": "staging"
-        },
+        "name": "env",
+        "type": "query",
         "hide": 0,
         "label": "Ambiente",
-        "name": "env",
-        "options": [
-          {
-            "selected": true,
-            "text": "staging",
-            "value": "staging"
-          },
-          {
-            "selected": false,
-            "text": "dev",
-            "value": "dev"
-          },
-          {
-            "selected": false,
-            "text": "prod",
-            "value": "prod"
-          }
-        ],
-        "query": "staging,dev,prod",
-        "type": "custom"
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(http_server_duration_bucket{service_name=\"bmad-core-service\"}, deployment_environment)",
+        "query": {
+          "query": "label_values(http_server_duration_bucket{service_name=\\\"bmad-core-service\\\"}, deployment_environment)",
+          "refId": "EnvVar"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": "staging",
+          "value": "staging"
+        }
       }
     ]
   },
@@ -227,5 +221,7 @@
   "timepicker": {},
   "title": "Saúde de Agentes",
   "uid": "bmad-agents-001",
-  "version": 1
+  "version": 2,
+  "timezone": "browser",
+  "refresh": "1m"
 }

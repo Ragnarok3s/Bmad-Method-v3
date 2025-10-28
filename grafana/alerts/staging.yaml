@@ -14,7 +14,7 @@ groups:
             relativeTimeRange:
               from: 0
               to: 0
-            datasourceUid: PROMETHEUS_DS
+            datasourceUid: prometheus-staging
             model:
               expr: |
                 sum(rate(http_server_duration_count{service_name="bmad-core-service", http_response_status_code=~"5..", deployment_environment="staging"}[5m]))
@@ -28,7 +28,7 @@ groups:
             relativeTimeRange:
               from: 0
               to: 0
-            datasourceUid: PROMETHEUS_DS
+            datasourceUid: prometheus-staging
             model:
               expr: |
                 sum(rate(http_server_duration_count{service_name="bmad-core-service", deployment_environment="staging"}[5m]))
@@ -44,6 +44,8 @@ groups:
         labels:
           team: sre
           playbook: platform
+          environment: staging
+          severity: critical
         annotations:
           summary: "Erro 5xx acima de 2% em staging"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
@@ -59,7 +61,7 @@ groups:
             relativeTimeRange:
               from: 0
               to: 0
-            datasourceUid: PROMETHEUS_DS
+            datasourceUid: prometheus-staging
             model:
               expr: |
                 increase(ci_pipeline_failures_total{pipeline="staging"}[10m])
@@ -75,6 +77,8 @@ groups:
         labels:
           team: devops
           playbook: ci
+          environment: staging
+          severity: critical
         annotations:
           summary: "Pipelines falharam mais de 3 vezes nos últimos 10 minutos"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
@@ -90,7 +94,7 @@ groups:
             relativeTimeRange:
               from: 0
               to: 0
-            datasourceUid: PROMETHEUS_DS
+            datasourceUid: prometheus-staging
             model:
               expr: |
                 sum(increase(bmad_web_page_view_total{deployment_environment="staging"}[30m]))
@@ -104,7 +108,7 @@ groups:
             relativeTimeRange:
               from: 0
               to: 0
-            datasourceUid: PROMETHEUS_DS
+            datasourceUid: prometheus-staging
             model:
               expr: |
                 sum(increase(bmad_web_page_view_total{deployment_environment="staging"}[1h])) / 2
@@ -123,7 +127,7 @@ groups:
         annotations:
           summary: "Queda de 20% no engajamento web vs média da última hora"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
-        for: 10m
+        for: 4m
         noDataState: NoData
         execErrState: Alerting
 receivers:

@@ -172,42 +172,40 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "text": "prometheus",
-          "value": "prometheus"
-        },
-        "label": "Data source",
         "name": "datasource",
+        "type": "datasource",
+        "label": "Prometheus",
+        "hide": 0,
         "query": "prometheus",
-        "refresh": 2,
-        "type": "datasource"
+        "regex": "prometheus-.*",
+        "refresh": 1,
+        "current": {
+          "selected": true,
+          "text": "Prometheus Staging",
+          "value": "prometheus-staging"
+        }
       },
       {
+        "name": "env",
+        "type": "query",
+        "hide": 0,
+        "label": "Ambiente",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "$datasource"
+        },
+        "definition": "label_values(bmad_core_reservations_confirmed_total, deployment_environment)",
+        "query": {
+          "query": "label_values(bmad_core_reservations_confirmed_total, deployment_environment)",
+          "refId": "EnvVar"
+        },
+        "refresh": 2,
+        "sort": 1,
         "current": {
+          "selected": true,
           "text": "staging",
           "value": "staging"
-        },
-        "label": "Ambiente",
-        "name": "env",
-        "options": [
-          {
-            "selected": true,
-            "text": "staging",
-            "value": "staging"
-          },
-          {
-            "selected": false,
-            "text": "dev",
-            "value": "dev"
-          },
-          {
-            "selected": false,
-            "text": "prod",
-            "value": "prod"
-          }
-        ],
-        "query": "staging,dev,prod",
-        "type": "custom"
+        }
       }
     ]
   },
@@ -217,5 +215,7 @@
   },
   "title": "Operações & Engajamento",
   "uid": "bmad-ops-002",
-  "version": 1
+  "version": 2,
+  "timezone": "browser",
+  "refresh": "1m"
 }
