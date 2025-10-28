@@ -1,0 +1,18 @@
+[
+  {
+    "guest_id": "GUEST-001",
+    "name": "Alice Example",
+    "email": "alice@example.test",
+    "document": "***1234",
+    "created_at": "2024-06-01",
+    "preferences": ["late-checkout", "quiet-room"]
+  },
+  {
+    "guest_id": "GUEST-002",
+    "name": "Bruno Synthetic",
+    "email": "bruno@example.test",
+    "document": "***5678",
+    "created_at": "2024-07-10",
+    "preferences": ["high-floor"]
+  }
+]

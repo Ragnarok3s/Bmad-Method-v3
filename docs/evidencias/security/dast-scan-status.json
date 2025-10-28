@@ -1,0 +1,7 @@
+{
+  "last_scan": "2024-07-15",
+  "scanner": "OWASP ZAP",
+  "environment": "staging",
+  "last_scan_status": "passed",
+  "unresolved_findings": []
+}

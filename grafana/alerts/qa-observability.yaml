@@ -1,0 +1,17 @@
+apiVersion: 1
+policies:
+  - orgId: 1
+    receiver: qa-ceremonies
+    group_by:
+      - alertname
+    routes:
+      - match:
+          team: qa
+        receiver: qa-ceremonies
+receivers:
+  - name: qa-ceremonies
+    slack_configs:
+      - channel: "#qa-reviews"
+        title: "[QA] {{ .CommonLabels.alertname }}"
+        text: "Build {{ .CommonLabels.build_id }} violou o gate {{ .CommonLabels.gate }}"
+        send_resolved: true

@@ -37,7 +37,7 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 ## Privacidade e Conformidade Regulatório
 
 - **Checklist LGPD/GDPR**: validar consentimentos, finalidades, direitos do titular e políticas de retenção em testes de aceitação e regressão.
-- **Dados Sintéticos**: utilizar geradores anonimizados e mascaramento obrigatório em ambientes de teste; proibir dados reais em pipelines.
+- **Dados Sintéticos**: utilizar geradores anonimizados e mascaramento obrigatório em ambientes de teste; proibir dados reais em pipelines. A amostra versionada vive em `tests/data/synthetic_guests.json` e é validada automaticamente na suíte de integração.
 - **Auditoria de Acessos**: garantir que testes de integração validem trilhas de auditoria (criação/edição/consulta) para usuários privilegiados.
 - **Localização de Dados**: cobrir cenários de transferência internacional com mocks de provedores para confirmar aplicação de cláusulas contratuais padrão.
 - **Revisão de Terceiros**: incluir verificação trimestral de conformidade com PSPs e OTAs quanto a cláusulas de proteção de dados.
@@ -83,9 +83,10 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 
 ## Integração com CI/CD
 
-1. Testes unitários e de integração rodarão na pipeline `ci.yml` (steps placeholders para scripts `./scripts/test-unit.sh` e `./scripts/test-integration.sh`).
-2. Testes E2E executados em pipeline agendada `e2e-nightly.yml` (futura) e manual antes de releases.
-3. Publicar relatórios em formato JUnit e HTML como artefatos para auditoria.
+1. Testes unitários e de integração rodarão na pipeline `ci.yml` usando `./scripts/test-unit.sh` e `./scripts/test-integration.sh`, gerando cobertura em `artifacts/coverage/`.
+2. Testes E2E executados através do script `./scripts/test-e2e.sh` dentro do `ci.yml` e na pipeline agendada `e2e-nightly.yml` (futura) para manter smoke diário.
+3. Quality gates automatizados (`./scripts/run-quality-gates.sh`) verificam cobertura mínima, backlog de bugs, resultados de Bandit, status DAST e matriz de privacidade (`docs/evidencias/compliance/privacy-readiness.yaml`).
+4. Publicar relatórios em formato JUnit e HTML como artefatos para auditoria.
 
 ## Gestão de Qualidade
 
