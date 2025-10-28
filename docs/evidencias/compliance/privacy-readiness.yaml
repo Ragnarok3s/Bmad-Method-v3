@@ -11,3 +11,7 @@ controles:
     requisito: "Retenção automática de 24 meses e anonimização"
     status: "aprovado"
     evidencia: "docs/revisao-validacao-artefatos.md"
+  - modulo: "Seeds de Dados"
+    requisito: "Rotinas de seed utilizam datasets sintéticos mascarados e geram evidências em artifacts/seed/"
+    status: "aprovado"
+    evidencia: "docs/evidencias/compliance/seed-datasets/README.md"

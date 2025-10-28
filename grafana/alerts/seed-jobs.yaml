@@ -1,0 +1,75 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: Seed Jobs
+    folder: Operações
+    interval: 1m
+    rules:
+      - uid: seed-job-failure
+        title: SeedJobFailure
+        condition: C
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                seed_job_success{environment="staging"}
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: B
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: PROMETHEUS_DS
+            model:
+              expr: |
+                (time() - seed_job_last_run_timestamp{environment="staging"}) / 3600
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: (A < 1) or (B > 6)
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: platform
+          playbook: seed
+        annotations:
+          summary: "Seed job de staging falhou ou não executa há mais de 6h"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/seed-data-jobs.md"
+        for: 5m
+        noDataState: Alerting
+        execErrState: Alerting
+receivers:
+  - name: seed-jobs-channel
+    slack_configs:
+      - channel: "#platform-ops"
+        title: "[Seed] {{ .CommonLabels.environment }} - {{ .CommonAnnotations.summary }}"
+        text: |
+          Última execução: {{ index .Values "B" }}h atrás
+          Status atual: {{ index .Values "A" }}
+        send_resolved: true
+    pagerduty_configs:
+      - service_key: "{{ pagerduty.SeedJobs }}"
+        severity: critical
+        description: "Seed job em alerta para {{ .CommonLabels.environment }}"
+        details:
+          mode: "{{ .CommonLabels.mode | default "apply" }}"
+          datastore: "relational+nosql"
+policies:
+  - orgId: 1
+    receiver: seed-jobs-channel
+    routes:
+      - matchers:
+          - "playbook=seed"
+        receiver: seed-jobs-channel

@@ -1,0 +1,27 @@
+name: Reset Staging
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'
+
+jobs:
+  reset:
+    name: Reset diário de staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Executar reset com seed sintético
+        env:
+          SEED_MODE: validate
+          STAGING_RELATIONAL_URL: ${{ secrets.STAGING_RELATIONAL_URL }}
+          STAGING_NOSQL_URL: ${{ secrets.STAGING_NOSQL_URL }}
+        run: |
+          ./scripts/infra/reset-staging.sh
+      - name: Publicar evidências de seed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reset-seed-metrics
+          path: artifacts/seed

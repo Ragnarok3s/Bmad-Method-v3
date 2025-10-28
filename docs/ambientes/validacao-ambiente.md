@@ -15,6 +15,7 @@ pip install -r requirements.txt
 ## Smoke tests executados
 - `scripts/test-unit.sh`: 10 testes executados (4 marcados como `integration`/`e2e` foram desconsiderados) com cobertura de 92% para `quality/metrics.py`. Artefatos `artifacts/junit/unit-tests.xml` e `artifacts/coverage/unit-coverage.xml` foram gerados automaticamente.【a4b8eb†L1-L19】
 - `scripts/infra/provision-dev.sh docker/k8s`: validação combinada do `design/docker-compose.dev.yml` e renderização dos manifests `design/k8s/dev` via `kubectl kustomize`, garantindo que os artefatos estejam prontos para consumo em pipelines.
+- `scripts/infra/seed-dev-data.sh --mode validate`: confirmou que `tests/data/seed/` está alinhado com `quality/privacy.py` e registrou métricas em `artifacts/seed/dev_seed.prom` para monitoramento no Grafana.
 
 ## Correções necessárias
 - O pipeline falha ao chamar `scripts/test-integration.sh` e `scripts/test-e2e.sh` porque ambos encerram com erro quando não há suítes configuradas; é preciso adicionar cenários mínimos ou introduzir uma variável de bypass antes de acionar esses scripts como parte dos smoke tests.【F:scripts/test-integration.sh†L11-L37】【F:scripts/test-e2e.sh†L10-L32】
