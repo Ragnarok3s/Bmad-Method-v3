@@ -336,7 +336,11 @@ class HousekeepingService:
         self.session = session
 
     def schedule(self, payload: HousekeepingTaskCreate, actor: Agent) -> HousekeepingTask:
-        assert_role(actor, {AgentRole.ADMIN, AgentRole.PROPERTY_MANAGER})
+        assert_role(
+            actor,
+            {AgentRole.ADMIN, AgentRole.PROPERTY_MANAGER},
+            property_id=payload.property_id,
+        )
         property_obj = self.session.get(Property, payload.property_id)
         if not property_obj:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propriedade não encontrada")
@@ -361,7 +365,7 @@ class HousekeepingService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarefa não encontrada")
 
         allowed_roles = {AgentRole.ADMIN, AgentRole.PROPERTY_MANAGER, AgentRole.HOUSEKEEPING}
-        assert_role(actor, allowed_roles)
+        assert_role(actor, allowed_roles, property_id=task.property_id)
         if actor.role == AgentRole.HOUSEKEEPING and task.assigned_agent_id != actor.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tarefa pertence a outro agente")
 

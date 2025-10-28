@@ -138,12 +138,23 @@ DEFAULT_ROLE_POLICIES: tuple[RolePolicyCreate, ...] = (
 )
 
 
-def get_effective_roles(agent: Agent, session: Session | None = None) -> set[AgentRole]:
+def get_effective_roles(
+    agent: Agent,
+    session: Session | None = None,
+    *,
+    property_id: int | None = None,
+) -> set[AgentRole]:
     roles = set(ROLE_HIERARCHY.get(agent.role, {agent.role}))
     if session is None:
         return roles
 
     query: Select[RolePolicy] = select(RolePolicy).where(RolePolicy.role == agent.role)
+    if property_id is None:
+        query = query.where(RolePolicy.property_id.is_(None))
+    else:
+        query = query.where(
+            RolePolicy.property_id.is_(None) | (RolePolicy.property_id == property_id)
+        )
     for policy in session.execute(query).scalars():
         for inherited in policy.inherits:
             try:
@@ -156,7 +167,7 @@ def get_effective_roles(agent: Agent, session: Session | None = None) -> set[Age
 def get_effective_permissions(
     session: Session, agent: Agent, *, property_id: int | None = None
 ) -> set[str]:
-    base_roles = get_effective_roles(agent, session)
+    base_roles = get_effective_roles(agent, session, property_id=property_id)
     permissions: set[str] = set()
 
     for role in base_roles:
@@ -177,6 +188,7 @@ def assert_role(
     allowed: Iterable[AgentRole],
     *,
     session: Session | None = None,
+    property_id: int | None = None,
 ) -> None:
     """Valida se o agente possui alguma das roles permitidas."""
 
@@ -184,7 +196,7 @@ def assert_role(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agente inativo")
 
     allowed_set = {role for role in allowed}
-    effective_roles = get_effective_roles(agent, session)
+    effective_roles = get_effective_roles(agent, session, property_id=property_id)
     if not effective_roles.intersection(allowed_set):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado")
 
