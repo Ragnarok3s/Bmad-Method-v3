@@ -40,6 +40,12 @@ export interface HousekeepingTaskQuery {
   signal?: AbortSignal;
 }
 
+export interface HousekeepingTaskUpdatePayload {
+  status?: HousekeepingStatus;
+  notes?: string | null;
+  assignedAgentId?: number | null;
+}
+
 interface HousekeepingTaskDto {
   id: number;
   property_id: number;
@@ -129,6 +135,31 @@ export async function getHousekeepingTasks(
   };
 }
 
+export async function updateHousekeepingTask(
+  taskId: number,
+  payload: HousekeepingTaskUpdatePayload
+): Promise<HousekeepingTask> {
+  const url = new URL(`/housekeeping/tasks/${taskId}`, CORE_API_BASE_URL);
+  const body = JSON.stringify(toSnakeCaseKeys(payload));
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body
+  });
+
+  if (!response.ok) {
+    const responseBody = await safeReadJson(response);
+    throw new CoreApiError('Failed to update housekeeping task', response.status, responseBody);
+  }
+
+  const dto = (await response.json()) as HousekeepingTaskDto;
+  return mapTask(dto);
+}
+
 async function safeReadJson(response: Response): Promise<unknown> {
   try {
     return await response.json();
@@ -141,4 +172,19 @@ function toSnakeCase(input: string): string {
   return input
     .replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`)
     .replace(/^_/, '');
+}
+
+function toSnakeCaseKeys(
+  payload: HousekeepingTaskUpdatePayload
+): Record<string, unknown> {
+  return Object.entries(payload).reduce<Record<string, unknown>>(
+    (acc, [key, value]) => {
+      if (value === undefined) {
+        return acc;
+      }
+      acc[toSnakeCase(key)] = value;
+      return acc;
+    },
+    {}
+  );
 }
