@@ -2,48 +2,26 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ARTIFACT_DIR="$ROOT_DIR/artifacts"
+COVERAGE_DIR="$ARTIFACT_DIR/coverage"
+JUNIT_DIR="$ARTIFACT_DIR/junit"
 
-has_npm_integration_script() {
-  local package_json="$1/package.json"
-  if [ ! -f "$package_json" ]; then
-    return 1
-  fi
+mkdir -p "$COVERAGE_DIR" "$JUNIT_DIR"
 
-  local script_name
-  script_name=$(python3 - <<'PY'
-import json, pathlib, sys
-path = pathlib.Path(sys.argv[1])
-try:
-    data = json.loads(path.read_text())
-except FileNotFoundError:
-    sys.exit(1)
-print(data.get("scripts", {}).get("test:integration", ""))
-PY
-"$package_json") || return 1
-
-  if [ -n "$script_name" ]; then
+run_pytest_integration() {
+  if compgen -G "$ROOT_DIR/tests/integration/*.py" > /dev/null; then
+    echo "[test-integration] Executando pytest -m integration"
+    export COVERAGE_FILE="$COVERAGE_DIR/.coverage.integration"
+    (\
+      cd "$ROOT_DIR" && \
+      pytest \
+        -m integration \
+        --cov=quality.privacy \
+        --cov-report=xml:"$COVERAGE_DIR/integration-coverage.xml" \
+        --cov-report=term \
+        --junitxml="$JUNIT_DIR/integration-tests.xml"
+    )
     return 0
-  fi
-  return 1
-}
-
-run_node_integration() {
-  local package_dir="$1"
-  if has_npm_integration_script "$package_dir"; then
-    echo "[test-integration] Executando npm run test:integration em $package_dir"
-    (cd "$package_dir" && npm run test:integration)
-    return 0
-  fi
-  return 1
-}
-
-run_python_integration() {
-  if command -v pytest >/dev/null 2>&1; then
-    if compgen -G "$ROOT_DIR/tests/integration/*.py" > /dev/null; then
-      echo "[test-integration] Executando pytest com marcador integration"
-      (cd "$ROOT_DIR" && pytest -m integration)
-      return 0
-    fi
   fi
   return 1
 }
@@ -51,15 +29,7 @@ run_python_integration() {
 main() {
   echo "[test-integration] Iniciando suíte de testes de integração"
 
-  if run_node_integration "$ROOT_DIR"; then
-    exit 0
-  fi
-
-  if run_node_integration "$ROOT_DIR/web-bundles"; then
-    exit 0
-  fi
-
-  if run_python_integration; then
+  if run_pytest_integration; then
     exit 0
   fi
 

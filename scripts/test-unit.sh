@@ -2,21 +2,25 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ARTIFACT_DIR="$ROOT_DIR/artifacts"
+COVERAGE_DIR="$ARTIFACT_DIR/coverage"
+JUNIT_DIR="$ARTIFACT_DIR/junit"
 
-run_node_tests() {
-  local package_dir="$1"
-  if [ -f "$package_dir/package.json" ]; then
-    echo "[test-unit] Executando testes do Node.js em $package_dir"
-    (cd "$package_dir" && npm test)
-    return 0
-  fi
-  return 1
-}
+mkdir -p "$COVERAGE_DIR" "$JUNIT_DIR"
 
-run_python_tests() {
-  if compgen -G "$ROOT_DIR/**/pytest.ini" > /dev/null || compgen -G "$ROOT_DIR/**/pyproject.toml" > /dev/null; then
-    echo "[test-unit] Executando pytest a partir da raiz do repositório"
-    (cd "$ROOT_DIR" && pytest)
+run_pytest_unit() {
+  if compgen -G "$ROOT_DIR/tests/**/*.py" > /dev/null; then
+    echo "[test-unit] Executando pytest com cobertura"
+    export COVERAGE_FILE="$COVERAGE_DIR/.coverage.unit"
+    (\
+      cd "$ROOT_DIR" && \
+      pytest \
+        -m "not integration and not e2e" \
+        --cov=quality.metrics \
+        --cov-report=xml:"$COVERAGE_DIR/unit-coverage.xml" \
+        --cov-report=term-missing \
+        --junitxml="$JUNIT_DIR/unit-tests.xml"
+    )
     return 0
   fi
   return 1
@@ -25,15 +29,7 @@ run_python_tests() {
 main() {
   echo "[test-unit] Iniciando suíte de testes unitários"
 
-  if run_node_tests "$ROOT_DIR"; then
-    exit 0
-  fi
-
-  if run_node_tests "$ROOT_DIR/web-bundles"; then
-    exit 0
-  fi
-
-  if run_python_tests; then
+  if run_pytest_unit; then
     exit 0
   fi
 

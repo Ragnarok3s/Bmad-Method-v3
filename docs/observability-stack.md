@@ -20,6 +20,12 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 | Runbooks Publicados | Procedimentos documentados para alarmes críticos e incidentes. | `docs/runbooks/` |
 | Integração PagerDuty | Serviço `bmad-platform-staging` com rota primária SRE e fallback Ops. | Configuração registrada em `docs/runbooks/alertas-criticos.md` |
 
+### Implementação no Repositório
+
+- Dashboard `QA-Quality` versionado em `grafana/staging/qa-quality-dashboard.json`, alinhado às métricas definidas em `docs/testing-strategy.md`.
+- Regras de alerta para cerimônias de QA configuradas em `grafana/alerts/qa-observability.yaml`, notificando o canal `#qa-reviews`.
+- Runbook específico para revisão de QA/observabilidade disponível em `docs/runbooks/qa-observability-review.md`.
+
 ## Logs
 
 | Camada | Ferramenta | Motivo | Implementação |

@@ -1,0 +1,13 @@
+controles:
+  - modulo: "Autenticação"
+    requisito: "Consentimento explícito e logs de auditoria"
+    status: "aprovado"
+    evidencia: "artifacts/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx"
+  - modulo: "Pagamentos PCI"
+    requisito: "Tokenização e segregação de rede conforme plano MVP"
+    status: "aprovado"
+    evidencia: "docs/evidencias/dpia-inicial-2024-05.md"
+  - modulo: "Reservas"
+    requisito: "Retenção automática de 24 meses e anonimização"
+    status: "aprovado"
+    evidencia: "docs/revisao-validacao-artefatos.md"

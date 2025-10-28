@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra"
+testpaths = [
+  "tests"
+]
+markers = [
+  "unit: testes unitários de componentes isolados",
+  "integration: testes de integração que validam orquestrações e requisitos de privacidade",
+  "e2e: cenários ponta a ponta que simulam fluxos completos do MVP"
+]

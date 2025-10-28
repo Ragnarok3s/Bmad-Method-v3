@@ -1,0 +1,76 @@
+{
+  "title": "QA-Quality",
+  "uid": "qa-quality-mvp",
+  "timezone": "browser",
+  "panels": [
+    {
+      "title": "Cobertura de Testes",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "orange", "value": 75},
+              {"color": "green", "value": 85}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "ci_pipeline_coverage_percentage{suite=\"unit\"}",
+          "legendFormat": "Unit"
+        },
+        {
+          "expr": "ci_pipeline_coverage_percentage{suite=\"integration\"}",
+          "legendFormat": "Integration"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "title": "Bugs por Severidade",
+      "type": "bargauge",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "analytics"},
+          "rawSql": "select severity, count(*) as total from qa_bug_backlog where status = 'open' group by severity",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "title": "Alertas de Segurança",
+      "type": "stat",
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 8},
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "expr": "count_over_time({app=\"dast\",level=\"error\"}[24h])"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "refresh": "5m",
+  "tags": ["qa", "observability", "quality-gates"]
+}
