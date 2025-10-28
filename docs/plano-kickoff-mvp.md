@@ -8,7 +8,7 @@ Estabelecer o arranque coordenado da fase de implementação do MVP da plataform
 - Aprovação executiva dos documentos estratégicos (roadmap, plano MVP, guias operacionais) após atribuição de owners e datas de revisão.【F:docs/revisao-validacao-artefatos.md†L68-L99】【F:docs/revisao-validacao-artefatos.md†L125-L133】
 - Equipa comprometida com calendário de sprints quinzenais, com capacidade alocada e cobertura de QA/DevOps definida.
 - SLAs e janelas operacionais com parceiros críticos (lavanderia, manutenção, fornecedores de amenities) assinados e documentados no repositório de operações antes do início do Sprint 0.
-- Publicação do pacote completo de Definition of Ready/Definition of Done com evidências anexadas no relatório de revisão (`docs/revisao-validacao-artefatos.md`).
+- Publicação do pacote completo de Definition of Ready/Definition of Done com evidências anexadas no relatório de revisão (`docs/revisao-validacao-artefatos.md`) e documentação centralizada em `docs/dor-dod-package.md`.
 
 ## Responsabilidades Principais
 | Área | Responsável | Escopo |

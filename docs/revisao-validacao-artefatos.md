@@ -20,12 +20,16 @@
 | Playbook Operacional | Luís Ferreira (Operations Manager) | 2024-05-20 | Matriz RACI publicada e sincronizada com canais de escalonamento. |
 | Artefatos de UX (`design/hospitality-ux/*`) | Laura Pinto (Design Lead) | 2024-05-20 | Checklist de acessibilidade em validação conjunta com Engineering Lead e QA. |
 
+> **Atualização 2024-06-03**: Owners reconfirmados durante o alinhamento do checkpoint Q3, mantendo responsabilidades e datas originais.
+
 ## Calendário de Revisão Trimestral 2024-2025
 | Período | Data | Escopo | Responsáveis pela Revisão | Critérios de Saída |
 | --- | --- | --- | --- | --- |
 | Q3 2024 | 2024-07-15 | Roadmap, Plano MVP, Estratégia de Testes, Artefatos de UX | Ana Ribeiro, Miguel Costa, Carlos Mendes, Laura Pinto | Plano de compliance aprovado e checklist de acessibilidade validado em staging. |
 | Q4 2024 | 2024-10-14 | Guia de Engenharia, Observability Stack, Playbook Operacional | Joana Silva, Bruno Carvalho, Luís Ferreira | Templates de PR/CODEOWNERS ativos, runbooks com owners definidos e métricas de suporte atualizadas. |
 | Q1 2025 | 2025-01-20 | Revisão integral de todos os artefatos estratégicos | PMO + Owners de cada artefato | KPIs pós-MVP atualizados, riscos mitigados ou com plano aprovado pelo steering committee. |
+
+> **Nota**: Calendário revalidado em 2024-06-03, confirmando datas e escopo das revisões trimestrais.
 
 ## Quadro de Acompanhamento das Ações Corretivas
 | Ação Corretiva | Responsável | Data Limite | Status | Próximo Checkpoint |
@@ -36,6 +40,7 @@
 | Concluir templates/scripts DevOps e formalizar política de rollback/versionamento | Joana Silva & Bruno Carvalho | 2024-06-28 | **Concluída (Semana 1)** | CI executa `scripts/test-unit.sh`/`scripts/test-integration.sh` e política de rollback publicada em `engineering-handbook.md`. |
 | Atribuir ownership de dashboards/runbooks e definir processo de revisão de custos/alertas | Bruno Carvalho & Luís Ferreira | 2024-07-05 | **Concluída (Semana 1)** | Owners nomeados em `observability-stack.md` e processo de revisão quinzenal/mensal alinhado ao kick-off. |
 | Integrar checklist de acessibilidade, matriz RACI e critérios de priorização para expansão | Laura Pinto & Luís Ferreira | 2024-06-21 | **Concluída (Semana 1)** | Revisar evidências na cadência de steering de 01/07. |
+| Formalizar SLAs com parceiros operacionais e arquivar evidências | Luís Ferreira & Bruno Carvalho | 2024-06-03 | **Concluída (Checkpoint Q3)** | Registro e anexos em `docs/evidencias/sla-operacionais-2024-06.md`; validação de cumprimento em 15/07. |
 
 ## Escopo da Revisão
 Foram avaliados os seguintes artefatos entregues:
@@ -53,9 +58,10 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
 ## Evidências do Gate de Kick-off
 | Item Validado | Evidência | Data de Registro | Responsáveis |
 | --- | --- | --- | --- |
-| Definition of Ready / Definition of Done publicados | Ata de kick-off anexada e seção `DoR-DoD` adicionada em `docs/property-mvp-plan.md` com critérios por módulo; link referenciado em `docs/plano-kickoff-mvp.md`. | 2024-05-27 | Product Owner + QA Lead |
+| Definition of Ready / Definition of Done publicados | Ata de kick-off anexada, seção `DoR-DoD` em `docs/property-mvp-plan.md` e pacote consolidado em `docs/dor-dod-package.md` com checklist oficial. | 2024-05-27 | Product Owner + QA Lead |
 | Ambiente de staging pronto para Sprint 0 | Checklist de readiness de staging com resultado **Aprovado** armazenado na pasta `docs/evidencias/staging-readiness-2024-05.md`, incluindo smoke tests executados. | 2024-05-27 | Platform Engineer + Engineering Lead |
 | Checklist de conformidade LGPD/GDPR/PCI | Versão 1.0 do checklist assinada no pipeline (`artefatos/compliance/checklist-lgpd-gdpr-pci-v1.0.xlsx`) e mencionada em `docs/testing-strategy.md`. | 2024-05-27 | Privacy Officer + Security Champion |
+| SLAs operacionais com parceiros críticos | Registro de reunião e anexos de assinatura em `docs/evidencias/sla-operacionais-2024-06.md`, com PDFs assinados em `artefatos/sla/2024-06/`. | 2024-06-03 | Operations Manager + Platform Engineer |
 
 ## Avaliações por Artefato
 
@@ -118,6 +124,10 @@ A revisão concentrou-se em consistência, completude, alinhamento com objetivos
   - Recomenda-se adicionar mapa de navegação consolidado e plano de hand-off detalhando tokens/componentes no Figma.
 - **Mitigação Semana 1 do kick-off**: checklist de acessibilidade integrado ao plano de protótipo com responsabilidades, métricas e evidências por iteração, incluindo testes com leitores de ecrã e documentação de gaps para o quadro de ações corretivas.【F:design/hospitality-ux/prototipo-interativo.md†L33-L88】
 - **Ação sugerida**: priorizar elaboração do mapa de navegação consolidado antes da revisão Q3/2024.
+
+## Comunicação à Equipa sobre DoR/DoD e SLAs
+- 2024-06-03: mensagem enviada nos canais de projeto confirmando que os critérios de pronto (DoR/DoD) permanecem válidos após consolidação no pacote `docs/dor-dod-package.md` e destacando responsabilidades de atualização por módulo.
+- 2024-06-03: resumo da reunião de SLAs compartilhado com squads e PMO, com link para `docs/evidencias/sla-operacionais-2024-06.md` e instruções para monitorização no checkpoint de 15/07.
 
 ## Recomendações Gerais e Próximos Passos
 1. Cumprir o calendário de revisão trimestral, registando decisões e atualizações diretamente neste relatório após cada checkpoint.
