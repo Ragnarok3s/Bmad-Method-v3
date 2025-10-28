@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Card } from '@/components/ui/Card';
 import { SectionHeader } from '@/components/layout/SectionHeader';
@@ -12,7 +12,8 @@ import {
   getHousekeepingTasks,
   HousekeepingStatus,
   HousekeepingTask,
-  PaginationMeta
+  PaginationMeta,
+  updateHousekeepingTask
 } from '@/services/api/housekeeping';
 
 const DEFAULT_PROPERTY_ID = 1;
@@ -35,12 +36,21 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
 });
 
 export default function HousekeepingPage() {
-  const { isOffline } = useOffline();
+  const {
+    isOffline,
+    pendingActions,
+    enqueueTaskUpdate,
+    flushQueue,
+    lastChangedAt,
+    isSyncing
+  } = useOffline();
   const [tasks, setTasks] = useState<HousekeepingTask[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOffline) {
@@ -88,7 +98,61 @@ export default function HousekeepingPage() {
       });
 
     return () => controller.abort();
-  }, [isOffline]);
+  }, [isOffline, lastChangedAt]);
+
+  const handleToggleStatus = useCallback(
+    async (task: HousekeepingTask) => {
+      const nextStatus: HousekeepingStatus =
+        task.status === 'completed' ? 'pending' : 'completed';
+      const description = `Tarefa #${task.id} → ${STATUS_LABELS[nextStatus]}`;
+
+      setMutationError(null);
+
+      if (isOffline) {
+        await enqueueTaskUpdate({
+          taskId: task.id,
+          updates: { status: nextStatus },
+          description
+        });
+        setTasks((prev) =>
+          prev.map((item) =>
+            item.id === task.id ? { ...item, status: nextStatus } : item
+          )
+        );
+        setLastUpdated(new Date());
+        return;
+      }
+
+      setUpdatingTaskId(task.id);
+
+      try {
+        const updatedTask = await updateHousekeepingTask(task.id, {
+          status: nextStatus
+        });
+        setTasks((prev) =>
+          prev.map((item) => (item.id === updatedTask.id ? updatedTask : item))
+        );
+        setLastUpdated(new Date());
+      } catch (apiError: unknown) {
+        if (apiError instanceof CoreApiError) {
+          setMutationError(
+            apiError.status >= 500
+              ? 'Sincronização indisponível. Tente novamente em instantes.'
+              : 'Não foi possível atualizar a tarefa no core.'
+          );
+        } else {
+          setMutationError('Ocorreu um erro ao atualizar a tarefa.');
+        }
+      } finally {
+        setUpdatingTaskId(null);
+      }
+    },
+    [enqueueTaskUpdate, isOffline]
+  );
+
+  const handleManualSync = useCallback(() => {
+    void flushQueue({ manual: true });
+  }, [flushQueue]);
 
   const statusCounters = useMemo(() => {
     return tasks.reduce(
@@ -166,27 +230,44 @@ export default function HousekeepingPage() {
       ];
     }
 
-    return tasks.map((task) => (
-      <Card
-        key={task.id}
-        title={`Tarefa #${task.id}`}
-        description={`Agendado para ${DATE_TIME_FORMATTER.format(
-          new Date(task.scheduledDate)
-        )}`}
-      >
-        <StatusBadge variant={STATUS_VARIANT[task.status]}>
-          {STATUS_LABELS[task.status]}
-        </StatusBadge>
-        <ul>
-          <li>Reserva: {task.reservationId ?? 'Sem ligação'}</li>
-          <li>Responsável: {task.assignedAgentId ?? 'Não atribuído'}</li>
-          <li>Observações: {task.notes ?? 'Sem notas adicionais.'}</li>
-        </ul>
-      </Card>
-    ));
-  }, [loading, error, tasks]);
+    return tasks.map((task) => {
+      const isTaskUpdating = updatingTaskId === task.id;
+      const actionLabel =
+        task.status === 'completed'
+          ? 'Reabrir tarefa'
+          : 'Marcar como concluída';
 
-  const operationBlocks = useMemo(() => {
+      return (
+        <Card
+          key={task.id}
+          title={`Tarefa #${task.id}`}
+          description={`Agendado para ${DATE_TIME_FORMATTER.format(
+            new Date(task.scheduledDate)
+          )}`}
+        >
+          <StatusBadge variant={STATUS_VARIANT[task.status]}>
+            {STATUS_LABELS[task.status]}
+          </StatusBadge>
+          <ul>
+            <li>Reserva: {task.reservationId ?? 'Sem ligação'}</li>
+            <li>Responsável: {task.assignedAgentId ?? 'Não atribuído'}</li>
+            <li>Observações: {task.notes ?? 'Sem notas adicionais.'}</li>
+          </ul>
+          <button
+            type="button"
+            onClick={() => {
+              void handleToggleStatus(task);
+            }}
+            disabled={isTaskUpdating || isSyncing}
+          >
+            {isTaskUpdating ? 'Sincronizando…' : actionLabel}
+          </button>
+        </Card>
+      );
+    });
+  }, [error, handleToggleStatus, isSyncing, loading, tasks, updatingTaskId]);
+
+  const metricsBlocks = useMemo(() => {
     if (loading) {
       return [
         {
@@ -243,6 +324,63 @@ export default function HousekeepingPage() {
     pagination
   ]);
 
+  const operationCards = useMemo(() => {
+    const cards = [
+      (
+        <Card
+          key="offline-queue"
+          title="Fila offline"
+          description="Acompanhe mutações pendentes para o serviço core"
+          accent={pendingActions.length > 0 ? 'warning' : 'success'}
+        >
+          <p>
+            {isOffline
+              ? 'Modo offline ativo. Os envios serão retomados automaticamente.'
+              : isSyncing
+                ? 'Sincronização em andamento com o core.'
+                : 'Online. Nenhum bloqueio para sincronizar as alterações.'}
+          </p>
+          <ul>
+            {pendingActions.length > 0 ? (
+              pendingActions.map((action) => <li key={action}>{action}</li>)
+            ) : (
+              <li>Sem ações pendentes.</li>
+            )}
+          </ul>
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isOffline || pendingActions.length === 0 || isSyncing}
+          >
+            {isSyncing ? 'Sincronizando…' : 'Sincronizar agora'}
+          </button>
+          {mutationError && <p className="queue-error">{mutationError}</p>}
+        </Card>
+      )
+    ];
+
+    cards.push(
+      ...metricsBlocks.map((block) => (
+        <Card key={block.title} title={block.title}>
+          <ul>
+            {block.items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </Card>
+      ))
+    );
+
+    return cards;
+  }, [
+    handleManualSync,
+    isOffline,
+    isSyncing,
+    metricsBlocks,
+    mutationError,
+    pendingActions
+  ]);
+
   return (
     <div>
       <SectionHeader subtitle="Planeamento diário com suporte offline-first">
@@ -266,23 +404,32 @@ export default function HousekeepingPage() {
       <SectionHeader subtitle="Sincronizações e métricas para gestores">
         Operação em tempo real
       </SectionHeader>
-      <ResponsiveGrid columns={2}>
-        {operationBlocks.map((block) => (
-          <Card key={block.title} title={block.title}>
-            <ul>
-              {block.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </Card>
-        ))}
-      </ResponsiveGrid>
+      <ResponsiveGrid columns={2}>{operationCards}</ResponsiveGrid>
       <style jsx>{`
         ul {
           margin: 0;
           padding-left: var(--space-5);
           display: grid;
           gap: var(--space-2);
+        }
+        button {
+          margin-top: var(--space-3);
+          padding: var(--space-2) var(--space-3);
+          border: 0;
+          border-radius: var(--radius-md, 6px);
+          background: var(--color-midnight, #0f172a);
+          color: var(--color-base-inverse, #ffffff);
+          cursor: pointer;
+          font-weight: 600;
+        }
+        button[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .queue-error {
+          margin-top: var(--space-2);
+          color: var(--color-coral);
+          font-weight: 600;
         }
       `}</style>
     </div>
