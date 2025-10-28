@@ -1,18 +1,18 @@
 # Runbook de Coordenação com Plataforma
 
 ## Objetivo
-Documentar o agendamento das execuções de scripts de infraestrutura e a responsabilidade de cada atividade para garantir alinhamento com a equipe de plataforma.
+Documentar as janelas de execução e a responsabilidade pelos scripts de infraestrutura que apoiam os ambientes de desenvolvimento e staging, mantendo alinhamento com a equipe de plataforma.
 
 ## Agenda de Execuções
 | Janela | Frequência | Scripts | Responsável Principal | Backup | Dependências |
 | --- | --- | --- | --- | --- | --- |
-| Segunda-feira 09:00 | Semanal | `scripts/infra/provisionar_cluster.sh` | Time de Plataforma (Ana Souza) | Engenharia de Confiabilidade (Lucas Lima) | Aprovação de Change Advisory Board |
-| Quarta-feira 14:00 | Quinzenal | `scripts/infra/sincronizar_segredos.py` | Engenharia de Confiabilidade (Lucas Lima) | Time de Plataforma (Bianca Ramos) | Rotas VPN validadas |
-| Sexta-feira 19:00 | Mensal | `scripts/infra/atualizar_pipelines.sh` | DevOps (Marcos Paulo) | Time de Plataforma (Ana Souza) | Janela de manutenção aprovada |
+| Segunda-feira 09:00 | Semanal | `scripts/infra/provision-dev.sh docker/k8s` (modo validate) | Time de Plataforma (Ana Souza) | Engenharia de Confiabilidade (Lucas Lima) | Docker CLI, kubectl/kustomize, manifests em `design/` |
+| Diária 05:00 UTC | Diária | `scripts/infra/reset-staging.sh` | Engenharia de Confiabilidade (Lucas Lima) | DevOps (Marcos Paulo) | Acesso a cluster staging, variáveis `STAGING_RELATIONAL_URL`/`STAGING_NOSQL_URL` |
+| Sexta-feira 19:00 | Semanal | `scripts/infra/seed-dev-data.sh --mode apply` | DevOps (Marcos Paulo) | Time de Plataforma (Bianca Ramos) | Ferramentas `psql`, `mongoimport` ou `mongosh`, variáveis `DEV_RELATIONAL_URL`/`DEV_NOSQL_URL` |
 
 ## Preparação Pré-Execução
 1. Confirmar disponibilidade das janelas acima com a equipe de plataforma até 24h antes.
-2. Validar se todas as dependências listadas estão atendidas.
+2. Validar se todas as dependências listadas estão atendidas (CLI instaladas e variáveis exportadas).
 3. Revisar tickets abertos relacionados ao script agendado.
 
 ## Responsabilidades
