@@ -46,3 +46,14 @@ Este documento registra a validação realizada sobre os scripts `scripts/infra/
 ## Próximos Passos
 - Automatizar verificações de presença dos manifests no pipeline de CI.
 - Incluir testes de fumaça para dashboards principais após o reset de staging.
+
+## Execuções validadas em 2025-10-28
+
+- `scripts/infra/provision-dev.sh docker` foi executado e retornou aviso de ausência do arquivo `design/docker-compose.dev.yml`, confirmando a validação de salvaguarda descrita na seção anterior.【42e222†L1-L4】【F:scripts/infra/provision-dev.sh†L7-L29】
+- `scripts/infra/reset-staging.sh` registrou o backup em `scripts/artifacts/backups`, sinalizando que o cálculo de `REPO_ROOT` aponta para `scripts/` em vez da raiz; também indicou ausência de manifests `design/k8s/staging` e do `seed-staging-data.sh`.【3c9cee†L1-L7】【F:scripts/infra/reset-staging.sh†L4-L27】
+
+## Ações recomendadas
+
+- Corrigir `REPO_ROOT` em ambos os scripts de infraestrutura para que o backup seja gravado em `artifacts/backups` na raiz do repositório.【F:scripts/infra/reset-staging.sh†L4-L27】【F:scripts/infra/provision-dev.sh†L4-L29】
+- Versionar (ou gerar) os manifests ausentes em `design/docker-compose.dev.yml`, `design/k8s/dev` e `design/k8s/staging` para que as execuções deixem de emitir avisos e possam aplicar recursos reais.【F:scripts/infra/provision-dev.sh†L7-L21】【F:scripts/infra/reset-staging.sh†L16-L24】
+- Criar o script `scripts/infra/seed-staging-data.sh` conforme mencionado para completar o fluxo de reset de staging.【3c9cee†L1-L7】【F:scripts/infra/reset-staging.sh†L23-L27】

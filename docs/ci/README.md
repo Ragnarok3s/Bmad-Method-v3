@@ -41,3 +41,19 @@ Este guia documenta o processo validado para preparar o pipeline de CI com vari�
 - Falhas de autenticação OIDC: verifique carimbo de tempo em `vault audit list` e compare com execução do workflow.
 - Secrets inexistentes no workflow: confirme se foram adicionados como **Secrets** e não como **Variables**.
 - Expiração de credencial: consulte o inventário e acione o Security Engineer para rotação imediata.
+
+## Secrets e Variáveis validadas (2025-10-28)
+
+| Workflow                 | Tipo    | Nome                       | Obrigatório | Observações |
+|--------------------------|---------|----------------------------|-------------|-------------|
+| `ci.yml`                 | Secret  | `GITHUB_TOKEN`             | Sim         | Utilizado pelo Super-Linter para autenticação com a API do GitHub. | 
+| `deploy-staging.yml`     | Secret  | _não aplicável_            | Não         | O fluxo atual apenas prepara artefatos estáticos; nenhum secret é referenciado. |
+| `ci.yml` / `deploy-staging.yml` | Variável | _não definido_            | Não         | Não existem variáveis de repositório consumidas diretamente nos workflows atuais. |
+
+- **Onde configurar:** `Settings > Secrets and variables > Actions` no repositório GitHub.
+- **Escopo recomendado:** secrets no nível de repositório, variáveis compartilhadas somente se a mesma credencial for usada por múltiplos workflows.
+
+## Gaps observados durante a revisão
+
+- Os scripts `scripts/test-integration.sh` e `scripts/test-e2e.sh` encerram o job com `exit 1` quando não encontram suítes de testes, o que derruba tanto o `ci.yml` quanto o `deploy-staging.yml`. Adicionar testes mínimos ou uma flag de bypass é necessário para estabilizar o pipeline.【F:scripts/test-integration.sh†L11-L37】【F:scripts/test-e2e.sh†L10-L32】【F:.github/workflows/ci.yml†L75-L82】【F:.github/workflows/deploy-staging.yml†L58-L62】
+- O gate `scripts/run-quality-gates.sh` exige arquivos de cobertura de integração e o relatório do Bandit; sem integração gerando `integration-coverage.xml` o `verify_quality_gates.py` falha ao tentar processar o arquivo inexistente. Ajustar o script ou produzir o artefato é mandatório antes de ativar o gate no CI.【F:scripts/run-quality-gates.sh†L1-L17】【F:scripts/verify_quality_gates.py†L31-L55】【F:.github/workflows/ci.yml†L81-L82】
