@@ -1,66 +1,54 @@
 # Platform Architecture Decisions
 
 ## 1. Target Platforms
-- **Primary**: Responsive web application (desktop, tablet, mobile browsers) to ensure broad reach and rapid iteration.
-- **Secondary**: Hybrid mobile applications (iOS and Android) delivered via Capacitor-based wrappers once core web experience stabilizes.
-- **Rationale**: Responsive web enables continuous delivery and centralized updates; hybrid approach reuses web codebase while satisfying app store presence requirements and native capabilities (push notifications, offline caching).
+- **Primary**: Aplicação web responsiva (desktop, tablet, mobile) entregue com Next.js para acelerar iterações e centralizar atualizações.
+- **Secundário**: APIs públicas e SDKs leves consumidos por parceiros e automações internas; wrappers móveis híbridos permanecem no backlog até validar tração da experiência web.
+- **Racional**: A camada web permite validar fluxos operacionais rapidamente, enquanto as APIs garantem extensibilidade para integrações OTA e ferramentas internas sem duplicar lógica de domínio.
 
 ## 2. Core Technology Stack
 ### Frontend
-- **Framework**: React with TypeScript.
-- **UI Layer**: Next.js (App Router) for SSR/SSG, internationalization, and SEO.
-- **State Management**: React Query for server state, Zustand for local state.
-- **Styling**: Tailwind CSS with headless component library (e.g., Radix UI) for accessibility.
+- **Framework**: Next.js 14 (App Router) com React 18 e TypeScript, combinando Server Components para dados e componentes `use client` para dashboards interativos.
+- **Gestão de estado**: Hooks dedicados e caches incrementais baseados em `fetch`; IndexedDB (`idb`) sustenta sincronização offline limitada e replay de analytics.
+- **UI**: Design tokens próprios + styled-jsx nos componentes (`apps/web/components/ui`) garantem consistência visual sem dependência de frameworks utilitários.
+- **Telemetria**: OpenTelemetry Web (`apps/web/telemetry`) exporta traces, métricas e logs via OTLP/HTTP para o Collector.
 
 ### Backend
-- **Architecture**: Node.js (TypeScript) services on NestJS, organized into modular microservices with API Gateway exposure.
-- **API Protocols**: REST for public APIs, GraphQL for consumer apps needing aggregated data, gRPC internally between services.
-- **Background Processing**: BullMQ (Redis-backed) for job queues (reservation sync, notification dispatch).
+- **Arquitetura**: Serviço único FastAPI em Python 3 com módulos organizados por domínio (`services/core`). REST é a interface principal; GraphQL opcional via Strawberry compartilha os mesmos modelos.
+- **Persistência**: SQLAlchemy 2.0 + Pydantic 2 para schemas; inicialização automática das tabelas ocorre via `Database.create_all` em `services/core/database.py`.
+- **Orquestração interna**: Serviços como `AutomationService` e `PartnerSLAService` encapsulam regras de negócio (execução de playbooks, reconciliação de SLAs) com instrumentação de métricas em `services/core/metrics.py`.
+- **Observabilidade**: Exporters OTLP/gRPC configurados em `services/core/observability.py` para traces, métricas e logs, expostos via health-check `/health/otel`.
 
 ### Data & Storage
-- **Primary Database**: PostgreSQL (managed via Amazon RDS) for transactional integrity of reservations, pricing, and customer data.
-- **Caching**: Redis (Amazon ElastiCache) for session storage, rate limiting, and frequently accessed inventory data.
-- **Search & Aggregation**: Elasticsearch/OpenSearch for full-text search and analytics dashboards.
-- **Object Storage**: Amazon S3 for media assets (property images, documents).
+- **Base transacional**: PostgreSQL 15 (via Docker Compose/Kubernetes) com SQLite usado nos testes automatizados.
+- **Filas/cache**: Redis opcional para cenários de fila de sincronização OTA (infraestrutura provisionada em `design/docker-compose.dev.yml`).
+- **Configuração**: Variáveis de ambiente carregadas por Kubernetes Secrets ou `.env` locais; não há dependência direta de serviços gerenciados cloud na fase atual.
 
 ### Cloud & DevOps
-- **Cloud Provider**: AWS to align with ecosystem maturity and managed services.
-- **Containerization**: Dockerized workloads orchestrated via Amazon EKS (Kubernetes) with GitOps deployment (Argo CD).
-- **CI/CD**: GitHub Actions pipelines triggering automated tests, security scanning, and progressive delivery.
-- **Observability**: Prometheus/Grafana for metrics, OpenTelemetry tracing exported to AWS X-Ray, centralized logging in AWS CloudWatch.
+- **Contêineres**: Imagens publicadas no GHCR; ambientes locais utilizam `design/docker-compose.dev.yml` e Kustomize overlays (`design/k8s`) para dev/staging.
+- **Deploy**: GitHub Actions executa testes, quality gates e publica manifestos; GitOps com Argo CD sincroniza overlays versionados (referência em `docs/engineering-handbook.md`).
+- **Observabilidade**: Stack LGTM (Loki, Grafana, Tempo, Prometheus) alimentada por OpenTelemetry Collector; scripts `scripts/run-quality-gates.sh` e `verify_observability_gates.py` validam dashboards/alertas versionados.
 
-## 3. External Integrations
-### Online Travel Agencies (OTAs)
-- **Booking.com**: Availability/Rate sync via Content API.
-- **Airbnb**: Channel Manager API for listing management and reservation updates.
-- **Expedia Group**: EPS Rapid API for inventory distribution.
-- **Integration Strategy**: Build dedicated integration microservice with pluggable connectors, normalized data model, and resilient retry/queue mechanisms.
+## 3. Integrações Externas
+### Canais de distribuição (OTAs)
+- Estrutura de catálogo e SLAs dos parceiros modelada em `services/core/domain/partners` e exposta via `PartnerSLAService`.
+- Estratégia MVP: webhooks normalizados (`PartnerWebhookPayload`) persistem eventos e atualizam indicadores, permitindo expandir conectores específicos (Booking.com, Airbnb, etc.) sem alterar o core.
 
-### Payment Gateways
-- **Primary**: Stripe for card payments, subscriptions, invoicing, and PSD2 compliance support.
-- **Regional Backup**: Adyen for multi-currency settlements and alternative payment methods.
-- **Fraud Prevention**: Leverage Stripe Radar and Sift integration for high-risk transaction scoring.
+### Pagamentos e faturação
+- Integração com gateways permanece em descoberta; fluxo atual delega captura a sistemas existentes e apenas reconcilia estados via APIs internas.
+- Requisitos PSD2/PCI são tratados através de redirecionamento/outros provedores até que módulo dedicado seja priorizado.
 
-### Automation & Operations
-- **Marketing Automation**: HubSpot API for CRM sync and email campaigns.
-- **Property Automation**: Integrate with smart-lock providers (e.g., August, Yale via APIs) and smart energy management (Sense, Nest) through webhooks and vendor SDKs.
-- **Internal Workflow Automation**: Use n8n or Temporal-based orchestration for automated task routing, alerts, and SLA tracking.
+### Automação operacional
+- Execuções de playbooks usam `AutomationService` com telemetria estruturada para acionar orquestrações externas (n8n/Temporal) através de webhooks, mantendo a complexidade fora do serviço core.
 
-## 4. Security & Compliance Standards
-- **Authentication & Authorization**: OAuth 2.1 + OpenID Connect using Auth0 as managed identity provider; enforce MFA for staff, PKCE for public clients.
-- **Access Control**: Role-based access complemented with attribute-based policies for property/region scoping.
-- **Data Protection**: End-to-end TLS (TLS 1.3), database encryption at rest (AWS KMS), per-tenant encryption keys where applicable.
-- **Secrets Management**: AWS Secrets Manager with automated rotation; Kubernetes sealed secrets for GitOps workflows.
-- **Secure Development Lifecycle**: SAST (GitHub Advanced Security), DAST (OWASP ZAP in CI), dependency scanning (Dependabot), IaC scanning (Checkov for Terraform).
-- **Logging & Monitoring**: Centralized audit logging with immutability controls (AWS CloudTrail, CloudWatch Logs Insights), anomaly detection alerts.
-- **Privacy & RGPD**:
-  - Data minimization and retention policies with automatic anonymization after retention periods.
-  - Data Processing Agreements with all third parties; maintain Record of Processing Activities (RoPA).
-  - Provide data subject access portals, consent management, and breach notification procedures within 72 hours.
-- **Compliance Frameworks**: Align with ISO 27001 controls, follow OWASP ASVS for application-level requirements, and PCI DSS SAQ A for payment flows (redirect/hosted payment fields).
+## 4. Segurança e Compliance
+- **Autenticação**: O serviço assume autenticação realizada a montante (gateway ou IdP corporativo). Contexto do agente chega pelo header `X-Actor-Id`, validado em `services/core/api/rest.py`.
+- **Autorização**: Matriz RBAC gerida por `SecurityService`, com políticas versionadas (`RolePolicy`) e catálogo de permissões auditável.
+- **Auditoria**: `AuditLog` persiste operações críticas, respeitando requisitos de rastreabilidade descritos em `docs/governanca/`.
+- **Proteção de dados**: Dados pessoais de hóspedes são mascarados antes de sair do serviço (`quality/privacy`). Criptografia e TLS são providos pela camada de infraestrutura (Ingress + Secrets).
+- **Secure SDLC**: Quality gates executam Bandit, verificações de observabilidade e cobertura de testes; Dependabot e análises adicionais estão registradas no backlog de SRE.
 
-## 5. Roadmap Alignment Considerations
-- Stage rollout via feature flags (LaunchDarkly) to support iterative delivery aligned with product roadmap.
-- Prioritize OTA integration service MVP (Booking.com, Airbnb) before expanding to Expedia and others.
-- Ensure data warehouse (Snowflake or BigQuery) is planned in roadmap Phase 2 for analytics once transactional system stable.
-- Include penetration testing and disaster recovery tabletop exercises in quarterly roadmap milestones.
+## 5. Alinhamento com Roadmap
+- Expandir integrações OTA priorizando conectores com webhooks existentes; cada novo conector deve alimentar métricas `bmad_core_ota_sync_*` para garantir monitorização.
+- Consolidar telemetria no Collector com destino único (Grafana LGTM) e automatizar validações via pipelines antes de releases.
+- Evoluir autenticação federada (OIDC) e provisionar rotação automática de segredos quando migrar para ambientes cloud gerenciados.
+- Planejar módulo de billing e automações financeiras após validar adoção dos fluxos de reservas/housekeeping.

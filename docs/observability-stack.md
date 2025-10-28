@@ -34,32 +34,34 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 
 | Camada | Ferramenta | Motivo | Implementação |
 |--------|------------|--------|---------------|
-| Aplicação | OpenTelemetry SDK + Logstash | Compatibilidade com linguagem e formatação estruturada JSON | Embutir exporters OTLP nos serviços, enviar para Logstash via Beats |
-| Pipeline | Elasticsearch | Busca e retenção de 30 dias com indexação flexível | Cluster gerenciado (Elastic Cloud) com ILM para cold storage |
-| Visualização | Kibana | Dashboards customizados e filtros por agente/playbook | Dashboards MVP pré-configurados com índices por ambiente (`kibana/dashboards/bmad-logs.ndjson`) |
+| Aplicação | OpenTelemetry SDK (FastAPI/Next.js) | Instrumentação nativa e correlação com métricas/traces | Exporters OTLP configurados em `services/core/observability.py` e `apps/web/telemetry/init.ts` |
+| Coletor | OpenTelemetry Collector | Normaliza OTLP (gRPC/HTTP), aplica enriquecimento e roteia para destinos múltiplos | Deploy Helm/Kustomize com pipelines `logs -> loki` e `logs -> S3` (opcional) |
+| Armazenamento | Grafana Loki | Consulta rápida por labels (`service.name`, `deployment.environment`) e retenção econômica | StatefulSet gerenciado pelo time de plataforma; configuração referenciada em `grafana/` |
+| Visualização | Grafana Explore | Interface unificada com correlação por traceID e dashboards versionados | Dashboards/queries salvos em `grafana/staging/*.json` |
 
 ## Métricas
 
 | Camada | Ferramenta | Motivo | Implementação |
 |--------|------------|--------|---------------|
-| Coleta | OpenTelemetry Collector | Gateway central para métricas, logs e traces | Implantar via Helm chart no cluster k8s |
-| Armazenamento | Prometheus + Thanos | Alta disponibilidade e retenção > 30 dias | Prometheus federado + Thanos para long-term storage |
-| Visualização | Grafana | Painéis multi-fonte e alertas avançados | Provisionar dashboards: saúde de agentes, execução de playbooks, UX. Dashboards seed disponíveis no repositório GitOps (`grafana/staging/`). |
+| Instrumentação | OpenTelemetry SDK (metrics API) | Conjuntos de métricas compartilhados entre backend e frontend | Counters/recorders definidos em `services/core/metrics.py` e `apps/web/telemetry/init.ts` |
+| Gateway | OpenTelemetry Collector | Converte OTLP -> Prometheus Remote Write e agrega atributos padrão | Pipeline `metrics -> prometheusremotewrite` com labels `service.namespace`, `deployment.environment` |
+| Armazenamento | Prometheus + Thanos | Retenção >30 dias e query distribuída | Instâncias dedicadas por ambiente com sidecar Thanos para histórico | 
+| Visualização | Grafana | Dashboards multi-fonte e alertas versionados | Dashboards em `grafana/staging/` validados por `verify_observability_gates.py` |
 
 ## Alertas
 
 | Tipo | Ferramenta | Critérios | Ação |
 |------|------------|----------|------|
-| Técnicos | Grafana Alerting + PagerDuty | Erros 5xx > 2% por 5 min; jobs com falha > 3x | PagerDuty rota para SRE; fallback Slack #incident |
-| Produto | Grafana + Slack | Queda > 20% no engajamento diário | Notificação no canal #product-ops e abertura de tarefa no Jira |
-| Segurança | Elastic Watcher | Tentativas de acesso suspeitas | Integração com SIEM corporativo |
+| Técnicos | Grafana Alerting + PagerDuty | Erros 5xx > 2% por 5 min; ausência de sinais OTEL > 10 min | PagerDuty rota SRE + fallback Slack `#incident` |
+| Produto | Grafana Alerting + Slack | Queda > 20% no engajamento diário ou backlog OTA > 5 | Slack `#product-ops` + criação de issue Jira |
+| Segurança | Grafana Alerting + SIEM | Eventos `audit_logs` com status suspeito (>5 por 10 min) | Integração com SIEM corporativo via webhook Collector |
 | Operacional | Grafana Alerting + Prometheus | `seed_job_success==0` por 5 min ou `seed_job_last_run_timestamp` > 6h | PagerDuty `bmad-platform-staging` + canal `#platform-ops` |
 
 ## Traços Distribuídos
 
-- Instrumentar backend com OpenTelemetry (HTTP, gRPC, DB). Exportar para Tempo (Grafana) para análise de latência.
-- Correlacionar traceID com logs e eventos de playbooks.
-- Frontend publica spans e métricas de engajamento via OTLP HTTP, correlacionadas pelo atributo `service.name=bmad-web-app`.
+- Instrumentar backend com OpenTelemetry (HTTP, SQLAlchemy, jobs internos) e enviar via OTLP/gRPC para o Collector com destino Tempo.
+- Utilizar `trace_id` exposto pelo backend (respostas REST/GraphQL) para correlação com logs Loki e métricas de domínio.
+- Frontend publica spans/métricas via OTLP HTTP usando `TelemetryProvider`, garantindo alinhamento de atributos (`service.name=bmad-web-app`).
 
 ## Governança de Observabilidade
 
