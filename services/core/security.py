@@ -188,6 +188,7 @@ def assert_role(
     allowed: Iterable[AgentRole],
     *,
     session: Session | None = None,
+    property_id: int | None = None,
 ) -> None:
     """Valida se o agente possui alguma das roles permitidas."""
 
@@ -195,7 +196,7 @@ def assert_role(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agente inativo")
 
     allowed_set = {role for role in allowed}
-    effective_roles = get_effective_roles(agent, session)
+    effective_roles = get_effective_roles(agent, session, property_id=property_id)
     if not effective_roles.intersection(allowed_set):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado")
 
