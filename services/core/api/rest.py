@@ -13,7 +13,8 @@ from pydantic import BaseModel
 
 from ..config import CoreSettings
 from ..database import Database, get_database
-from ..domain.models import AgentRole, HousekeepingStatus
+from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
+from ..domain.models import HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
     AgentRead,
@@ -111,6 +112,21 @@ async def create_workspace(
 @router.get("/properties", response_model=list[PropertyRead])
 def list_properties(session: Session = Depends(get_session)):
     return PropertyService(session).list()
+
+
+@router.get("/agents", response_model=AgentCatalogPage)
+def list_agents_catalog(
+    competency: list[str] = Query(default_factory=list),
+    availability: list[AgentAvailability] = Query(default_factory=list),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(6, ge=1, le=50),
+):
+    return list_agent_catalog(
+        competencies=competency,
+        availability=availability,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.post("/agents", response_model=AgentRead, status_code=201)
