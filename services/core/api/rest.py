@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, TypeVar, Union
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
@@ -17,6 +18,7 @@ from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_cata
 from ..domain.models import Agent, HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
+    AgentProfileUpdate,
     AgentRead,
     DashboardMetricsRead,
     GovernanceAuditRead,
@@ -24,6 +26,9 @@ from ..domain.schemas import (
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
     HousekeepingStatusUpdate,
+    LoginRequest,
+    LoginResponse,
+    MFAVerificationRequest,
     PermissionCreate,
     PermissionRead,
     PermissionUpdate,
@@ -35,6 +40,9 @@ from ..domain.schemas import (
     PlaybookTemplateRead,
     PropertyCreate,
     PropertyRead,
+    RecoveryCompleteRequest,
+    RecoveryInitiateRequest,
+    RecoveryInitiateResponse,
     ReservationCreate,
     ReservationRead,
     ReservationUpdateStatus,
@@ -60,7 +68,7 @@ from ..services import (
 )
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
-from ..security import SecurityService
+from ..security import AuthenticationError, AuthenticationService, SecurityService
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -68,6 +76,15 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 knowledge_base_service = KnowledgeBaseService()
+
+
+def _auth_error_response(error: AuthenticationError) -> JSONResponse:
+    return JSONResponse(status_code=error.status_code, content={"detail": error.detail})
+
+
+def _build_authentication_service(request: Request, session: Session) -> AuthenticationService:
+    timeout: timedelta | None = getattr(request.app.state, "auth_session_timeout", None)
+    return AuthenticationService(session, session_timeout=timeout)
 
 
 @router.get("/health/otel")
@@ -89,6 +106,8 @@ def get_otel_health() -> dict[str, Any]:
         "collector": snapshot["collector"],
         "resource": snapshot["resource"],
         "signals": snapshot["signals"],
+        "audit": snapshot.get("audit", {}),
+        "alerts": snapshot.get("alerts", {}),
     }
 
 
@@ -134,6 +153,104 @@ def _require_actor(session: Session, request: Request) -> Agent:
             detail="Agente responsável não encontrado",
         )
     return actor
+
+
+@router.post("/auth/login", response_model=LoginResponse)
+async def login(
+    request: Request, session: Session = Depends(get_session)
+) -> LoginResponse | JSONResponse:
+    payload = await _parse_model(request, LoginRequest)
+    service = _build_authentication_service(request, session)
+    try:
+        result = service.initiate_login(
+            payload.email,
+            payload.password,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except AuthenticationError as error:
+        session.flush()
+        return _auth_error_response(error)
+    session.flush()
+    auth_session = result.session
+    return LoginResponse(
+        session_id=auth_session.id,
+        agent_id=auth_session.agent_id,
+        mfa_required=result.mfa_required,
+        expires_at=auth_session.expires_at,
+        session_timeout_seconds=service.session_timeout_seconds,
+        recovery_codes_remaining=result.recovery_codes_remaining,
+    )
+
+
+@router.post("/auth/mfa/verify", response_model=LoginResponse)
+async def verify_mfa(
+    request: Request, session: Session = Depends(get_session)
+) -> LoginResponse | JSONResponse:
+    payload = await _parse_model(request, MFAVerificationRequest)
+    service = _build_authentication_service(request, session)
+    try:
+        auth_session = service.verify_mfa(
+            payload.session_id,
+            payload.code,
+            method=payload.method,
+        )
+    except AuthenticationError as error:
+        session.flush()
+        return _auth_error_response(error)
+    credentials = auth_session.agent.credentials
+    remaining = len(credentials.recovery_codes) if credentials else 0
+    return LoginResponse(
+        session_id=auth_session.id,
+        agent_id=auth_session.agent_id,
+        mfa_required=False,
+        expires_at=auth_session.expires_at,
+        session_timeout_seconds=service.session_timeout_seconds,
+        recovery_codes_remaining=remaining,
+    )
+
+
+@router.post("/auth/recovery/initiate", response_model=RecoveryInitiateResponse)
+async def initiate_recovery(
+    request: Request, session: Session = Depends(get_session)
+) -> RecoveryInitiateResponse | JSONResponse:
+    payload = await _parse_model(request, RecoveryInitiateRequest)
+    service = _build_authentication_service(request, session)
+    try:
+        codes = service.initiate_recovery(payload.email)
+    except AuthenticationError as error:
+        session.flush()
+        return _auth_error_response(error)
+    issued_at = datetime.now(timezone.utc)
+    return RecoveryInitiateResponse(email=payload.email, issued_at=issued_at, recovery_codes=codes)
+
+
+@router.post("/auth/recovery/complete", response_model=LoginResponse)
+async def complete_recovery(
+    request: Request, session: Session = Depends(get_session)
+) -> LoginResponse | JSONResponse:
+    payload = await _parse_model(request, RecoveryCompleteRequest)
+    service = _build_authentication_service(request, session)
+    try:
+        auth_session = service.complete_recovery(
+            payload.email,
+            payload.code,
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    except AuthenticationError as error:
+        session.flush()
+        return _auth_error_response(error)
+    credentials = auth_session.agent.credentials
+    remaining = len(credentials.recovery_codes) if credentials else 0
+    return LoginResponse(
+        session_id=auth_session.id,
+        agent_id=auth_session.agent_id,
+        mfa_required=False,
+        expires_at=auth_session.expires_at,
+        session_timeout_seconds=service.session_timeout_seconds,
+        recovery_codes_remaining=remaining,
+    )
 
 
 @router.get("/governance/permissions", response_model=list[PermissionRead])
@@ -341,6 +458,18 @@ async def create_agent(
     return service.create(payload)
 
 
+@router.patch("/agents/{agent_id}", response_model=AgentRead)
+async def update_agent(
+    agent_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> Agent:
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, AgentProfileUpdate)
+    service = AgentService(session)
+    return service.update_profile(agent_id, payload, actor=actor)
+
+
 @router.post("/properties/{property_id}/reservations", response_model=ReservationRead, status_code=201)
 async def create_reservation(
     property_id: int,
@@ -500,6 +629,8 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
         return database
 
     app.dependency_overrides[get_database] = _get_db_override
+    app.state.auth_session_timeout = timedelta(seconds=settings.auth_session_timeout_seconds)
+    app.state.core_settings = settings
     app.include_router(router)
     instrument_application(app)
     return app
