@@ -167,7 +167,7 @@ seed_relational() {
   fi
 
   echo "[seed-data][$ENVIRONMENT] Aplicando seed relacional em ${RELATIONAL_URL}."
-  psql "$RELATIONAL_URL" <<__SQL__
+  if ! psql "$RELATIONAL_URL" <<__SQL__; then
 CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
   guest_id TEXT PRIMARY KEY,
   full_name TEXT NOT NULL,
@@ -179,11 +179,15 @@ CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
 );
 TRUNCATE TABLE ${TABLE_NAME};
 __SQL__
+    return 1
+  fi
 
-  psql "$RELATIONAL_URL" <<__COPY__
+  if ! psql "$RELATIONAL_URL" <<__COPY__; then
 \copy ${TABLE_NAME} (guest_id, full_name, email, document, tax_id, created_at, booking_source)
   FROM '${RELATIONAL_DATASET}' WITH (FORMAT csv, HEADER true);
 __COPY__
+    return 1
+  fi
 }
 
 seed_nosql() {
@@ -194,26 +198,29 @@ seed_nosql() {
 
   if command -v mongoimport >/dev/null 2>&1; then
     echo "[seed-data][$ENVIRONMENT] Aplicando seed NoSQL via mongoimport para ${NOSQL_URL}."
-    mongoimport --uri "$NOSQL_URL" \
+    if ! mongoimport --uri "$NOSQL_URL" \
       --collection "$COLLECTION_NAME" \
       --drop \
       --file "$NOSQL_DATASET" \
-      --jsonArray >/dev/null
-    return $?
+      --jsonArray >/dev/null; then
+      return 1
+    fi
+    return 0
   fi
 
   if command -v mongosh >/dev/null 2>&1; then
     echo "[seed-data][$ENVIRONMENT] Aplicando seed NoSQL via mongosh para ${NOSQL_URL}."
-    mongosh "$NOSQL_URL" --quiet <<__MONGOSH__
+    if ! mongosh "$NOSQL_URL" --quiet <<__MONGOSH__; then
 const fs = require('fs');
 const path = '$NOSQL_DATASET'.toString();
 const payload = JSON.parse(fs.readFileSync(path, 'utf-8'));
-const dbRef = db.getSiblingDB();
-const collection = dbRef.getCollection('${COLLECTION_NAME}');
+const collection = db.getCollection('${COLLECTION_NAME}');
 collection.drop();
 collection.insertMany(payload);
 __MONGOSH__
-    return $?
+      return 1
+    fi
+    return 0
   fi
 
   echo "[seed-data][$ENVIRONMENT] Nenhuma ferramenta NoSQL suportada encontrada (mongoimport/mongosh)." >&2
