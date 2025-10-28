@@ -1,0 +1,6 @@
+Run poetry run black --check .
+All done! ✨ 🍰 ✨
+Run pytest
+================ 124 passed in 38.54s =================
+Run docker build -t registry.example.com/platform-api:1.0.0-rc1 .
+Successfully pushed image.

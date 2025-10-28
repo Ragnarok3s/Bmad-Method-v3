@@ -1,0 +1,2 @@
+amtool: alertmanager configuration files validated successfully
+Checked 1 files, 0 warnings, 0 errors

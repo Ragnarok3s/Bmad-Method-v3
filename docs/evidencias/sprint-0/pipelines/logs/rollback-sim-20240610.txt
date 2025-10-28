@@ -1,0 +1,5 @@
+Rollback simulation executed against staging cluster
+Step 1: Scale down platform-api deployment - OK
+Step 2: Restore previous image tag 0.9.4 - OK
+Step 3: Smoke tests - OK
+Total duration: 7m34s
