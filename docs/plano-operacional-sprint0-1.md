@@ -20,6 +20,14 @@ Estabelecer a cadência operacional das primeiras quatro semanas pós-go/no-go, 
 | Semana 2 | Sprint 1 – foco em reservas e calendário; testes E2E iniciais | Incremento com reservas básicas e métricas iniciais | Histórias priorizadas com DoD cumprido; dashboards básicos publicados em `docs/observability-stack.md` |
 | Semana 3 | Sprint 1 – integrações externas e privacidade | Integrações OTA/pagamentos testadas, checklist LGPD/GDPR atualizado | Logs de testes de integração anexados; checklist de conformidade assinado pelo DPO |
 
+## Atualização de Status – 07/07/2024
+| Evento | Situação Atual | Evidências |
+| --- | --- | --- |
+| Kick-off técnico e operacional | Realizado em 01/07; backlog Sprint 0/1 validado e cadência de checkpoints confirmada. | Ata `docs/atas/ata-kickoff-sprint0-2024-07-01.md`; roadmap atualizado em andamento |
+| Checkpoint Infra #1 | Concluído em 03/07 com aprovação do ambiente de staging e plano de riscos atualizado. | Ata `docs/atas/ata-checkpoint-infra-2024-07-03.md`; criação da pasta `docs/integracoes/` |
+| Observability Standup #1 | Realizado em 05/07; definidos owners e prazos para dashboards e alertas críticos. | Ata `docs/atas/ata-observability-standup-2024-07-05.md`; pendência de publicação do dashboard até 08/07 |
+| SLAs críticos | Assinaturas finalizadas e arquivadas; aguardando validação digital no playbook. | Referências em `docs/evidencias/sla-operacionais-2024-07.md` e ação aberta no checkpoint infra |
+
 ## Mecanismo de Monitorização Semanal
 - **Ritmo:** checkpoint às sextas-feiras conduzido pelo Scrum Master com participação do PO, QA Lead e Platform Engineer.
 - **Checklist de outputs:**
@@ -31,7 +39,7 @@ Estabelecer a cadência operacional das primeiras quatro semanas pós-go/no-go, 
 
 ## Normas de Documentação de Atas e Checkpoints
 1. **Localização padrão:** diretório `docs/atas/` (criar se ainda não existir) com convenção `YYYY-MM-DD-nome-reuniao.md`.
-2. **Template mínimo:**
+2. **Template mínimo:** disponível em `docs/templates/ata.md` e resumido abaixo.
    - Objetivo da reunião e participantes.
    - Decisões tomadas e responsáveis.
    - Ações e deadlines (YYYY-MM-DD) com owner explícito.
