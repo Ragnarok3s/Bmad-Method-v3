@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
+from uuid import uuid4
+
 from pydantic import BaseModel, EmailStr, Field
 
 from .models import AgentRole, HousekeepingStatus, ReservationStatus, SLAStatus
@@ -208,3 +210,43 @@ class DashboardMetricsRead(BaseModel):
     occupancy: OccupancySnapshot
     critical_alerts: CriticalAlertSummary
     playbook_adoption: PlaybookAdoptionSummary
+
+
+class PlaybookTemplateBase(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    summary: str = Field(min_length=1)
+    tags: list[str] = Field(default_factory=list)
+    steps: list[str] = Field(default_factory=list)
+
+
+class PlaybookTemplateCreate(PlaybookTemplateBase):
+    pass
+
+
+class PlaybookTemplateRead(PlaybookTemplateBase):
+    id: int
+    execution_count: int
+    last_executed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PlaybookExecutionRequest(BaseModel):
+    initiated_by: str | None = None
+    context: dict[str, str] = Field(default_factory=dict)
+
+
+class PlaybookExecutionRead(BaseModel):
+    run_id: str = Field(default_factory=lambda: uuid4().hex)
+    playbook_id: int
+    status: str
+    initiated_by: str | None = None
+    started_at: datetime
+    finished_at: datetime | None
+    message: str
+
+    class Config:
+        from_attributes = True
