@@ -32,6 +32,21 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 - **Dependências mapeadas**: todas as dependências críticas dos épicos BL-HK foram revisadas e etiquetadas no board Jira com links cruzados para este roadmap (`docs/product-roadmap.md`). Foram adicionados campos obrigatórios para SLAs de parceiros, readiness de APIs móveis, sincronização offline e checkpoints de segurança de dados.
 - **Acompanhamento contínuo**: cada atualização de dependência ou risco deve referenciar a linha correspondente nesta tabela, anexar evidências (ex.: contratos, mocks, checklists) ao card Jira associado e atualizar o quadro de planning da Sprint 1.
 
+### Atualização 2025-02-15 — Identidade Multi-Tenant
+
+- **Novo serviço de identidade**: foi criado `services/identity`, com endpoints `POST /tenants/{tenant_slug}/login`, `POST /tenants/{tenant_slug}/mfa/verify` e rotas de gestão de papéis (`/tenants/{tenant_slug}/roles`). A camada reutiliza o `AuthenticationService` do core e aplica isolamento via repositório `TenantAgentAccess`, garantindo autenticação e autorização alinhadas às dependências listadas na arquitetura core.
+- **Fluxo validado em testes automatizados**: a suíte dedicada `pytest tests/services/identity -q` documentada em [`docs/testing-strategy.md`](testing-strategy.md#suites-dedicadas-atualização-2025-02-15) cobre login, MFA e revogação de papéis por tenant, garantindo regressão automatizada.
+- **Controles de segurança mapeados**: os impactos e checkpoints estão descritos em [`docs/security/security-scan-2025-02-14.md`](security/security-scan-2025-02-14.md#identity-service-hardening) e na matriz STRIDE atualizada ([`docs/security/stride-integracoes-housekeeping.md`](security/stride-integracoes-housekeeping.md#camada-de-identidade-multi-tenant)). O roadmap passa a rastrear esses artefatos como dependências explícitas do épico `BL-05`.
+
+```mermaid
+flowchart LR
+    TenantUser["Agente do tenant"] -->|login/password| IdentityAPI["/tenants/{slug}/login"]
+    IdentityAPI -->|sessão + MFA| CoreAuth["AuthenticationService core"]
+    IdentityAPI -->|enforce| TenantAccessRepo["TenantAccessRepository"]
+    TenantAccessRepo --> TenantAgentAccess[("Tabela tenant_agent_access")]
+    IdentityAPI -->|papéis| CoreSecurity["Role policies & audit"]
+```
+
 ## Roadmap MVP
 
 ### Sprint 0 — Preparação (Semana 0)

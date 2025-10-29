@@ -26,6 +26,10 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 | Observabilidade | Confirmar ingestão de logs e métricas | pytest + mock OpenTelemetry Collector | Eventos simulados |
 | Permissões | Garantir regras RBAC entre camadas | Cypress component testing + API mocks | Usuários com perfis distintos |
 
+### Suites Dedicadas (Atualização 2025-02-15)
+
+- **Serviço de Identidade multi-tenant**: executar `pytest tests/services/identity -q` para validar login, MFA e gestão de papéis isolados por tenant. A suíte cria uma instância FastAPI a partir de `services.identity` e reaproveita os contratos de segurança do core, garantindo compatibilidade com os controles descritos no [product roadmap](product-roadmap.md#atualização-2025-02-15-identidade-multi-tenant).
+
 ### Testes End-to-End (E2E)
 
 | Cenário | Objetivo | Ferramentas | Frequência |
