@@ -44,6 +44,7 @@ _SAFE_BUILTINS: Dict[str, Any] = {
         "object",
         "property",
         "setattr",
+        "classmethod",
         "staticmethod",
         "super",
         "type",
