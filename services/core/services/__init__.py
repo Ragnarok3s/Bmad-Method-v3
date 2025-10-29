@@ -546,9 +546,12 @@ class ReservationService:
 
         reservation_payload = ReservationRead.model_validate(reservation, from_attributes=True)
         history: list[CommunicationMessage] = []
-        if self._communications:
+        tenant_slug = self.session.info.get("tenant_slug")
+        if self._communications and tenant_slug:
             history = sorted(
-                self._communications.history_for_reservation(reservation_id),
+                self._communications.history_for_reservation(
+                    reservation_id, tenant_slug=tenant_slug
+                ),
                 key=lambda message: message.sent_at,
             )
 
@@ -1058,7 +1061,12 @@ class OperationalMetricsService:
 
     def _calculate_guest_experience_metrics(self) -> GuestExperienceAnalytics:
         summary = get_guest_journey_summary()
-        delivery = self._communications.delivery_summary() if self._communications else {}
+        tenant_slug = self.session.info.get("tenant_slug")
+        delivery = (
+            self._communications.delivery_summary(tenant_slug=tenant_slug)
+            if self._communications and tenant_slug
+            else {}
+        )
 
         satisfaction = summary.get("average_satisfaction")
         check_in_rate = summary.get("check_in_completion_rate", 0.0)
