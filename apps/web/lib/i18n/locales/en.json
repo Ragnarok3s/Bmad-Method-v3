@@ -1,0 +1,280 @@
+{
+  "common": {
+    "skipToMainContent": "Skip to main content",
+    "loading": {
+      "navigation": "Preparing navigation context…"
+    }
+  },
+  "auth": {
+    "login": {
+      "cardTitle": "Authentication",
+      "cardDescription": "Sign in to the platform with strengthened MFA.",
+      "labels": {
+        "email": "Corporate email",
+        "password": "Password"
+      },
+      "errors": {
+        "missingCredentials": "Provide your email and password.",
+        "coreFailure": "Authentication failed. Check your credentials.",
+        "unexpected": "Unexpected error while contacting the API."
+      },
+      "success": {
+        "sessionStarted": "Session started for agent #{{agentId}}. Expires in {{minutes}} minutes."
+      },
+      "actions": {
+        "submit": "Sign in",
+        "submitting": "Validating…"
+      },
+      "links": {
+        "recoverPrompt": "Lost access to the second factor?",
+        "recoverCta": "Start recovery"
+      }
+    },
+    "mfa": {
+      "invalidSessionTitle": "MFA validation",
+      "invalidSessionDescription": "Invalid session",
+      "invalidSessionBody": "We did not receive a valid session identifier. Return to the <link>login screen</link> to restart the flow.",
+      "cardTitle": "Confirm second factor",
+      "cardDescription": "Enter the 6-digit code or use a recovery code.",
+      "methodLegend": "Method",
+      "methods": {
+        "totp": "Authenticator code",
+        "recovery": "Recovery code"
+      },
+      "placeholders": {
+        "totp": "000000",
+        "recovery": "ABCDE-12345"
+      },
+      "errors": {
+        "missingCode": "Provide the authenticator or recovery code.",
+        "invalidCode": "Invalid code. Try again.",
+        "unexpected": "We were unable to validate MFA."
+      },
+      "success": {
+        "confirmed": "MFA confirmed successfully. You can continue."
+      },
+      "actions": {
+        "submit": "Confirm MFA",
+        "submitting": "Validating…"
+      },
+      "links": {
+        "recover": "Request recovery",
+        "needNewCodes": "Need new codes?"
+      }
+    },
+    "recover": {
+      "generateCardTitle": "Generate new codes",
+      "generateCardDescription": "Produces a new set of recovery codes with immediate validity.",
+      "completeCardTitle": "Complete recovery",
+      "completeCardDescription": "Use one of the issued codes to create an authenticated session.",
+      "labels": {
+        "agentEmail": "Agent email",
+        "recoveryCode": "Recovery code"
+      },
+      "errors": {
+        "missingEmail": "Provide the email associated with the agent.",
+        "missingEmailAndCode": "Provide email and recovery code.",
+        "generateFailure": "Unable to generate new codes.",
+        "generateUnexpected": "Unexpected failure while contacting the API.",
+        "completeInvalid": "Invalid or expired code.",
+        "completeUnexpected": "Recovery could not be completed."
+      },
+      "feedback": {
+        "generatedAt": "Store these codes safely. Issued at {{issuedAt}}.",
+        "completeSuccess": "Recovery completed. <link>Return to login</link> to start a new session."
+      },
+      "actions": {
+        "generate": "Generate codes",
+        "generating": "Generating…",
+        "complete": "Complete recovery",
+        "completing": "Validating…"
+      }
+    }
+  },
+  "housekeeping": {
+    "status": {
+      "pending": "Pending",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "blocked": "Blocked"
+    },
+    "errors": {
+      "offline": "Offline mode enabled. Real-time data will sync when the connection returns.",
+      "fetchUnavailable": "Housekeeping service unavailable. Try again shortly.",
+      "fetchFailed": "We could not load housekeeping tasks for this property.",
+      "fetchUnexpected": "An unexpected error occurred while loading tasks.",
+      "slaOffline": "SLA monitoring is not available in offline mode.",
+      "slaUnavailable": "Unable to refresh partner SLAs. Service unavailable.",
+      "slaFailed": "Failed to load SLAs. Try again later.",
+      "slaUnexpected": "Unexpected error while loading partner SLAs.",
+      "mutationUnavailable": "Sync unavailable. Try again shortly.",
+      "mutationFailed": "Unable to update the task in core.",
+      "mutationUnexpected": "An error occurred while updating the task."
+    },
+    "sections": {
+      "main": {
+        "title": "Housekeeping",
+        "subtitle": "Daily planning with offline-first support"
+      },
+      "connection": {
+        "title": "Connection status",
+        "description": "Monitor pending tasks and scheduled syncs.",
+        "offline": "Offline mode enabled. Completed tasks will sync automatically once connectivity is restored.",
+        "online": "Online. Automatic sync every 2 minutes plus manual sync available."
+      },
+      "sla": {
+        "title": "Partner SLAs",
+        "subtitle": "Operational alerts with support partners"
+      },
+      "tasks": {
+        "title": "Housekeeping tasks",
+        "subtitle": "Prioritised assignments with core data"
+      },
+      "operations": {
+        "title": "Real-time operations",
+        "subtitle": "Syncs and metrics for managers"
+      }
+    },
+    "loading": {
+      "title": "Syncing tasks",
+      "description": "Fetching the latest assignments.",
+      "body": "Loading data from the core service..."
+    },
+    "loadingError": {
+      "title": "Unable to load tasks",
+      "body": "Check connectivity or try again shortly."
+    },
+    "empty": {
+      "title": "No tasks visible",
+      "description": "No housekeeping tasks found for the requested period.",
+      "body": "Adjust API filters to retrieve a different result set."
+    },
+    "taskCard": {
+      "title": "Task #{{id}}",
+      "scheduled": "Scheduled for {{date}}",
+      "reservation": "Reservation: {{value}}",
+      "reservationFallback": "Unlinked",
+      "assignee": "Assignee: {{value}}",
+      "assigneeFallback": "Unassigned",
+      "notes": "Notes: {{value}}",
+      "notesFallback": "No additional notes.",
+      "reopen": "Reopen task",
+      "complete": "Mark as completed",
+      "syncing": "Syncing…"
+    },
+    "sla": {
+      "loadingTitle": "Tracking partner SLAs",
+      "loadingDescription": "Synchronising response and resolution indicators.",
+      "loadingBody": "Loading SLA indicators…",
+      "errorTitle": "SLAs unavailable",
+      "errorDescription": "Check with the integrations team to confirm the connection state.",
+      "emptyTitle": "No SLAs configured",
+      "emptyDescription": "No active SLA is associated with housekeeping partners.",
+      "emptyBody": "Update partner records to display alerts in this panel."
+    },
+    "queue": {
+      "title": "Offline queue",
+      "description": "Track pending mutations for the core service",
+      "offline": "Offline mode enabled. Submissions will resume automatically.",
+      "syncing": "Synchronising with core.",
+      "online": "Online. No blockers to sync changes.",
+      "empty": "No pending actions.",
+      "action": "Sync now",
+      "actionSyncing": "Syncing…"
+    },
+    "metrics": {
+      "loadingTitle": "Waiting for sync",
+      "loadingBody": "Refreshing indicators with the most recent data...",
+      "errorTitle": "Indicators unavailable",
+      "efficiencyTitle": "Efficiency indicators",
+      "efficiency": {
+        "total": "Total registered in core: {{value}}",
+        "visible": "Tasks in this view: {{value}}",
+        "backlog": "Active backlog: {{value}}",
+        "completed": "Completed: {{value}}",
+        "page": "Current page: {{page}}/{{pages}}",
+        "updatedAt": "Last updated: {{value}}"
+      },
+      "upcomingTitle": "Upcoming executions",
+      "upcomingItem": "#{{id}} · {{date}} · {{status}}",
+      "noUpcoming": "No tasks scheduled for the selected window."
+    },
+    "queueUpdate": "Task #{{id}} → {{status}}"
+  },
+  "owners": {
+    "overview": {
+      "section": {
+        "title": "Owner financial overview",
+        "subtitle": "Financial and operational indicators updated every 15 minutes"
+      },
+      "errors": {
+        "loadFailed": "Failed to load owner data. Contact support for assistance.",
+        "updateFailed": "Unable to update payout preferences right now.",
+        "uploadMissing": "Select a valid document before submitting.",
+        "uploadFailed": "Document upload failed. Try again."
+      },
+      "loading": "Loading consolidated data…",
+      "cards": {
+        "occupancy": {
+          "title": "Occupancy rate",
+          "description": "Last 30 days",
+          "properties": "{{count}} active properties"
+        },
+        "revenue": {
+          "title": "Accumulated revenue",
+          "description": "Current month",
+          "adr": "Average daily rate {{value}}"
+        },
+        "compliance": {
+          "title": "Compliance",
+          "description": "KYC reviews and audits",
+          "clear": "Compliant",
+          "pending": "Review pending",
+          "summary": "{{pending}} verifications remaining · {{documents}} documents delivered"
+        },
+        "payout": {
+          "title": "Payout preferences",
+          "description": "Update banking details and settlement frequency.",
+          "success": "Payout preferences updated successfully.",
+          "labels": {
+            "beneficiary": "Beneficiary",
+            "method": "Method",
+            "lastDigits": "Last 4 account digits",
+            "currency": "Currency",
+            "threshold": "Minimum payout amount",
+            "schedule": "Frequency"
+          },
+          "options": {
+            "bank_transfer": "Bank transfer",
+            "pix": "PIX (Brazil)",
+            "paypal": "PayPal",
+            "monthly": "Monthly",
+            "weekly": "Weekly"
+          },
+          "submit": "Save preferences"
+        },
+        "documents": {
+          "title": "Verification documents",
+          "description": "Upload corporate records, bank proofs or ID.",
+          "labels": {
+            "type": "Document type",
+            "file": "File"
+          },
+          "options": {
+            "identidade": "Identity",
+            "comprovativo-bancario": "Bank proof",
+            "contrato-social": "Corporate charter"
+          },
+          "submit": "Submit document",
+          "success": "Document submitted and sent for manual review."
+        },
+        "notifications": {
+          "title": "Alerts and notifications",
+          "description": "Most recent events in the owner portal.",
+          "empty": "No notifications right now.",
+          "meta": "{{timestamp}} · {{category}}"
+        }
+      }
+    }
+  }
+}

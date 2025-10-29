@@ -17,25 +17,16 @@ import {
   updateHousekeepingTask
 } from '@/services/api/housekeeping';
 import { getPartnerSlas, PartnerSla } from '@/services/api/partners';
+import { useTranslation } from '@/lib/i18n';
 
 const DEFAULT_PROPERTY_ID = 1;
 const DEFAULT_PAGE_SIZE = 9;
-const STATUS_LABELS: Record<HousekeepingStatus, string> = {
-  pending: 'Pendente',
-  in_progress: 'Em progresso',
-  completed: 'Concluída',
-  blocked: 'Bloqueada'
-};
 const STATUS_VARIANT: Record<HousekeepingStatus, 'success' | 'warning' | 'critical' | 'info' | 'neutral'> = {
   pending: 'warning',
   in_progress: 'info',
   completed: 'success',
   blocked: 'critical'
 };
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
-  dateStyle: 'short',
-  timeStyle: 'short'
-});
 
 export default function HousekeepingPage() {
   const {
@@ -46,6 +37,7 @@ export default function HousekeepingPage() {
     lastChangedAt,
     isSyncing
   } = useOffline();
+  const { t, locale } = useTranslation('housekeeping');
   const [tasks, setTasks] = useState<HousekeepingTask[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -56,13 +48,29 @@ export default function HousekeepingPage() {
   const [partnerSlas, setPartnerSlas] = useState<PartnerSla[]>([]);
   const [slaLoading, setSlaLoading] = useState<boolean>(false);
   const [slaError, setSlaError] = useState<string | null>(null);
+  const dateTimeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale, {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }),
+    [locale]
+  );
+  const integerFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const statusLabels = useMemo<Record<HousekeepingStatus, string>>(
+    () => ({
+      pending: t('status.pending'),
+      in_progress: t('status.in_progress'),
+      completed: t('status.completed'),
+      blocked: t('status.blocked')
+    }),
+    [t]
+  );
 
   useEffect(() => {
     if (isOffline) {
       setLoading(false);
-      setError(
-        'Modo offline ativo. Dados em tempo real serão sincronizados quando a ligação for restabelecida.'
-      );
+      setError(t('errors.offline'));
       return;
     }
 
@@ -88,12 +96,10 @@ export default function HousekeepingPage() {
         }
         if (apiError instanceof CoreApiError) {
           setError(
-            apiError.status >= 500
-              ? 'Serviço de housekeeping indisponível. Tente novamente em instantes.'
-              : 'Não foi possível carregar as tarefas de housekeeping para esta propriedade.'
+            apiError.status >= 500 ? t('errors.fetchUnavailable') : t('errors.fetchFailed')
           );
         } else {
-          setError('Ocorreu um erro inesperado ao carregar as tarefas.');
+          setError(t('errors.fetchUnexpected'));
         }
       })
       .finally(() => {
@@ -103,12 +109,12 @@ export default function HousekeepingPage() {
       });
 
     return () => controller.abort();
-  }, [isOffline, lastChangedAt]);
+  }, [isOffline, lastChangedAt, t]);
 
   useEffect(() => {
     if (isOffline) {
       setSlaLoading(false);
-      setSlaError('Monitorização de SLA indisponível em modo offline.');
+      setSlaError(t('errors.slaOffline'));
       return;
     }
 
@@ -128,12 +134,10 @@ export default function HousekeepingPage() {
         }
         if (apiError instanceof CoreApiError) {
           setSlaError(
-            apiError.status >= 500
-              ? 'Não foi possível atualizar os SLAs dos parceiros. Serviço indisponível.'
-              : 'Falha ao carregar SLAs. Tente novamente mais tarde.'
+            apiError.status >= 500 ? t('errors.slaUnavailable') : t('errors.slaFailed')
           );
         } else {
-          setSlaError('Ocorreu um erro inesperado ao carregar os SLAs dos parceiros.');
+          setSlaError(t('errors.slaUnexpected'));
         }
         setPartnerSlas([]);
       })
@@ -144,13 +148,16 @@ export default function HousekeepingPage() {
       });
 
     return () => controller.abort();
-  }, [isOffline, lastChangedAt]);
+  }, [isOffline, lastChangedAt, t]);
 
   const handleToggleStatus = useCallback(
     async (task: HousekeepingTask) => {
       const nextStatus: HousekeepingStatus =
         task.status === 'completed' ? 'pending' : 'completed';
-      const description = `Tarefa #${task.id} → ${STATUS_LABELS[nextStatus]}`;
+      const description = t('queueUpdate', {
+        id: task.id,
+        status: statusLabels[nextStatus]
+      });
 
       setMutationError(null);
 
@@ -183,17 +190,17 @@ export default function HousekeepingPage() {
         if (apiError instanceof CoreApiError) {
           setMutationError(
             apiError.status >= 500
-              ? 'Sincronização indisponível. Tente novamente em instantes.'
-              : 'Não foi possível atualizar a tarefa no core.'
+              ? t('errors.mutationUnavailable')
+              : t('errors.mutationFailed')
           );
         } else {
-          setMutationError('Ocorreu um erro ao atualizar a tarefa.');
+          setMutationError(t('errors.mutationUnexpected'));
         }
       } finally {
         setUpdatingTaskId(null);
       }
     },
-    [enqueueTaskUpdate, isOffline]
+    [enqueueTaskUpdate, isOffline, statusLabels, t]
   );
 
   const handleManualSync = useCallback(() => {
@@ -224,9 +231,13 @@ export default function HousekeepingPage() {
       .slice(0, 3)
       .map(
         (task) =>
-          `#${task.id} · ${DATE_TIME_FORMATTER.format(new Date(task.scheduledDate))} · ${STATUS_LABELS[task.status]}`
+          t('metrics.upcomingItem', {
+            id: task.id,
+            date: dateTimeFormatter.format(new Date(task.scheduledDate)),
+            status: statusLabels[task.status]
+          })
       );
-  }, [tasks]);
+  }, [dateTimeFormatter, statusLabels, t, tasks]);
 
   const backlogCount = useMemo(() => {
     return (
@@ -241,11 +252,11 @@ export default function HousekeepingPage() {
       return [
         <Card
           key="loading"
-          title="Sincronizando tarefas"
-          description="Aguarde enquanto buscamos as atribuições mais recentes."
+          title={t('loading.title')}
+          description={t('loading.description')}
           accent="info"
         >
-          <p>Carregando dados do serviço core...</p>
+          <p>{t('loading.body')}</p>
         </Card>
       ];
     }
@@ -254,11 +265,11 @@ export default function HousekeepingPage() {
       return [
         <Card
           key="error"
-          title="Não foi possível carregar as tarefas"
+          title={t('loadingError.title')}
           description={error}
           accent="critical"
         >
-          <p>Verifique a ligação ou tente novamente em alguns instantes.</p>
+          <p>{t('loadingError.body')}</p>
         </Card>
       ];
     }
@@ -267,11 +278,11 @@ export default function HousekeepingPage() {
       return [
         <Card
           key="empty"
-          title="Nenhuma tarefa visível"
-          description="Nenhuma tarefa de housekeeping foi encontrada para o período consultado."
+          title={t('empty.title')}
+          description={t('empty.description')}
           accent="info"
         >
-          <p>Configure filtros adicionais na API para obter um conjunto diferente de resultados.</p>
+          <p>{t('empty.body')}</p>
         </Card>
       ];
     }
@@ -279,25 +290,35 @@ export default function HousekeepingPage() {
     return tasks.map((task) => {
       const isTaskUpdating = updatingTaskId === task.id;
       const actionLabel =
-        task.status === 'completed'
-          ? 'Reabrir tarefa'
-          : 'Marcar como concluída';
+        task.status === 'completed' ? t('taskCard.reopen') : t('taskCard.complete');
 
       return (
         <Card
           key={task.id}
-          title={`Tarefa #${task.id}`}
-          description={`Agendado para ${DATE_TIME_FORMATTER.format(
-            new Date(task.scheduledDate)
-          )}`}
+          title={t('taskCard.title', { id: task.id })}
+          description={t('taskCard.scheduled', {
+            date: dateTimeFormatter.format(new Date(task.scheduledDate))
+          })}
         >
           <StatusBadge variant={STATUS_VARIANT[task.status]}>
-            {STATUS_LABELS[task.status]}
+            {statusLabels[task.status]}
           </StatusBadge>
           <ul>
-            <li>Reserva: {task.reservationId ?? 'Sem ligação'}</li>
-            <li>Responsável: {task.assignedAgentId ?? 'Não atribuído'}</li>
-            <li>Observações: {task.notes ?? 'Sem notas adicionais.'}</li>
+            <li>
+              {t('taskCard.reservation', {
+                value: task.reservationId ?? t('taskCard.reservationFallback')
+              })}
+            </li>
+            <li>
+              {t('taskCard.assignee', {
+                value: task.assignedAgentId ?? t('taskCard.assigneeFallback')
+              })}
+            </li>
+            <li>
+              {t('taskCard.notes', {
+                value: task.notes ?? t('taskCard.notesFallback')
+              })}
+            </li>
           </ul>
           <button
             type="button"
@@ -306,23 +327,33 @@ export default function HousekeepingPage() {
             }}
             disabled={isTaskUpdating || isSyncing}
           >
-            {isTaskUpdating ? 'Sincronizando…' : actionLabel}
+            {isTaskUpdating ? t('taskCard.syncing') : actionLabel}
           </button>
         </Card>
       );
     });
-  }, [error, handleToggleStatus, isSyncing, loading, tasks, updatingTaskId]);
+  }, [
+    dateTimeFormatter,
+    error,
+    handleToggleStatus,
+    isSyncing,
+    loading,
+    statusLabels,
+    t,
+    tasks,
+    updatingTaskId
+  ]);
 
   const slaSection = useMemo(() => {
     if (slaLoading) {
       return (
         <ResponsiveGrid columns={1}>
           <Card
-            title="Acompanhar SLAs de parceiros"
-            description="Sincronizando indicadores de resposta e resolução."
+            title={t('sla.loadingTitle')}
+            description={t('sla.loadingDescription')}
             accent="info"
           >
-            <p>Carregando indicadores de SLA…</p>
+            <p>{t('sla.loadingBody')}</p>
           </Card>
         </ResponsiveGrid>
       );
@@ -332,8 +363,8 @@ export default function HousekeepingPage() {
       return (
         <ResponsiveGrid columns={1}>
           <Card
-            title="SLAs indisponíveis"
-            description="Consulte o time de integrações para confirmar o estado da conexão."
+            title={t('sla.errorTitle')}
+            description={t('sla.errorDescription')}
             accent="critical"
           >
             <p>{slaError}</p>
@@ -346,25 +377,25 @@ export default function HousekeepingPage() {
       return (
         <ResponsiveGrid columns={1}>
           <Card
-            title="Sem SLAs configurados"
-            description="Nenhum SLA ativo foi associado aos parceiros de housekeeping."
+            title={t('sla.emptyTitle')}
+            description={t('sla.emptyDescription')}
             accent="info"
           >
-            <p>Atualize os cadastros de parceiros para acompanhar alertas neste painel.</p>
+            <p>{t('sla.emptyBody')}</p>
           </Card>
         </ResponsiveGrid>
       );
     }
 
     return <SlaOverview slas={partnerSlas} context="housekeeping" />;
-  }, [partnerSlas, slaError, slaLoading]);
+  }, [partnerSlas, slaError, slaLoading, t]);
 
   const metricsBlocks = useMemo(() => {
     if (loading) {
       return [
         {
-          title: 'Aguardando sincronização',
-          items: ['Actualizando indicadores com os dados mais recentes...']
+          title: t('metrics.loadingTitle'),
+          items: [t('metrics.loadingBody')]
         }
       ];
     }
@@ -372,14 +403,14 @@ export default function HousekeepingPage() {
     if (error) {
       return [
         {
-          title: 'Indicadores indisponíveis',
+          title: t('metrics.errorTitle'),
           items: [error]
         }
       ];
     }
 
     const lastUpdatedLabel = lastUpdated
-      ? DATE_TIME_FORMATTER.format(lastUpdated)
+      ? dateTimeFormatter.format(lastUpdated)
       : '—';
     const totalRegistrado = pagination?.total ?? tasks.length;
     const totalPaginas = pagination?.totalPages ?? (tasks.length > 0 ? 1 : 0);
@@ -387,22 +418,25 @@ export default function HousekeepingPage() {
 
     return [
       {
-        title: 'Indicadores de eficiência',
+        title: t('metrics.efficiencyTitle'),
         items: [
-          `Total registado no core: ${totalRegistrado}`,
-          `Tarefas nesta vista: ${tasks.length}`,
-          `Backlog activo: ${backlogCount}`,
-          `Concluídas: ${statusCounters.completed}`,
-          `Página actual: ${paginaActual}/${totalPaginas || 1}`,
-          `Última atualização: ${lastUpdatedLabel}`
+          t('metrics.efficiency.total', { value: integerFormatter.format(totalRegistrado) }),
+          t('metrics.efficiency.visible', { value: integerFormatter.format(tasks.length) }),
+          t('metrics.efficiency.backlog', { value: integerFormatter.format(backlogCount) }),
+          t('metrics.efficiency.completed', {
+            value: integerFormatter.format(statusCounters.completed)
+          }),
+          t('metrics.efficiency.page', {
+            page: integerFormatter.format(paginaActual),
+            pages: integerFormatter.format(totalPaginas || 1)
+          }),
+          t('metrics.efficiency.updatedAt', { value: lastUpdatedLabel })
         ]
       },
       {
-        title: 'Próximas execuções',
+        title: t('metrics.upcomingTitle'),
         items:
-          upcomingTasks.length > 0
-            ? upcomingTasks
-            : ['Nenhuma tarefa agendada no intervalo consultado.']
+          upcomingTasks.length > 0 ? upcomingTasks : [t('metrics.noUpcoming')]
       }
     ];
   }, [
@@ -413,7 +447,10 @@ export default function HousekeepingPage() {
     statusCounters.completed,
     upcomingTasks,
     lastUpdated,
-    pagination
+    pagination,
+    t,
+    integerFormatter,
+    dateTimeFormatter
   ]);
 
   const operationCards = useMemo(() => {
@@ -421,22 +458,22 @@ export default function HousekeepingPage() {
       (
         <Card
           key="offline-queue"
-          title="Fila offline"
-          description="Acompanhe mutações pendentes para o serviço core"
+          title={t('queue.title')}
+          description={t('queue.description')}
           accent={pendingActions.length > 0 ? 'warning' : 'success'}
         >
           <p>
             {isOffline
-              ? 'Modo offline ativo. Os envios serão retomados automaticamente.'
+              ? t('queue.offline')
               : isSyncing
-                ? 'Sincronização em andamento com o core.'
-                : 'Online. Nenhum bloqueio para sincronizar as alterações.'}
+                ? t('queue.syncing')
+                : t('queue.online')}
           </p>
           <ul>
             {pendingActions.length > 0 ? (
               pendingActions.map((action) => <li key={action}>{action}</li>)
             ) : (
-              <li>Sem ações pendentes.</li>
+              <li>{t('queue.empty')}</li>
             )}
           </ul>
           <button
@@ -444,7 +481,7 @@ export default function HousekeepingPage() {
             onClick={handleManualSync}
             disabled={isOffline || pendingActions.length === 0 || isSyncing}
           >
-            {isSyncing ? 'Sincronizando…' : 'Sincronizar agora'}
+            {isSyncing ? t('queue.actionSyncing') : t('queue.action')}
           </button>
           {mutationError && <p className="queue-error">{mutationError}</p>}
         </Card>
@@ -470,35 +507,36 @@ export default function HousekeepingPage() {
     isSyncing,
     metricsBlocks,
     mutationError,
-    pendingActions
+    pendingActions,
+    t
   ]);
 
   return (
     <div>
-      <SectionHeader subtitle="Planeamento diário com suporte offline-first">
-        Housekeeping
+      <SectionHeader subtitle={t('sections.main.subtitle')}>
+        {t('sections.main.title')}
       </SectionHeader>
       <Card
-        title="Estado da conexão"
-        description="Monitorize tarefas pendentes e sincronizações agendadas."
+        title={t('sections.connection.title')}
+        description={t('sections.connection.description')}
         accent={isOffline ? 'critical' : 'success'}
       >
         <p>
           {isOffline
-            ? 'Modo offline ativo. As tarefas concluídas serão sincronizadas automaticamente quando a conexão retornar.'
-            : 'Online. Sincronização automática a cada 2 minutos e sincronização manual disponível.'}
+            ? t('sections.connection.offline')
+            : t('sections.connection.online')}
         </p>
       </Card>
-      <SectionHeader subtitle="Alertas operacionais com parceiros de apoio">
-        SLAs dos parceiros
+      <SectionHeader subtitle={t('sections.sla.subtitle')}>
+        {t('sections.sla.title')}
       </SectionHeader>
       {slaSection}
-      <SectionHeader subtitle="Atribuições priorizadas com dados do core">
-        Tarefas de housekeeping
+      <SectionHeader subtitle={t('sections.tasks.subtitle')}>
+        {t('sections.tasks.title')}
       </SectionHeader>
       <ResponsiveGrid columns={3}>{taskCards}</ResponsiveGrid>
-      <SectionHeader subtitle="Sincronizações e métricas para gestores">
-        Operação em tempo real
+      <SectionHeader subtitle={t('sections.operations.subtitle')}>
+        {t('sections.operations.title')}
       </SectionHeader>
       <ResponsiveGrid columns={2}>{operationCards}</ResponsiveGrid>
       <style jsx>{`
