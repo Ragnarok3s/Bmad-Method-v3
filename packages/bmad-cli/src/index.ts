@@ -41,9 +41,19 @@ const ajv = new Ajv({ allErrors: true });
 const validateManifest = ajv.compile(manifestSchema);
 
 async function loadManifest(manifestPath: string) {
-  const absolutePath = await fs.pathExists(manifestPath)
-    ? manifestPath
-    : path.join(manifestPath, MANIFEST_FILENAME);
+  const resolvedPath = path.resolve(manifestPath);
+  let stats: fs.Stats | undefined;
+  try {
+    stats = await fs.stat(resolvedPath);
+  } catch {
+    stats = undefined;
+  }
+
+  const absolutePath = stats?.isDirectory()
+    ? path.join(resolvedPath, MANIFEST_FILENAME)
+    : stats
+      ? resolvedPath
+      : path.join(resolvedPath, MANIFEST_FILENAME);
 
   if (!(await fs.pathExists(absolutePath))) {
     throw new Error(`Manifest not found at ${absolutePath}`);
