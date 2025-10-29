@@ -104,11 +104,13 @@ from ..events import EventBus, NotificationCenter, WebhookDispatcher
 from ..notifications import NotificationRelay, PushNotificationService
 from ..security import AuthenticationError, AuthenticationService, SecurityService
 from ..storage import SecureDocumentStorage, StorageError
+from .partners import router as marketplace_router
 from .webhooks import verify_webhook_signature
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
 router = APIRouter()
+router.include_router(marketplace_router)
 logger = logging.getLogger(__name__)
 
 
