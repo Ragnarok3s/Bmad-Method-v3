@@ -101,6 +101,7 @@ class CommunicationMessage:
     subject: str | None
     body: str
     sent_at: datetime
+    tenant_slug: str | None = None
     context: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -163,6 +164,7 @@ class CommunicationService:
         variables: dict[str, Any] | None = None,
         context: dict[str, Any] | None = None,
         author: str = "automation",
+        tenant_slug: str | None = None,
     ) -> CommunicationMessage:
         template = self.get_template(template_id)
         if channel not in template.channels:
@@ -184,6 +186,7 @@ class CommunicationService:
             subject=subject,
             body=body,
             sent_at=datetime.now(timezone.utc),
+            tenant_slug=tenant_slug,
             context=context or {},
             metadata={"variables": variables or {}},
         )
@@ -199,6 +202,7 @@ class CommunicationService:
         recipient: str,
         error: str,
         context: dict[str, Any] | None = None,
+        tenant_slug: str | None = None,
     ) -> CommunicationMessage:
         message = CommunicationMessage(
             id=uuid4().hex,
@@ -212,6 +216,7 @@ class CommunicationService:
             subject=None,
             body=error,
             sent_at=datetime.now(timezone.utc),
+            tenant_slug=tenant_slug,
             context=context or {},
         )
         self._messages.append(message)
@@ -228,6 +233,7 @@ class CommunicationService:
         context: dict[str, Any] | None = None,
         in_reply_to: str | None = None,
         author: str = "guest",
+        tenant_slug: str | None = None,
     ) -> CommunicationMessage:
         payload_context = context or {}
         if in_reply_to:
@@ -244,27 +250,34 @@ class CommunicationService:
             subject=None,
             body=body,
             sent_at=datetime.now(timezone.utc),
+            tenant_slug=tenant_slug,
             context=payload_context,
         )
         self._messages.append(message)
         return message
 
-    def history_for_reservation(self, reservation_id: int) -> list[CommunicationMessage]:
+    def history_for_reservation(
+        self, reservation_id: int, *, tenant_slug: str | None
+    ) -> list[CommunicationMessage]:
         return [
             message
             for message in self._messages
             if message.context.get("reservation_id") == reservation_id
+            and message.tenant_slug == tenant_slug
         ]
 
-    def messages(self) -> list[CommunicationMessage]:
-        return list(self._messages)
+    def messages(self, *, tenant_slug: str | None) -> list[CommunicationMessage]:
+        return [message for message in self._messages if message.tenant_slug == tenant_slug]
 
-    def delivery_summary(self) -> dict[str, Any]:
-        total = len(self._messages)
+    def delivery_summary(self, *, tenant_slug: str | None) -> dict[str, Any]:
+        scoped_messages = [
+            message for message in self._messages if message.tenant_slug == tenant_slug
+        ]
+        total = len(scoped_messages)
         status_counts: dict[str, int] = {}
         channel_counts: dict[str, dict[str, int]] = {}
         template_usage: dict[str, int] = {}
-        messages_by_id = {message.id: message for message in self._messages}
+        messages_by_id = {message.id: message for message in scoped_messages}
         response_deltas: list[float] = []
         upsell_offers = 0
         upsell_accepted = 0
@@ -274,7 +287,7 @@ class CommunicationService:
         outbound_total = 0
         last_message_at: datetime | None = None
 
-        for message in self._messages:
+        for message in scoped_messages:
             status_counts[message.status.value] = status_counts.get(message.status.value, 0) + 1
             channel_stats = channel_counts.setdefault(message.channel.value, {"total": 0, "failed": 0})
             channel_stats["total"] += 1
@@ -317,7 +330,7 @@ class CommunicationService:
         )
         pending_followups = sum(
             1
-            for message in self._messages
+            for message in scoped_messages
             if message.direction == "outbound" and message.id not in replied_messages
         )
 
