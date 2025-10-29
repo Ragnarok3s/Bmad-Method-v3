@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/onboarding', label: 'Onboarding' },
   { href: '/agentes', label: 'Catálogo de Agentes' },
   { href: '/playbooks', label: 'Playbooks Automatizados' },
+  { href: '/recommendations', label: 'Recomendações' },
   { href: '/observabilidade', label: 'Observabilidade' },
   { href: '/governanca', label: 'Governança' },
   { href: '/analytics', label: 'Analytics' },
