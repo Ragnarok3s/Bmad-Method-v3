@@ -27,6 +27,7 @@ from .config import ObservabilitySettings
 
 _MAX_AUDIT_EVENTS = 100
 _MAX_ALERT_EVENTS = 100
+_MAX_CONTROL_EVENTS = 200
 _CONFIGURED = False
 
 
@@ -61,6 +62,9 @@ class _RuntimeState:
         default_factory=lambda: deque(maxlen=_MAX_ALERT_EVENTS)
     )
     alert_totals: Counter = field(default_factory=Counter)
+    control_events: Deque["_ControlCheckpoint"] = field(
+        default_factory=lambda: deque(maxlen=_MAX_CONTROL_EVENTS)
+    )
 
 
 _STATE = _RuntimeState()
@@ -93,6 +97,16 @@ class _AlertEvent:
     message: str
     severity: str
     context: Mapping[str, str]
+    observed_at: datetime
+
+
+@dataclass
+class _ControlCheckpoint:
+    control_id: str
+    status: str
+    actor_id: int | None
+    detail: Mapping[str, str]
+    tags: Mapping[str, str]
     observed_at: datetime
 
 
@@ -302,6 +316,58 @@ def record_critical_alert(
     _STATE.alert_totals["total"] += 1
 
 
+def register_control_checkpoint(
+    control_id: str,
+    *,
+    status: str,
+    actor_id: int | None = None,
+    detail: Mapping[str, Any] | None = None,
+    tags: Mapping[str, Any] | None = None,
+) -> None:
+    """Registra um checkpoint de controle para rastreabilidade de compliance."""
+
+    payload = _ControlCheckpoint(
+        control_id=control_id,
+        status=status,
+        actor_id=actor_id,
+        detail=_stringify_attributes(detail),
+        tags=_stringify_attributes(tags),
+        observed_at=_now(),
+    )
+    _STATE.control_events.appendleft(payload)
+    mark_signal_event(
+        "logs",
+        f"compliance:{control_id}",
+        {
+            "status": status,
+            "actor_id": actor_id,
+            **payload.detail,
+            **{f"tag.{key}": value for key, value in payload.tags.items()},
+        },
+    )
+
+
+def get_compliance_snapshot(limit: int = 50) -> dict[str, Any]:
+    """Devolve resumo dos últimos checkpoints de controle de compliance."""
+
+    events: list[dict[str, Any]] = []
+    for event in list(_STATE.control_events)[:limit]:
+        events.append(
+            {
+                "control_id": event.control_id,
+                "status": event.status,
+                "actor_id": event.actor_id,
+                "detail": dict(event.detail),
+                "tags": dict(event.tags),
+                "observed_at": event.observed_at.isoformat().replace("+00:00", "Z"),
+            }
+        )
+    totals: Counter[str] = Counter()
+    for event in _STATE.control_events:
+        totals[event.status] += 1
+    return {"recent": events, "totals": dict(totals)}
+
+
 def get_observability_status() -> dict[str, Any]:
     """Devolve snapshot da configuração OTEL (usado pelos health-checks)."""
 
@@ -382,6 +448,7 @@ def get_observability_status() -> dict[str, Any]:
             "recent": recent_audit,
         },
         "alerts": alerts_snapshot,
+        "compliance": get_compliance_snapshot(limit=20),
     }
 
 
