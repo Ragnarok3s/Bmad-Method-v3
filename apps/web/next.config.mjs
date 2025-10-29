@@ -4,6 +4,7 @@ const nextConfig = {
   experimental: {
     typedRoutes: true
   },
+  transpilePackages: ['@bmad/api-client'],
   env: {
     NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT:
       process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318',

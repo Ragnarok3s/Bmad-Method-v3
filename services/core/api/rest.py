@@ -65,6 +65,8 @@ from ..domain.schemas import (
     OwnerIncidentReport,
     OwnerInvoiceRead,
     OwnerNotificationRead,
+    PushDeviceRead,
+    PushDeviceRegistration,
     OwnerOverviewRead,
     OwnerPayoutPreferencesRead,
     OwnerPayoutPreferencesUpdate,
@@ -90,6 +92,7 @@ from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
 from ..owners import ManualVerificationQueue, OwnerService
 from ..events import EventBus, NotificationCenter, WebhookDispatcher
+from ..notifications import NotificationRelay, PushNotificationService
 from ..security import AuthenticationError, AuthenticationService, SecurityService
 from ..storage import SecureDocumentStorage, StorageError
 from .webhooks import verify_webhook_signature
@@ -113,6 +116,9 @@ owner_service = OwnerService(
     notifications=owner_notifications,
     webhooks=owner_webhooks,
 )
+push_notification_service = PushNotificationService()
+notification_relay = NotificationRelay(push_notification_service)
+owner_notifications.subscribe(notification_relay.handle)
 owner_webhooks.register(
     "owner.payment.processed",
     "https://hooks.bmad.example/payments",
@@ -943,6 +949,22 @@ def list_owner_notifications(owner_id: int, request: Request) -> list[OwnerNotif
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
 
 
+@router.get("/owners/{owner_id}/devices", response_model=list[PushDeviceRead])
+def list_owner_devices(owner_id: int, request: Request) -> list[PushDeviceRead]:
+    _require_owner_access(request, owner_id)
+    devices = push_notification_service.list_devices(owner_id)
+    return [
+        PushDeviceRead(
+            token=device.token,
+            platform=device.platform,
+            device_name=device.device_name,
+            last_seen_at=device.last_seen_at,
+            enabled=device.enabled,
+        )
+        for device in devices
+    ]
+
+
 @router.post("/owners/{owner_id}/payout-preferences", response_model=OwnerPayoutPreferencesRead)
 async def update_owner_payout_preferences(owner_id: int, request: Request) -> OwnerPayoutPreferencesRead:
     _require_owner_access(request, owner_id)
@@ -978,3 +1000,24 @@ async def report_owner_incident(owner_id: int, request: Request) -> dict[str, st
     except KeyError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
     return {"status": "received"}
+
+
+@router.post("/owners/{owner_id}/devices", status_code=status.HTTP_204_NO_CONTENT)
+async def register_owner_device(owner_id: int, request: Request) -> Response:
+    _require_owner_access(request, owner_id)
+    payload = await _parse_model(request, PushDeviceRegistration)
+    push_notification_service.register_device(
+        owner_id,
+        payload.token,
+        payload.platform,
+        device_name=payload.device_name,
+        expo_push_token=payload.expo_push_token,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.delete("/owners/{owner_id}/devices/{token}", status_code=status.HTTP_204_NO_CONTENT)
+def unregister_owner_device(owner_id: int, token: str, request: Request) -> Response:
+    _require_owner_access(request, owner_id)
+    push_notification_service.unregister_device(owner_id, token)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

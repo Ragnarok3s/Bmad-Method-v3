@@ -16,7 +16,25 @@ describe('MainNav', () => {
 
     expect(screen.getByRole('navigation', { name: 'Módulos principais' })).toBeInTheDocument();
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(14);
+    expect(links).toHaveLength(16);
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Dashboard',
+      'Reservas',
+      'Calendário',
+      'Housekeeping',
+      'Faturação',
+      'Portal Proprietários',
+      'Onboarding',
+      'Catálogo de Agentes',
+      'Playbooks Automatizados',
+      'Recomendações',
+      'Observabilidade',
+      'Governança',
+      'Analytics',
+      'Base de Conhecimento',
+      'App Housekeeping',
+      'App Gestor'
+    ]);
     expect(screen.getByRole('link', { name: 'Housekeeping' })).toHaveAttribute('aria-current', 'page');
   });
 });
