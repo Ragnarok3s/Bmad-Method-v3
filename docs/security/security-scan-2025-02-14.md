@@ -47,3 +47,9 @@ Regression execution order: apply web updates first to unblock deployment, then 
    - Prepare rollout plan with fallback strategy and monitor observability dashboards post-deploy.
 
 Document remediation progress in the security runbook and open follow-up tickets for each dependency upgrade, referencing this report for traceability.
+
+## Identity Service Hardening
+
+- **Escopo**: o novo serviço `services/identity` usa o `TenantAccessRepository` e a tabela `tenant_agent_access` para impor isolamento de papéis por tenant. Toda alteração deve preservar a compatibilidade com o `AuthenticationService` e com os limites configurados em `TenantManager`.
+- **Cobertura de testes**: executar `pytest tests/services/identity -q` como parte dos gates de segurança para validar MFA, login e revogação. Essa suíte está vinculada ao [roadmap do produto](../product-roadmap.md#atualização-2025-02-15-identidade-multi-tenant) e mapeada na [matriz STRIDE](stride-integracoes-housekeeping.md#camada-de-identidade-multi-tenant).
+- **Monitoramento**: registrar métricas e logs emitidos pelo Identity Service no mesmo pipeline de observabilidade do core; auditar eventos críticos (`auth_mfa_failed`, `auth_login_blocked`) para confirmar que continuam presentes na trilha descrita em `services/core/observability.py`.
