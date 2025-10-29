@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 export type BillingWebhookEvent = {
   event: string;
@@ -24,8 +24,9 @@ export function createBillingWebhookHandler(options: BillingWebhookHandlerOption
       throw new Error('Missing webhook signature');
     }
     const bodyBuffer = typeof rawBody === 'string' ? Buffer.from(rawBody) : rawBody;
-    const expected = createHmac('sha256', options.secret).update(bodyBuffer).digest('hex');
-    if (expected !== signature) {
+    const expected = createHmac('sha256', options.secret).update(bodyBuffer).digest();
+    const provided = toSignatureBuffer(signature, expected.length);
+    if (!timingSafeEqual(expected, provided)) {
       throw new Error('Invalid webhook signature');
     }
     const event = JSON.parse(bodyBuffer.toString('utf-8')) as BillingWebhookEvent;
@@ -34,6 +35,15 @@ export function createBillingWebhookHandler(options: BillingWebhookHandlerOption
     }
     return event;
   };
+}
+
+function toSignatureBuffer(signature: string, expectedLength: number): Buffer {
+  const normalized = signature.trim();
+  const requiredLength = expectedLength * 2;
+  if (normalized.length !== requiredLength || !/^[0-9a-f]+$/i.test(normalized)) {
+    throw new Error('Invalid webhook signature');
+  }
+  return Buffer.from(normalized, 'hex');
 }
 
 function getHeader(
