@@ -30,6 +30,7 @@ export function TourLauncher() {
 
   const activeTour = availableTours.find((tour) => tour.id === selectedTourId) ?? availableTours[0];
   const completed = hasCompleted(activeTour.id);
+  const statusMessage = completed ? 'Concluído — pode rever os passos principais' : 'Duração média ~3 minutos';
 
   return (
     <div className="tour-launcher" data-completed={completed ? 'true' : 'false'}>
@@ -37,7 +38,12 @@ export function TourLauncher() {
         <div>
           <p className="tour-launcher__eyebrow">Tour guiado</p>
           <strong>{activeTour.title}</strong>
-          {activeTour.description && <span className="tour-launcher__description">{activeTour.description}</span>}
+          {activeTour.description && (
+            <span className="tour-launcher__description">{activeTour.description}</span>
+          )}
+          <span className="tour-launcher__status" data-completed={completed ? 'true' : 'false'}>
+            {statusMessage}
+          </span>
         </div>
         <div className="tour-launcher__actions">
           {availableTours.length > 1 && (
@@ -69,72 +75,117 @@ export function TourLauncher() {
       </div>
       <style jsx>{`
         .tour-launcher {
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          position: relative;
+          display: grid;
+          padding: var(--space-4) var(--space-5);
           border-radius: var(--radius-md);
-          padding: var(--space-3) var(--space-4);
-          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.85));
-          color: #fff;
+          background: #fff;
+          border: 1px solid rgba(11, 60, 93, 0.1);
           box-shadow: var(--shadow-card);
-          min-width: 280px;
+          max-width: 420px;
+        }
+        .tour-launcher::before {
+          content: '';
+          position: absolute;
+          top: var(--space-4);
+          bottom: var(--space-4);
+          left: 0;
+          width: 4px;
+          border-radius: var(--radius-xs);
+          background: var(--color-deep-blue);
+        }
+        .tour-launcher[data-completed='true']::before {
+          background: var(--color-soft-aqua);
         }
         .tour-launcher__body {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: var(--space-4);
+          flex-wrap: wrap;
         }
         .tour-launcher__eyebrow {
           margin: 0;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           font-size: 0.75rem;
+          color: var(--color-neutral-2);
         }
         strong {
           display: block;
-          font-size: 1.05rem;
+          font-size: 1.1rem;
+          color: var(--color-deep-blue);
         }
         .tour-launcher__description {
           display: block;
-          font-size: 0.875rem;
-          opacity: 0.85;
-          margin-top: 0.25rem;
+          font-size: 0.9rem;
+          color: var(--color-neutral-2);
+          margin-top: 0.35rem;
+        }
+        .tour-launcher__status {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-1);
+          margin-top: var(--space-2);
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 600;
+          color: var(--color-neutral-2);
+        }
+        .tour-launcher__status[data-completed='true'] {
+          color: var(--color-soft-aqua);
         }
         .tour-launcher__actions {
-          display: flex;
+          display: inline-flex;
           align-items: center;
           gap: var(--space-3);
         }
-        .tour-launcher__select select {
+        .tour-launcher__select {
+          display: inline-flex;
+          align-items: center;
+          background: rgba(11, 60, 93, 0.05);
           border-radius: var(--radius-sm);
+          padding: 0 var(--space-2);
+        }
+        .tour-launcher__select select {
           border: none;
-          background: rgba(255, 255, 255, 0.18);
-          color: #fff;
-          padding: var(--space-1) var(--space-3);
+          background: transparent;
+          color: var(--color-deep-blue);
           font-weight: 600;
+          padding: var(--space-1) var(--space-2);
           cursor: pointer;
         }
         .tour-launcher__select select:focus-visible {
-          outline: 2px solid rgba(255, 255, 255, 0.9);
+          outline: 2px solid var(--color-soft-aqua);
           outline-offset: 2px;
         }
         .tour-launcher__cta {
           border-radius: var(--radius-sm);
-          border: none;
-          background: #fff;
-          color: var(--color-deep-blue);
+          border: 1px solid transparent;
+          background: var(--color-deep-blue);
+          color: #fff;
           padding: var(--space-2) var(--space-4);
           font-weight: 600;
           cursor: pointer;
+          transition: background 0.2s ease, border 0.2s ease, color 0.2s ease;
+        }
+        .tour-launcher__cta:hover,
+        .tour-launcher__cta:focus-visible {
+          background: #07273b;
         }
         .tour-launcher[data-completed='true'] .tour-launcher__cta {
-          background: rgba(255, 255, 255, 0.16);
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.6);
+          background: rgba(46, 196, 182, 0.15);
+          color: var(--color-deep-blue);
+          border-color: rgba(46, 196, 182, 0.35);
+        }
+        .tour-launcher[data-completed='true'] .tour-launcher__cta:hover,
+        .tour-launcher[data-completed='true'] .tour-launcher__cta:focus-visible {
+          background: rgba(46, 196, 182, 0.25);
         }
         @media (max-width: 768px) {
           .tour-launcher {
-            width: 100%;
+            max-width: 100%;
           }
           .tour-launcher__body {
             flex-direction: column;
@@ -142,6 +193,10 @@ export function TourLauncher() {
           }
           .tour-launcher__actions {
             justify-content: space-between;
+          }
+          .tour-launcher__cta {
+            width: 100%;
+            text-align: center;
           }
         }
       `}</style>
