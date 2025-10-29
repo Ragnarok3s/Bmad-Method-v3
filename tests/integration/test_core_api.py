@@ -3,16 +3,19 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from fastapi.testclient import TestClient
 
-from services.core.config import CoreSettings
+from services.core.config import CoreSettings, TenantSettings
 from services.core.database import get_database
 from services.core.domain.models import Partner, PartnerSLA, SLAStatus
 from services.core.main import build_application
 
 
 def build_client(tmp_path) -> TestClient:
-    settings = CoreSettings(database_url=f"sqlite:///{tmp_path}/integration.db")
+    settings = CoreSettings(
+        database_url=f"sqlite:///{tmp_path}/integration.db",
+        tenancy=TenantSettings(platform_token="platform-secret"),
+    )
     app = build_application(settings)
-    return TestClient(app)
+    return TestClient(app, headers={"x-tenant-slug": settings.tenancy.default_slug})
 
 
 @pytest.mark.reservations
@@ -221,3 +224,18 @@ def test_partner_sla_webhook_reconciliation(tmp_path) -> None:
     assert statuses["fixitnow"]["status"] == "at_risk"
     assert statuses["partner-ota-hub"]["status"] == "breached"
     assert statuses["partner-ota-hub"]["metric_label"] == "Disponibilidade API"
+
+
+def test_multi_tenant_report_requires_platform_scope(tmp_path) -> None:
+    client = build_client(tmp_path)
+    forbidden = client.get("/tenants/reports/kpis")
+    assert forbidden.status_code == 403
+
+    response = client.get(
+        "/tenants/reports/kpis",
+        headers={
+            "x-tenant-scope": "platform",
+            "x-tenant-platform-token": "platform-secret",
+        },
+    )
+    assert response.status_code == 200

@@ -177,11 +177,11 @@ def record_critical_alert(
     detail_value = detail if detail is not None else message
     context_attributes = _stringify_attributes(context)
 
-    attributes: dict[str, Any] = {"name": name, "severity": severity}
+    attributes: dict[str, Any] = {"alert_name": name, "severity": severity}
     if detail_value is not None:
         attributes["detail"] = detail_value
     if message is not None:
-        attributes["message"] = message
+        attributes["alert_message"] = message
     if context_attributes:
         attributes["context"] = context_attributes
 

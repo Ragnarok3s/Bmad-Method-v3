@@ -10,6 +10,7 @@ from services.core.domain.models import (
     PaymentIntentStatus,
     PaymentProvider,
     ReservationStatus,
+    Tenant,
 )
 from services.core.domain.schemas import (
     PaymentAuthorizationRequest,
@@ -34,6 +35,13 @@ def test_reservation_payment_lifecycle(tmp_path) -> None:
     db_url = f"sqlite:///{tmp_path}/payments.db"
     database, payment_settings = setup_database(db_url)
     with database.session_scope() as session:
+        tenant = Tenant(slug="payments", name="Tenant Pagamentos", active=True)
+        session.add(tenant)
+        session.flush()
+        session.info["tenant_scope"] = "tenant"
+        session.info["tenant_id"] = tenant.id
+        session.info["tenant_slug"] = tenant.slug
+
         property_service = PropertyService(session)
         property_obj = property_service.create(
             PropertyCreate(name="Hotel Atlântico", timezone="UTC", units=5)

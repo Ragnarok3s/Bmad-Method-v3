@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 
-from services.core.config import CoreSettings
+from services.core.config import CoreSettings, TenantSettings
 from services.core.database import get_database
 from services.core.domain.models import Agent, AgentRole, AuthSession, AuditLog
 from services.core.main import build_application
@@ -10,9 +10,12 @@ from services.core.security import AuthenticationService
 
 
 def build_client(tmp_path) -> TestClient:
-    settings = CoreSettings(database_url=f"sqlite:///{tmp_path}/auth.db")
+    settings = CoreSettings(
+        database_url=f"sqlite:///{tmp_path}/auth.db",
+        tenancy=TenantSettings(platform_token="platform-secret"),
+    )
     app = build_application(settings)
-    return TestClient(app)
+    return TestClient(app, headers={"x-tenant-slug": settings.tenancy.default_slug})
 
 
 def enroll_agent(database, name: str, email: str, role: AgentRole, secret: str | None = None):

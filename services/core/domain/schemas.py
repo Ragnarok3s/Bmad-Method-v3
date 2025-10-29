@@ -63,6 +63,50 @@ class WorkspaceRead(WorkspaceCreate):
         from_attributes = True
 
 
+class PaymentMethodCreate(BaseModel):
+    provider: PaymentProvider
+    customer_reference: str
+    payment_method_nonce: str
+    guest_email: EmailStr | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class PaymentAuthorizationRequest(BaseModel):
+    method: PaymentMethodCreate
+    amount_minor: int = Field(gt=0)
+    currency: str = Field(min_length=3, max_length=3)
+    capture_on_check_in: bool = False
+    metadata: dict[str, Any] | None = None
+
+
+class PaymentIntentRead(BaseModel):
+    id: int
+    status: PaymentIntentStatus
+    amount_minor: int
+    currency_code: str
+    provider: PaymentProvider
+    provider_reference: str | None = None
+    capture_on_check_in: bool
+    payment_method_status: PaymentMethodStatus | None = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class InvoiceRead(BaseModel):
+    id: int
+    status: InvoiceStatus
+    amount_minor: int
+    currency_code: str
+    issued_at: datetime
+    due_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1)
@@ -513,6 +557,20 @@ class KPIReportRead(BaseModel):
     generated_at: datetime
     items: list[KPIReportEntry]
     summary: KPIReportSummary
+
+
+class TenantKPIReportRead(BaseModel):
+    tenant_slug: str
+    tenant_name: str
+    generated_at: datetime
+    items: list[KPIReportEntry]
+    summary: KPIReportSummary
+
+
+class MultiTenantKPIReportRead(BaseModel):
+    generated_at: datetime
+    tenants: list[TenantKPIReportRead]
+    total_summary: KPIReportSummary
 
 
 class CriticalAlertExample(BaseModel):

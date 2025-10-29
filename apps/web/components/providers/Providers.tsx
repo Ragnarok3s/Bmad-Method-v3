@@ -6,6 +6,7 @@ import { OfflineProvider } from '@/components/offline/OfflineContext';
 import { GuidedTourProvider } from '@/components/tour/TourContext';
 import { TelemetryProvider } from '@/components/telemetry/TelemetryProvider';
 import { I18nProvider, useTranslation } from '@/lib/i18n';
+import { TenantProvider } from '@/lib/tenant-context';
 
 function NavigationFallback() {
   const { t } = useTranslation('common.loading');
@@ -17,11 +18,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <I18nProvider>
       <Suspense fallback={<NavigationFallback />}>
         <TelemetryProvider>
-          <AnalyticsProvider>
-            <OfflineProvider>
-              <GuidedTourProvider>{children}</GuidedTourProvider>
-            </OfflineProvider>
-          </AnalyticsProvider>
+          <TenantProvider>
+            <AnalyticsProvider>
+              <OfflineProvider>
+                <GuidedTourProvider>{children}</GuidedTourProvider>
+              </OfflineProvider>
+            </AnalyticsProvider>
+          </TenantProvider>
         </TelemetryProvider>
       </Suspense>
     </I18nProvider>

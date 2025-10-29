@@ -17,6 +17,7 @@ from services.core.domain.models import (
     Partner,
     PartnerSLA,
     SLAStatus,
+    Tenant,
 )
 from services.core.domain.schemas import PropertyCreate, ReservationCreate
 from services.core.services import (
@@ -39,7 +40,16 @@ def test_operational_metrics_overview(tmp_path) -> None:
     check_in = datetime.combine(now.date(), time.min, tzinfo=timezone.utc)
     check_out = check_in + timedelta(days=2)
 
+    tenant_slug = "operational"
     with database.session_scope() as session:
+        tenant = Tenant(slug=tenant_slug, name="Tenant Operacional", active=True)
+        session.add(tenant)
+        session.flush()
+        tenant_id = tenant.id
+        session.info["tenant_scope"] = "tenant"
+        session.info["tenant_id"] = tenant_id
+        session.info["tenant_slug"] = tenant.slug
+
         property_service = PropertyService(session)
         primary_property = property_service.create(
             PropertyCreate(name="Hotel Atlas", timezone="UTC", units=10)
@@ -183,6 +193,9 @@ def test_operational_metrics_overview(tmp_path) -> None:
         )
 
     with database.session_scope() as session:
+        session.info["tenant_scope"] = "tenant"
+        session.info["tenant_id"] = tenant_id
+        session.info["tenant_slug"] = tenant_slug
         PIPELINE.reset()
         service = OperationalMetricsService(session)
         overview = service.get_overview(now.date())

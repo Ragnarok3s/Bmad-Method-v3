@@ -79,7 +79,12 @@ def generate_kpi_report(
     if period_end < period_start:
         raise ValueError("period_end deve ser maior ou igual a period_start")
 
+    tenant_scope = session.info.get("tenant_scope")
+    tenant_id = session.info.get("tenant_id") if tenant_scope != "platform" else None
+
     property_stmt = select(Property)
+    if tenant_id is not None:
+        property_stmt = property_stmt.where(Property.tenant_id == tenant_id)
     if property_ids:
         property_stmt = property_stmt.where(Property.id.in_(property_ids))
 
