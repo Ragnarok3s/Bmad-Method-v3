@@ -1,0 +1,78 @@
+name: Extensions Quality Gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/core/extensions/**'
+      - 'packages/bmad-cli/**'
+      - 'apps/web/app/extensions/**'
+      - 'docs/extensions/**'
+      - '.github/workflows/extensions.yml'
+  pull_request:
+    paths:
+      - 'services/core/extensions/**'
+      - 'packages/bmad-cli/**'
+      - 'apps/web/app/extensions/**'
+      - 'docs/extensions/**'
+      - '.github/workflows/extensions.yml'
+
+jobs:
+  runtime-and-cli:
+    name: Runtime & CLI validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Python static checks
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install bandit
+          python -m compileall services/core/extensions
+          bandit -r services/core/extensions -lll
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check CLI
+        run: npm run lint --workspace @bmad/extensions-cli
+
+      - name: Build CLI package
+        run: npm run build --workspace @bmad/extensions-cli
+
+      - name: Smoke test packaging
+        run: |
+          node -e "const fs=require('fs');const path=require('path');const manifest={manifest_version:'1.1',identifier:'demo.ext',version:'0.0.1',entrypoint:'src.index:handler'};const root=path.join(process.cwd(),'tmp-ext');fs.mkdirSync(path.join(root,'src'),{recursive:true});fs.writeFileSync(path.join(root,'src','index.py'),'def handler(event, context):\n    return {\'status\': \'ok\'}');fs.writeFileSync(path.join(root,'extension.manifest.json'),JSON.stringify(manifest));"
+          node dist/index.js package tmp-ext --output tmp-ext.zip
+          test -f tmp-ext.zip
+        working-directory: packages/bmad-cli
+
+  docs:
+    name: Documentation guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Lint markdown
+        uses: avto-dev/markdown-lint@v1
+        with:
+          config: .markdownlint.json
+        continue-on-error: true
+
+      - name: Ensure governance docs exist
+        run: |
+          test -d docs/extensions
+          test -f docs/extensions/README.md
