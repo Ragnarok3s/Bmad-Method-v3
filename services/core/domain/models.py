@@ -5,12 +5,13 @@ import json
 from datetime import datetime, timezone
 
 from enum import Enum
-from typing import Iterable
+from typing import Any, Iterable
 
 from sqlalchemy import (
     Boolean,
     DateTime,
     Enum as SAEnum,
+    Float,
     ForeignKey,
     Integer,
     JSON,
@@ -108,6 +109,11 @@ class Agent(Base):
     )
     sessions: Mapped[list["AuthSession"]] = relationship(
         "AuthSession", back_populates="agent", cascade="all, delete-orphan"
+    )
+    recommendation_feedback: Mapped[list["RecommendationFeedback"]] = relationship(
+        "RecommendationFeedback",
+        back_populates="agent",
+        cascade="all, delete-orphan",
     )
 
 
@@ -717,3 +723,28 @@ class AnalyticsSyncState(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=datetime.utcnow
     )
+
+
+class RecommendationDecision(str, Enum):
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    DISMISSED = "dismissed"
+
+
+class RecommendationFeedback(Base):
+    """Armazena feedback supervisionado para recomendações geradas pelo motor."""
+
+    __tablename__ = "recommendation_feedback"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    recommendation_key: Mapped[str] = mapped_column(String(160), nullable=False, index=True)
+    decision: Mapped[RecommendationDecision] = mapped_column(
+        SAEnum(RecommendationDecision), nullable=False
+    )
+    agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
+    score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    agent: Mapped[Agent | None] = relationship("Agent", back_populates="recommendation_feedback")

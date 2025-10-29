@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from enum import Enum
 from typing import Any, Literal
 
 from uuid import uuid4
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from .models import (
     AgentRole,
@@ -20,6 +21,7 @@ from .models import (
     ReconciliationSource,
     ReconciliationStatus,
     SLAStatus,
+    RecommendationDecision,
 )
 
 
@@ -671,6 +673,62 @@ class OwnerPropertySummaryRead(BaseModel):
     adr: float
     last_incident_at: datetime | None
     issues_open: int
+
+
+class RecommendationPriority(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class RecommendationExplanation(BaseModel):
+    signal: str
+    description: str
+    weight: float = Field(ge=0.0, le=1.0)
+
+
+class RecommendationRead(BaseModel):
+    key: str
+    title: str
+    summary: str
+    priority: RecommendationPriority
+    score: float = Field(ge=0.0, le=1.0)
+    source: str
+    created_at: datetime
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    explainability: list[RecommendationExplanation] = Field(default_factory=list)
+    actions: list[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecommendationFeedbackCreate(BaseModel):
+    recommendation_key: str = Field(min_length=1)
+    decision: RecommendationDecision
+    agent_id: int | None = None
+    score: float | None = Field(default=None, ge=0.0, le=1.0)
+    notes: str | None = Field(default=None, max_length=2000)
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+class RecommendationFeedbackRead(RecommendationFeedbackCreate):
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PrecisionRecallReport(BaseModel):
+    evaluated_at: datetime
+    window_start: datetime | None = None
+    window_end: datetime | None = None
+    precision: float = Field(ge=0.0, le=1.0)
+    recall: float = Field(ge=0.0, le=1.0)
+    true_positives: int
+    false_positives: int
+    false_negatives: int
+    total_predictions: int
+    total_relevant: int
 
 
 class OwnerInvoiceRead(BaseModel):
