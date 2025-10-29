@@ -4,6 +4,19 @@ import React from 'react';
 
 import OnboardingLayout from '@/app/onboarding/layout';
 import OnboardingPage from '@/app/onboarding/page';
+import { GuidedTourProvider } from '@/components/tour/TourContext';
+
+jest.mock('@/components/tour/TourContext', () => {
+  const React = require('react');
+  return {
+    GuidedTourProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
+    useGuidedTour: () => ({
+      startTour: jest.fn(),
+      hasCompleted: () => false
+    })
+  };
+});
 
 const STORAGE_KEY = 'bmad:onboarding:progress';
 
@@ -22,9 +35,11 @@ afterEach(() => {
 
 function renderWizard() {
   return render(
-    <OnboardingLayout>
-      <OnboardingPage />
-    </OnboardingLayout>
+    <GuidedTourProvider>
+      <OnboardingLayout>
+        <OnboardingPage />
+      </OnboardingLayout>
+    </GuidedTourProvider>
   );
 }
 

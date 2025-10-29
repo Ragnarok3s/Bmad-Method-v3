@@ -1,0 +1,31 @@
+{
+  "name": "@bmad/api-client",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Shared API client for Bmad Method services",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "lodash.snakecase": "4.1.1"
+  },
+  "devDependencies": {
+    "rimraf": "5.0.5",
+    "typescript": "5.4.5",
+    "@types/lodash.snakecase": "4.1.9"
+  }
+}

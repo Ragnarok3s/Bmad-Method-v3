@@ -3,11 +3,14 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 import hashlib
 import hmac
 import threading
 import uuid
 from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional
+
+logger = logging.getLogger(__name__)
 
 EventListener = Callable[["Event"], None]
 
@@ -85,6 +88,7 @@ class NotificationCenter:
     def __init__(self, bus: Optional[EventBus] = None) -> None:
         self._notifications: MutableMapping[int, List[Notification]] = defaultdict(list)
         self._lock = threading.Lock()
+        self._listeners: List[Callable[[Notification], None]] = []
         if bus is not None:
             self.bind(bus)
 
@@ -102,6 +106,7 @@ class NotificationCenter:
         with self._lock:
             items = self._notifications.setdefault(notification.owner_id, [])
             items.append(notification)
+        self._emit(notification)
         return notification
 
     def mark_read(self, owner_id: int, notification_id: str) -> None:
@@ -114,6 +119,20 @@ class NotificationCenter:
     def unread_count(self, owner_id: int) -> int:
         with self._lock:
             return sum(1 for item in self._notifications.get(owner_id, ()) if not item.read)
+
+    def subscribe(self, listener: Callable[[Notification], None]) -> None:
+        with self._lock:
+            self._listeners.append(listener)
+
+    def _emit(self, notification: Notification) -> None:
+        listeners: List[Callable[[Notification], None]]
+        with self._lock:
+            listeners = list(self._listeners)
+        for listener in listeners:
+            try:
+                listener(notification)
+            except Exception:  # pragma: no cover - safety
+                logger.exception("notification_listener_failed")
 
     def _handle_payment_event(self, event: Event) -> None:
         owner_id = int(event.payload.get("owner_id", 0))

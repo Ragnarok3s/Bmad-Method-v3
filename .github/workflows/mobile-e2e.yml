@@ -1,0 +1,45 @@
+name: mobile-e2e
+
+on:
+  push:
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/api-client/**'
+      - '.github/workflows/mobile-e2e.yml'
+  pull_request:
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/api-client/**'
+      - '.github/workflows/mobile-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  detox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-progress
+
+      - name: Build shared API client
+        run: npm run build --workspace @bmad/api-client
+
+      - name: Build Android debug binary
+        run: npm run detox:build:android --workspace @bmad/mobile
+
+      - name: Run Detox tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          script: npm run detox:test:android --workspace @bmad/mobile -- --headless

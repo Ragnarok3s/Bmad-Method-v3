@@ -758,6 +758,21 @@ class OwnerNotificationRead(BaseModel):
     read: bool
 
 
+class PushDeviceRegistration(BaseModel):
+    token: str
+    platform: Literal["ios", "android", "web"]
+    device_name: str | None = None
+    expo_push_token: str | None = None
+
+
+class PushDeviceRead(BaseModel):
+    token: str
+    platform: str
+    device_name: str | None = None
+    last_seen_at: datetime
+    enabled: bool
+
+
 class OwnerIncidentReport(BaseModel):
     incident: str
     severity: Literal["low", "medium", "high"]

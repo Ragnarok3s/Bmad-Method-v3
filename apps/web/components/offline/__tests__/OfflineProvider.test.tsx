@@ -5,6 +5,7 @@ import {
   OfflineProvider,
   useOffline
 } from '../OfflineContext';
+import { resetApiClient } from '@/services/api/client';
 import { clearTaskUpdates } from '@/lib/offline-queue';
 
 describe('OfflineProvider queue behaviour', () => {
@@ -19,7 +20,10 @@ describe('OfflineProvider queue behaviour', () => {
 
   beforeEach(async () => {
     onlineState = true;
-    global.fetch = jest.fn() as unknown as typeof fetch;
+    const fetchMock = jest.fn() as unknown as typeof fetch;
+    global.fetch = fetchMock;
+    (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
+    resetApiClient();
     await clearTaskUpdates();
   });
 
@@ -68,6 +72,7 @@ describe('OfflineProvider queue behaviour', () => {
     const mockResponse = {
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({
         id: 1,
         property_id: 1,
@@ -142,6 +147,7 @@ describe('OfflineProvider queue behaviour', () => {
     const mockResponse = {
       ok: true,
       status: 200,
+      headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({
         id: 2,
         property_id: 1,
