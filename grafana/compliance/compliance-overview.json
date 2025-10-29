@@ -1,0 +1,107 @@
+{
+  "uid": "compliance-overview",
+  "title": "Bmad Compliance Overview",
+  "tags": ["compliance", "security", "governance"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5m",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Checkpoints aprovados",
+      "id": 1,
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "options": {
+        "reduceOptions": {"calcs": ["sum"], "fields": "status"},
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(compliance_control_checkpoint_total{status=\"approved\"})"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Checkpoints rejeitados",
+      "id": 2,
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "options": {
+        "reduceOptions": {"calcs": ["sum"], "fields": "status"},
+        "orientation": "horizontal",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(compliance_control_checkpoint_total{status=\"rejected\"})"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Últimos checkpoints",
+      "id": 3,
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 4},
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "expr": "{app=\"bmad-core\", stream=\"compliance\"}",
+          "maxLines": 200,
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Eventos críticos",
+      "id": 4,
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(rate(bmad_alerts_total{severity=\"critical\"}[15m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"lineWidth": 2}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "piechart",
+      "title": "MFA enforcement",
+      "id": 5,
+      "gridPos": {"h": 8, "w": 8, "x": 12, "y": 10},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum by (status) (compliance_control_checkpoint_total{control_id=\"IAM.AC-001\"})"
+        }
+      ],
+      "options": {
+        "legend": {"displayMode": "table"},
+        "displayLabels": ["name", "value", "percent"]
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "query": "label_values(deployment_environment)",
+        "current": {"text": "staging", "value": "staging"}
+      }
+    ]
+  }
+}

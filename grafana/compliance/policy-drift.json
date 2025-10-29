@@ -1,0 +1,81 @@
+{
+  "uid": "policy-drift",
+  "title": "IAM Policy Drift",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10m",
+  "tags": ["compliance", "iam"],
+  "panels": [
+    {
+      "type": "heatmap",
+      "title": "Desvios por controle",
+      "id": 10,
+      "gridPos": {"h": 12, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "compliance_policy_drift_bucket"
+        }
+      ],
+      "options": {
+        "legend": {"show": true},
+        "tooltip": {"show": true}
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Políticas alteradas no período",
+      "id": 11,
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "increase(compliance_policy_change_total[30d])"
+        }
+      ],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Eventos de baseline",
+      "id": 12,
+      "gridPos": {"h": 12, "w": 12, "x": 12, "y": 4},
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "expr": "{app=\"bmad-core\", stream=\"baseline\"}",
+          "queryType": "range",
+          "maxLines": 200
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Hash de arquivos críticos",
+      "id": 13,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {
+          "datasource": {"type": "postgres", "uid": "compliance-db"},
+          "format": "table",
+          "rawSql": "SELECT control_id, path, sha256, generated_at FROM compliance_file_hashes ORDER BY generated_at DESC LIMIT 50"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "control_id",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "query": "label_values(compliance_control_checkpoint_total, control_id)",
+        "current": {"text": "IAM.AC-001", "value": "IAM.AC-001"}
+      }
+    ]
+  }
+}

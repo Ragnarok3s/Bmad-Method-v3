@@ -1,0 +1,118 @@
+{
+  "generated_at": "2025-10-29T02:25:44.225841Z",
+  "period": "2024-08",
+  "controls": [
+    {
+      "control_id": "iam_access_control",
+      "description": "Decisões de IAM/MFA e checkpoints de auditoria",
+      "files": [
+        {
+          "path": "services/core/observability.py",
+          "exists": true,
+          "kind": "file",
+          "sha256": "070e567dbf857c76d598c83d39444eb51495e5a55af3dd109aa4fd11dade8656",
+          "size": 14746,
+          "modified_at": "2025-10-29T02:24:00.086212Z"
+        },
+        {
+          "path": "services/core/security/__init__.py",
+          "exists": true,
+          "kind": "file",
+          "sha256": "57218163aba358eb9301b6e4870903e88a76b509b9d6d6f0c7c8a5027fb6d7f3",
+          "size": 23314,
+          "modified_at": "2025-10-29T02:25:04.058057Z"
+        },
+        {
+          "path": "services/core/security/auth.py",
+          "exists": true,
+          "kind": "file",
+          "sha256": "9e087ae9772c1db18c2ee0549be7172ea66ff2c1886337dc5ee948dbcf626070",
+          "size": 17058,
+          "modified_at": "2025-10-29T00:00:45.775388Z"
+        }
+      ]
+    },
+    {
+      "control_id": "governance_audit_log",
+      "description": "Histórico de auditoria funcional",
+      "files": [
+        {
+          "path": "docs/evidencias/compliance",
+          "exists": true,
+          "kind": "directory",
+          "sha256": null,
+          "size": null,
+          "modified_at": "2025-10-29T00:00:45.763388Z"
+        },
+        {
+          "path": "docs/evidencias/compliance/README.md",
+          "exists": true,
+          "kind": "file",
+          "sha256": "f9015ee71d9690f74bf3ada5fe2bd6029f9cb3cc7c5e693c1c8dfc321b979a80",
+          "size": 629,
+          "modified_at": "2025-10-29T00:00:45.763388Z"
+        },
+        {
+          "path": "docs/evidencias/security",
+          "exists": true,
+          "kind": "directory",
+          "sha256": null,
+          "size": null,
+          "modified_at": "2025-10-29T00:00:45.763388Z"
+        },
+        {
+          "path": "docs/evidencias/security/dast-scan-status.json",
+          "exists": true,
+          "kind": "file",
+          "sha256": "cf2b40249886c1b56f1078d0ce4f5c94683feadff2e0421a30cec4154fa4aec3",
+          "size": 147,
+          "modified_at": "2025-10-29T00:00:45.763388Z"
+        }
+      ]
+    },
+    {
+      "control_id": "pipeline_controls",
+      "description": "Workflows de compliance e policies lint",
+      "files": [
+        {
+          "path": ".github/workflows/compliance-checks.yml",
+          "exists": true,
+          "kind": "file",
+          "sha256": "4623c7d6aeeaca1cab45628634b93976a6942a9a2d34c0f241da0a1477e8536b",
+          "size": 1476,
+          "modified_at": "2025-10-29T02:25:38.421973Z"
+        }
+      ]
+    },
+    {
+      "control_id": "grafana_dashboards",
+      "description": "Dashboards de conformidade e deriva de políticas",
+      "files": [
+        {
+          "path": "grafana/compliance",
+          "exists": true,
+          "kind": "directory",
+          "sha256": null,
+          "size": null,
+          "modified_at": "2025-10-29T02:25:24.618006Z"
+        },
+        {
+          "path": "grafana/compliance/compliance-overview.json",
+          "exists": true,
+          "kind": "file",
+          "sha256": "d28aa9adb63458b93637347e9ce0879cb270518f91343c9d1dec69f19980a23b",
+          "size": 2908,
+          "modified_at": "2025-10-29T02:25:16.166027Z"
+        },
+        {
+          "path": "grafana/compliance/policy-drift.json",
+          "exists": true,
+          "kind": "file",
+          "sha256": "2021b6143f8e7cf5674a435ad0b30228facc81a912eb2dc305cd1c58f4726838",
+          "size": 2156,
+          "modified_at": "2025-10-29T02:25:24.622006Z"
+        }
+      ]
+    }
+  ]
+}

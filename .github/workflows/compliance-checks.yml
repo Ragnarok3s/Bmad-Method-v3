@@ -1,0 +1,48 @@
+name: Compliance Checks
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install .; fi
+
+      - name: Lint compliance documentation
+        run: python scripts/compliance/collect_evidence.py lint
+
+      - name: Collect compliance evidence
+        run: python scripts/compliance/collect_evidence.py collect --format both --output-dir docs/compliance/reports --period $(date +"%Y-%m")
+
+      - name: Show compliance summary
+        run: |
+          echo "Generated files:"
+          ls -1 docs/compliance/reports/compliance-report-* || true
+          tail -n 20 docs/compliance/reports/compliance-report-$(date +"%Y-%m").md || true
+
+      - name: Upload compliance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: |
+            docs/compliance/reports/compliance-report-*.json
+            docs/compliance/reports/compliance-report-*.md
+          if-no-files-found: warn

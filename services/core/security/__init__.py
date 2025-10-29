@@ -4,13 +4,13 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from fastapi import HTTPException, status
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
-from ..observability import record_audit_event
+from ..observability import record_audit_event, register_control_checkpoint
 from ..domain.models import Agent, AgentRole, AuditLog, PermissionDefinition, RolePolicy
 from ..domain.schemas import (
     GovernanceAuditRead,
@@ -22,6 +22,26 @@ from ..domain.schemas import (
 )
 
 logger = logging.getLogger("bmad.core.security")
+
+IAM_CONTROL_ACCESS = "IAM.AC-001"
+IAM_CONTROL_POLICY_CHANGE = "IAM.AC-002"
+
+
+def _register_access_checkpoint(
+    control_id: str,
+    *,
+    status: str,
+    actor: Agent | None,
+    detail: Mapping[str, Any],
+    tags: Mapping[str, Any] | None = None,
+) -> None:
+    register_control_checkpoint(
+        control_id,
+        status=status,
+        actor_id=actor.id if actor else None,
+        detail=dict(detail),
+        tags=dict(tags or {}),
+    )
 
 ROLE_HIERARCHY: dict[AgentRole, set[AgentRole]] = {
     AgentRole.ADMIN: {
@@ -193,13 +213,42 @@ def assert_role(
 ) -> None:
     """Valida se o agente possui alguma das roles permitidas."""
 
-    if not agent.active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agente inativo")
-
     allowed_set = {role for role in allowed}
     effective_roles = get_effective_roles(agent, session, property_id=property_id)
-    if not effective_roles.intersection(allowed_set):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado")
+    context = {
+        "agent_id": agent.id,
+        "allowed_roles": sorted(role.value for role in allowed_set),
+        "effective_roles": sorted(role.value for role in effective_roles),
+        "property_id": property_id,
+    }
+    if not agent.active:
+        _register_access_checkpoint(
+            IAM_CONTROL_ACCESS,
+            status="rejected",
+            actor=agent,
+            detail={**context, "reason": "inactive"},
+            tags={"check": "assert_role"},
+        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agente inativo")
+
+    if effective_roles.intersection(allowed_set):
+        _register_access_checkpoint(
+            IAM_CONTROL_ACCESS,
+            status="approved",
+            actor=agent,
+            detail=context,
+            tags={"check": "assert_role"},
+        )
+        return
+
+    _register_access_checkpoint(
+        IAM_CONTROL_ACCESS,
+        status="rejected",
+        actor=agent,
+        detail={**context, "reason": "missing_role"},
+        tags={"check": "assert_role"},
+    )
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso negado")
 
 
 def assert_permission(
@@ -210,11 +259,48 @@ def assert_permission(
     property_id: int | None = None,
 ) -> None:
     if not agent.active:
+        _register_access_checkpoint(
+            IAM_CONTROL_ACCESS,
+            status="rejected",
+            actor=agent,
+            detail={
+                "agent_id": agent.id,
+                "permission": permission,
+                "property_id": property_id,
+                "reason": "inactive",
+            },
+            tags={"check": "assert_permission"},
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Agente inativo")
 
     effective = get_effective_permissions(session, agent, property_id=property_id)
     if permission not in effective:
+        _register_access_checkpoint(
+            IAM_CONTROL_ACCESS,
+            status="rejected",
+            actor=agent,
+            detail={
+                "agent_id": agent.id,
+                "permission": permission,
+                "property_id": property_id,
+                "effective_permissions": sorted(effective),
+                "reason": "missing_permission",
+            },
+            tags={"check": "assert_permission"},
+        )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permissão insuficiente")
+
+    _register_access_checkpoint(
+        IAM_CONTROL_ACCESS,
+        status="approved",
+        actor=agent,
+        detail={
+            "agent_id": agent.id,
+            "permission": permission,
+            "property_id": property_id,
+        },
+        tags={"check": "assert_permission"},
+    )
 
 
 class SecurityService:
@@ -516,6 +602,13 @@ class SecurityService:
 
     def _log(self, action: str, actor: Agent | None, detail: dict[str, Any]) -> None:
         record_audit_event(action, actor_id=actor.id if actor else None, detail=detail)
+        _register_access_checkpoint(
+            IAM_CONTROL_POLICY_CHANGE,
+            status="logged",
+            actor=actor,
+            detail={"action": action, **detail},
+            tags={"source": "security_service"},
+        )
         payload = AuditLog(
             action=action,
             agent_id=actor.id if actor else None,
