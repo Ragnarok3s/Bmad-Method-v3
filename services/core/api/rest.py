@@ -51,6 +51,10 @@ from ..domain.schemas import (
     ReservationCreate,
     ReservationRead,
     ReservationUpdateStatus,
+    PricingBulkUpdateRequest,
+    PricingBulkUpdateResponse,
+    PricingSimulationRead,
+    PricingSimulationRequest,
     RolePolicyCreate,
     RolePolicyRead,
     RolePolicyUpdate,
@@ -81,6 +85,7 @@ from ..services import (
     ReservationService,
     WorkspaceService,
 )
+from ..pricing import PricingService
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
 from ..owners import ManualVerificationQueue, OwnerService
@@ -645,6 +650,32 @@ async def update_reservation_status(
     payload = await _parse_model(request, ReservationUpdateStatus)
     service = _get_reservation_service(request, session)
     return service.update_status(reservation_id, payload)
+
+
+@router.post("/pricing/simulate", response_model=PricingSimulationRead)
+async def simulate_pricing(
+    request: Request,
+    session: Session = Depends(get_session),
+) -> PricingSimulationRead:
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, PricingSimulationRequest)
+    service = PricingService(session)
+    result = service.simulate(payload, actor_id=actor.id)
+    session.flush()
+    return result
+
+
+@router.patch("/reservations/pricing", response_model=PricingBulkUpdateResponse)
+async def apply_pricing_updates(
+    request: Request,
+    session: Session = Depends(get_session),
+) -> PricingBulkUpdateResponse:
+    actor = _require_actor(session, request)
+    payload = await _parse_model(request, PricingBulkUpdateRequest)
+    service = PricingService(session)
+    result = service.apply_bulk_update(payload, actor_id=actor.id)
+    session.flush()
+    return result
 
 
 @router.post("/housekeeping/tasks", response_model=HousekeepingTaskRead, status_code=201)

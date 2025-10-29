@@ -18,6 +18,7 @@ from ..domain.models import (
     Partner,
     PartnerSLA,
     PartnerSLAVersion,
+    Reservation,
     ReconciliationSource,
     ReconciliationStatus,
     SLAStatus,
@@ -192,6 +193,68 @@ class OTASyncService:
             "status": job.status.value,
             "processed_at": contract.processed_at,
             "payload": contract.payload,
+        }
+
+    def propagate_pricing_update(
+        self,
+        reservation: Reservation,
+        *,
+        amount_minor: int,
+        currency_code: str,
+        triggered_at: datetime | None = None,
+    ) -> dict[str, Any]:
+        """Enfileira sincronização de atualização de tarifa com fallback manual."""
+
+        if reservation.id is None:
+            return {
+                "status": "manual",
+                "reason": "reservation_without_id",
+            }
+
+        triggered_at = triggered_at or datetime.now(timezone.utc)
+
+        latest_job = self.session.execute(
+            select(OTASyncQueue)
+            .where(OTASyncQueue.reservation_id == reservation.id)
+            .order_by(OTASyncQueue.created_at.desc())
+        ).scalar_one_or_none()
+
+        if latest_job is None:
+            return {
+                "status": "manual",
+                "reason": "no_channel_context",
+            }
+
+        payload = json.dumps(
+            {
+                "type": "pricing_update",
+                "reservation_id": reservation.id,
+                "property_id": reservation.property_id,
+                "amount_minor": amount_minor,
+                "currency_code": currency_code,
+                "check_in": reservation.check_in.isoformat(),
+                "check_out": reservation.check_out.isoformat(),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+
+        job = OTASyncQueue(
+            reservation_id=reservation.id,
+            property_id=reservation.property_id,
+            channel_id=latest_job.channel_id,
+            payload=payload,
+            status=OTASyncStatus.PENDING,
+        )
+        self.session.add(job)
+        self.session.flush()
+
+        record_ota_enqueue(reservation.property_id, "pricing_update")
+
+        return {
+            "status": "synced",
+            "job_id": job.id,
+            "enqueued_at": triggered_at,
         }
 
     def _ensure_channel(self, name: str) -> OTAChannel:
