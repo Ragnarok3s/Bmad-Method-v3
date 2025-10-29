@@ -79,9 +79,18 @@ class ExtensionRuntime:
             raise SandboxViolation(f"Unable to load extension module '{dotted_path}'.")
 
         module = importlib.util.module_from_spec(spec)
+        module.__dict__["__builtins__"] = self.sandbox.safe_builtins
         loader = spec.loader
         assert loader is not None
-        loader.exec_module(module)
+        try:
+            with self.sandbox.patched_builtins():
+                loader.exec_module(module)
+        except SandboxViolation:
+            raise
+        except Exception as exc:  # pragma: no cover - runtime bubble
+            raise SandboxViolation(
+                f"Extension module '{dotted_path}' failed to load inside sandbox: {exc}"
+            ) from exc
         extension_module = ExtensionModule(module=module, entrypoint=lambda *args, **kwargs: None)
         self._module_cache[dotted_path] = extension_module
         return extension_module

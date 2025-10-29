@@ -34,6 +34,20 @@ _SAFE_BUILTINS: Dict[str, Any] = {
         "sum",
         "tuple",
         "zip",
+        "__build_class__",
+        "BaseException",
+        "Exception",
+        "getattr",
+        "hasattr",
+        "isinstance",
+        "issubclass",
+        "object",
+        "property",
+        "setattr",
+        "staticmethod",
+        "super",
+        "type",
+        "print",
     )
 }
 
