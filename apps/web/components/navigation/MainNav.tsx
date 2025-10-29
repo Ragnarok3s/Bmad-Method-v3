@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/calendario', label: 'Calendário' },
   { href: '/housekeeping', label: 'Housekeeping' },
   { href: '/faturacao', label: 'Faturação' },
+  { href: '/owners', label: 'Portal Proprietários' },
   { href: '/onboarding', label: 'Onboarding' },
   { href: '/agentes', label: 'Catálogo de Agentes' },
   { href: '/playbooks', label: 'Playbooks Automatizados' },

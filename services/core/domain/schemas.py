@@ -545,3 +545,96 @@ class PlaybookExecutionRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class OwnerMetricsRead(BaseModel):
+    occupancy_rate: float
+    revenue_mtd: float
+    average_daily_rate: float
+    incident_count: int
+    guest_satisfaction: float
+    pending_invoices: int
+    properties_active: int
+
+
+class OwnerPayoutPreferencesRead(BaseModel):
+    method: Literal["bank_transfer", "pix", "paypal"]
+    beneficiary_name: str
+    bank_account_last4: str | None
+    currency: str
+    payout_threshold: float
+    schedule: Literal["weekly", "monthly"]
+    updated_at: datetime
+    manual_review_required: bool = False
+
+
+class OwnerPayoutPreferencesUpdate(BaseModel):
+    method: Literal["bank_transfer", "pix", "paypal"]
+    beneficiary_name: str
+    bank_account_last4: str | None = None
+    currency: str
+    payout_threshold: float
+    schedule: Literal["weekly", "monthly"]
+
+
+class OwnerOverviewRead(BaseModel):
+    owner_id: int
+    owner_name: str
+    email: EmailStr
+    phone: str
+    metrics: OwnerMetricsRead
+    payout_preferences: OwnerPayoutPreferencesRead
+    pending_verifications: int
+    unread_notifications: int
+    last_payout_at: datetime | None
+    compliance_status: Literal["clear", "pending", "restricted"]
+    documents_submitted: int
+
+
+class OwnerPropertySummaryRead(BaseModel):
+    property_id: int
+    property_name: str
+    occupancy_rate: float
+    revenue_mtd: float
+    adr: float
+    last_incident_at: datetime | None
+    issues_open: int
+
+
+class OwnerInvoiceRead(BaseModel):
+    invoice_id: str
+    property_name: str
+    due_date: datetime
+    amount_due: float
+    currency: str
+    status: Literal["pending", "paid", "overdue"]
+
+
+class OwnerReportRead(BaseModel):
+    report_id: str
+    title: str
+    period: str
+    url: str
+    generated_at: datetime
+    format: Literal["pdf", "xlsx"]
+
+
+class OwnerNotificationRead(BaseModel):
+    id: str
+    title: str
+    message: str
+    category: str
+    created_at: datetime
+    read: bool
+
+
+class OwnerIncidentReport(BaseModel):
+    incident: str
+    severity: Literal["low", "medium", "high"]
+    reported_by: str
+
+
+class OwnerDocumentUploadResponse(BaseModel):
+    document_id: str
+    status: Literal["pending", "queued"]
+    manual_review_id: str
