@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import strawberry
+from fastapi import HTTPException, Request, status
 from strawberry.fastapi import GraphQLRouter
+from strawberry.types import Info
+
+from sqlalchemy.orm import Session
 
 from ..database import Database
 from ..domain.agents import (
@@ -15,6 +19,7 @@ from ..domain.agents import (
 from ..domain.models import HousekeepingTask, Property, Reservation
 from ..domain.schemas import ReservationRead
 from ..services import HousekeepingService, PropertyService, ReservationService
+from ..tenancy import TenantIsolationError, TenantManager, TenantNotFoundError
 
 
 def _property_to_type(model: Property) -> "PropertyType":
@@ -176,18 +181,60 @@ class HousekeepingTaskType:
     scheduled_date: str
 
 
-def create_graphql_router(database: Database) -> GraphQLRouter:
+def create_graphql_router(database: Database, tenant_manager: TenantManager | None = None) -> GraphQLRouter:
+    def _resolve_manager(request: Request) -> TenantManager | None:
+        return tenant_manager or getattr(request.app.state, "tenant_manager", None)
+
+    def _bind_session(session: Session, request: Request) -> None:
+        manager = _resolve_manager(request)
+        if not manager:
+            return
+        scope = (request.headers.get("x-tenant-scope") or "tenant").lower()
+        if scope == "platform":
+            token = request.headers.get("x-tenant-platform-token")
+            if not manager.validate_platform_token(token):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Escopo de plataforma não autorizado",
+                )
+            manager.bind_platform_session(session)
+            return
+
+        slug = request.headers.get("x-tenant-slug")
+        if not slug:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cabeçalho X-Tenant-Slug obrigatório",
+            )
+        try:
+            tenant = manager.require_tenant(session, slug)
+        except TenantNotFoundError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Tenant não encontrado",
+            ) from exc
+        except TenantIsolationError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=str(exc),
+            ) from exc
+        manager.bind_session(session, tenant)
+
     @strawberry.type
     class Query:
         @strawberry.field
-        def properties(self) -> list[PropertyType]:
+        def properties(self, info: Info) -> list[PropertyType]:
+            request: Request = info.context["request"]
             with database.session_scope() as session:
+                _bind_session(session, request)
                 service = PropertyService(session)
                 return [_property_to_type(prop) for prop in service.list()]
 
         @strawberry.field
-        def reservations(self, property_id: int) -> list[ReservationType]:
+        def reservations(self, info: Info, property_id: int) -> list[ReservationType]:
+            request: Request = info.context["request"]
             with database.session_scope() as session:
+                _bind_session(session, request)
                 service = ReservationService(session)
                 data = service.list_for_property(property_id)
                 return [_reservation_to_type(item) for item in data]
@@ -209,11 +256,17 @@ def create_graphql_router(database: Database) -> GraphQLRouter:
             return _agent_page_to_type(catalog_page)
 
         @strawberry.field
-        def housekeeping_tasks(self, property_id: int) -> list[HousekeepingTaskType]:
+        def housekeeping_tasks(self, info: Info, property_id: int) -> list[HousekeepingTaskType]:
+            request: Request = info.context["request"]
             with database.session_scope() as session:
+                _bind_session(session, request)
                 service = HousekeepingService(session)
                 data = service.list_for_property(property_id)
                 return [_task_to_type(item) for item in data]
 
     schema = strawberry.Schema(query=Query)
-    return GraphQLRouter(schema)
+
+    async def get_context(request: Request):
+        return {"request": request}
+
+    return GraphQLRouter(schema, context_getter=get_context)

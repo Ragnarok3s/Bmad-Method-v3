@@ -8,6 +8,9 @@ import { Card } from '@/components/ui/Card';
 import { exportKpiReportCsv } from '@/services/api/reports';
 import type { KpiReportRow } from '@/services/api/reports';
 import { listProperties } from '@/services/api/properties';
+import { getMultiTenantKpiReport } from '@/services/api/tenancy';
+import type { MultiTenantKpiReport } from '@/services/api/tenancy';
+import { useTenant } from '@/lib/tenant-context';
 
 import { useKpiReport } from './useKpiReport';
 
@@ -59,6 +62,7 @@ function formatCurrency(value: number, currency?: string | null) {
 }
 
 export default function ReportsPage() {
+  const tenant = useTenant();
   const today = useMemo(() => new Date(), []);
   const defaultEnd = useMemo(() => formatDateInput(today), [today]);
   const defaultStart = useMemo(() => {
@@ -70,6 +74,7 @@ export default function ReportsPage() {
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [selectedProperty, setSelectedProperty] = useState<number | 'all'>('all');
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [propertyState, setPropertyState] = useState<{
@@ -81,11 +86,75 @@ export default function ReportsPage() {
     error: null,
     options: []
   });
+  const [multiTenantState, setMultiTenantState] = useState<{
+    loading: boolean;
+    error: string | null;
+    data: MultiTenantKpiReport | null;
+  }>({
+    loading: tenant.capabilities.canViewAggregatedReports,
+    error: null,
+    data: null
+  });
+
+  useEffect(() => {
+    if (!tenant.capabilities.canViewAggregatedReports) {
+      setMultiTenantState({ loading: false, error: null, data: null });
+      return;
+    }
+    let isMounted = true;
+    const controller = new AbortController();
+    setMultiTenantState((previous) => ({ ...previous, loading: true, error: null }));
+    getMultiTenantKpiReport({
+      startDate,
+      endDate,
+      headers: tenant.buildHeaders({ scope: 'platform' }),
+      signal: controller.signal
+    })
+      .then((report) => {
+        if (!isMounted) {
+          return;
+        }
+        setMultiTenantState({ loading: false, error: null, data: report });
+        setSelectedTenant((current) => current ?? report.tenants[0]?.tenantSlug ?? null);
+      })
+      .catch((error: Error) => {
+        if (error.name === 'AbortError' || !isMounted) {
+          return;
+        }
+        setMultiTenantState({ loading: false, error: error.message, data: null });
+      });
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [tenant, startDate, endDate]);
+
+  const effectiveTenantSlug = useMemo(() => {
+    if (tenant.capabilities.canViewAggregatedReports) {
+      if (selectedTenant) {
+        return selectedTenant;
+      }
+      return multiTenantState.data?.tenants[0]?.tenantSlug ?? null;
+    }
+    return tenant.tenant?.slug ?? null;
+  }, [tenant, selectedTenant, multiTenantState.data]);
+
+  useEffect(() => {
+    setSelectedProperty('all');
+  }, [effectiveTenantSlug]);
 
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
-    listProperties({ signal: controller.signal })
+    if (tenant.capabilities.canViewAggregatedReports && !effectiveTenantSlug) {
+      setPropertyState({ loading: false, error: null, options: [] });
+      return () => {
+        controller.abort();
+      };
+    }
+    setPropertyState((previous) => ({ ...previous, loading: true }));
+    const headers = tenant.buildHeaders({ scope: 'tenant', tenantSlug: effectiveTenantSlug ?? undefined });
+    listProperties({ signal: controller.signal, headers })
       .then((properties) => {
         if (!isMounted) {
           return;
@@ -107,18 +176,27 @@ export default function ReportsPage() {
       isMounted = false;
       controller.abort();
     };
-  }, []);
+  }, [tenant, effectiveTenantSlug]);
 
   const propertyFilter = useMemo(
     () => (selectedProperty === 'all' ? [] : [selectedProperty]),
     [selectedProperty]
   );
 
-  const { status, data, error, refresh } = useKpiReport({
-    startDate,
-    endDate,
-    propertyIds: propertyFilter
-  });
+  const shouldSkipReport = tenant.capabilities.canViewAggregatedReports && !effectiveTenantSlug;
+
+  const { status, data, error, refresh } = useKpiReport(
+    {
+      startDate,
+      endDate,
+      propertyIds: propertyFilter
+    },
+    {
+      tenantSlug: effectiveTenantSlug ?? undefined,
+      scope: 'tenant',
+      skip: shouldSkipReport
+    }
+  );
 
   const adrSummary = useMemo(() => {
     if (!data) {
@@ -137,9 +215,29 @@ export default function ReportsPage() {
     }));
   }, [data]);
 
+  const multiTenantRevenueEntries = useMemo(() => {
+    if (!multiTenantState.data) {
+      return [] as Array<{ currency: string; value: number }>;
+    }
+    return Object.entries(multiTenantState.data.totalSummary.revenueBreakdown).map(([currency, value]) => ({
+      currency,
+      value
+    }));
+  }, [multiTenantState.data]);
+
   const isLoading = status === 'idle' || status === 'loading';
   const isEmpty = status === 'empty';
   const hasError = status === 'error';
+
+  const activeTenantName = useMemo(() => {
+    if (!tenant.capabilities.canViewAggregatedReports) {
+      return tenant.tenant?.name ?? tenant.tenant?.slug ?? null;
+    }
+    const tenantReport = multiTenantState.data?.tenants.find(
+      (entry) => entry.tenantSlug === effectiveTenantSlug
+    );
+    return tenantReport?.tenantName ?? effectiveTenantSlug;
+  }, [tenant, multiTenantState.data, effectiveTenantSlug]);
 
   const handleExport = async () => {
     setExportError(null);
@@ -148,7 +246,8 @@ export default function ReportsPage() {
       const csv = await exportKpiReportCsv({
         startDate,
         endDate,
-        propertyIds: propertyFilter
+        propertyIds: propertyFilter,
+        headers: tenant.buildHeaders({ scope: 'tenant', tenantSlug: effectiveTenantSlug ?? undefined })
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -181,6 +280,86 @@ export default function ReportsPage() {
       >
         Relatórios &amp; KPIs
       </SectionHeader>
+
+      {tenant.capabilities.canViewAggregatedReports && (
+        <section className="multi-tenant" aria-labelledby="multi-tenant-heading">
+          <h2 id="multi-tenant-heading">Visão multi-tenant</h2>
+          {multiTenantState.loading && <p className="state">Carregando visão consolidada…</p>}
+          {multiTenantState.error && (
+            <p className="state state-error">Falha ao consolidar relatórios: {multiTenantState.error}</p>
+          )}
+          {multiTenantState.data && (
+            <>
+              <div className="multi-tenant__summary">
+                <Card title="Reservas totais" accent="info">
+                  <p className="metric">{multiTenantState.data.totalSummary.totalReservations}</p>
+                  <p className="details">
+                    Taxa média {formatPercent(multiTenantState.data.totalSummary.averageOccupancyRate)}
+                  </p>
+                </Card>
+                <Card title="Cobertura" accent="success">
+                  <p className="metric">{multiTenantState.data.totalSummary.propertiesCovered} propriedades</p>
+                  <p className="details">Receita agregada</p>
+                  <ul className="breakdown" data-testid="multi-tenant-revenue">
+                    {multiTenantRevenueEntries.map((entry) => (
+                      <li key={entry.currency}>
+                        <span>{entry.currency === 'null' ? 'Sem moeda' : entry.currency}</span>
+                        <strong>
+                          {formatCurrency(
+                            entry.value,
+                            entry.currency === 'null' ? 'BRL' : entry.currency
+                          )}
+                        </strong>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </div>
+              <div className="tenant-cards">
+                {multiTenantState.data.tenants.map((tenantReport) => (
+                  <Card
+                    key={tenantReport.tenantSlug}
+                    title={tenantReport.tenantName}
+                    description={`Atualizado em ${new Date(tenantReport.generatedAt).toLocaleString('pt-BR')}`}
+                    accent={effectiveTenantSlug === tenantReport.tenantSlug ? 'info' : undefined}
+                  >
+                    <dl className="tenant-card__metrics">
+                      <div>
+                        <dt>Reservas</dt>
+                        <dd>{tenantReport.summary.totalReservations}</dd>
+                      </div>
+                      <div>
+                        <dt>Ocupação média</dt>
+                        <dd>{formatPercent(tenantReport.summary.averageOccupancyRate)}</dd>
+                      </div>
+                      <div>
+                        <dt>Receita total</dt>
+                        <dd>
+                          {formatCurrency(
+                            Object.values(tenantReport.summary.revenueBreakdown).reduce(
+                              (acc, value) => acc + value,
+                              0
+                            )
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                    <div className="tenant-card__actions">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTenant(tenantReport.tenantSlug)}
+                        disabled={effectiveTenantSlug === tenantReport.tenantSlug}
+                      >
+                        {effectiveTenantSlug === tenantReport.tenantSlug ? 'Selecionado' : 'Explorar'}
+                      </button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="filters" aria-labelledby="filters-heading">
         <h2 id="filters-heading">Filtros</h2>
@@ -229,6 +408,11 @@ export default function ReportsPage() {
           </label>
         </div>
         {exportError && <p className="hint hint--error">Falha ao exportar: {exportError}</p>}
+        {tenant.capabilities.canViewAggregatedReports && activeTenantName && (
+          <p className="hint">
+            Analisando tenant: <strong>{activeTenantName}</strong>
+          </p>
+        )}
       </section>
 
       {hasError && <p className="state state-error">Falha ao carregar KPIs: {error}</p>}
@@ -405,29 +589,63 @@ export default function ReportsPage() {
         }
         .table-wrapper {
           overflow-x: auto;
-          border-radius: var(--radius-md);
-          border: 1px solid var(--color-neutral-5);
-          background: #fff;
         }
         table {
           width: 100%;
           border-collapse: collapse;
+          min-width: 640px;
         }
         th,
         td {
-          padding: var(--space-3);
           text-align: left;
+          padding: var(--space-2);
+          border-bottom: 1px solid var(--color-neutral-5);
         }
-        thead {
+        th {
           background: var(--color-neutral-6);
+          font-weight: 600;
         }
-        tbody tr:nth-child(even) {
-          background: rgba(0, 0, 0, 0.02);
+        .multi-tenant {
+          background: var(--color-neutral-6);
+          border-radius: var(--radius-md);
+          padding: var(--space-4);
+          display: grid;
+          gap: var(--space-4);
+        }
+        .multi-tenant__summary {
+          display: grid;
+          gap: var(--space-4);
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .tenant-cards {
+          display: grid;
+          gap: var(--space-4);
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+        .tenant-card__metrics {
+          margin: 0;
+          display: grid;
+          gap: var(--space-2);
+        }
+        .tenant-card__metrics div {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.95rem;
+        }
+        .tenant-card__metrics dt {
+          margin: 0;
+          font-weight: 600;
+        }
+        .tenant-card__metrics dd {
+          margin: 0;
+        }
+        .tenant-card__actions {
+          display: flex;
+          justify-content: flex-end;
         }
         @media (max-width: 768px) {
-          .actions {
-            flex-direction: column;
-            align-items: stretch;
+          .table-wrapper {
+            overflow-x: auto;
           }
         }
       `}</style>

@@ -41,6 +41,16 @@ def _to_int(value: str | None, default: int) -> int:
         return default
 
 
+def _to_optional_int(value: str | None, default: int | None) -> int | None:
+    if value is None or value.strip() == "":
+        return default
+    try:
+        parsed = int(value)
+    except ValueError:
+        return default
+    return None if parsed <= 0 else parsed
+
+
 @dataclass(slots=True)
 class ObservabilitySettings:
     """Configurações para exporters OpenTelemetry."""
@@ -128,6 +138,7 @@ class CoreSettings:
     observability: ObservabilitySettings = field(default_factory=ObservabilitySettings)
     auth_session_timeout_seconds: int = 30 * 60
     payments: PaymentGatewaySettings = field(default_factory=PaymentGatewaySettings)
+    tenancy: "TenantSettings" = field(default_factory=lambda: TenantSettings())
 
     @classmethod
     def from_environ(cls, environ: dict[str, str]) -> "CoreSettings":
@@ -143,4 +154,54 @@ class CoreSettings:
                 30 * 60,
             ),
             payments=PaymentGatewaySettings.from_environ(environ),
+            tenancy=TenantSettings.from_environ(environ),
+        )
+
+
+@dataclass(slots=True)
+class TenantLimitSettings:
+    max_workspaces: int | None = 5
+    max_properties: int | None = 50
+    max_agents: int | None = 200
+    max_storage_mb: int | None = 10_240
+    api_rate_per_minute: int | None = 600
+
+    @classmethod
+    def from_environ(cls, environ: dict[str, str]) -> "TenantLimitSettings":
+        return cls(
+            max_workspaces=_to_optional_int(
+                environ.get("CORE_TENANCY_LIMIT_WORKSPACES"), cls.max_workspaces
+            ),
+            max_properties=_to_optional_int(
+                environ.get("CORE_TENANCY_LIMIT_PROPERTIES"), cls.max_properties
+            ),
+            max_agents=_to_optional_int(
+                environ.get("CORE_TENANCY_LIMIT_AGENTS"), cls.max_agents
+            ),
+            max_storage_mb=_to_optional_int(
+                environ.get("CORE_TENANCY_LIMIT_STORAGE_MB"), cls.max_storage_mb
+            ),
+            api_rate_per_minute=_to_optional_int(
+                environ.get("CORE_TENANCY_LIMIT_API_RATE_PER_MINUTE"),
+                cls.api_rate_per_minute,
+            ),
+        )
+
+
+@dataclass(slots=True)
+class TenantSettings:
+    default_slug: str = "pilot"
+    default_name: str = "Tenant Piloto"
+    default_plan: str = "trial"
+    platform_token: str | None = None
+    default_limits: TenantLimitSettings = field(default_factory=TenantLimitSettings)
+
+    @classmethod
+    def from_environ(cls, environ: dict[str, str]) -> "TenantSettings":
+        return cls(
+            default_slug=environ.get("CORE_TENANCY_DEFAULT_SLUG", cls.default_slug),
+            default_name=environ.get("CORE_TENANCY_DEFAULT_NAME", cls.default_name),
+            default_plan=environ.get("CORE_TENANCY_DEFAULT_PLAN", cls.default_plan),
+            platform_token=environ.get("CORE_TENANCY_PLATFORM_TOKEN"),
+            default_limits=TenantLimitSettings.from_environ(environ),
         )

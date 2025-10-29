@@ -10,6 +10,7 @@ from .config import CoreSettings
 from .database import get_database
 from .domain.models import Base
 from .observability import configure_observability
+from .tenancy import create_tenant_manager
 
 
 def build_application(settings: CoreSettings | None = None) -> FastAPI:
@@ -18,9 +19,10 @@ def build_application(settings: CoreSettings | None = None) -> FastAPI:
     database = get_database(settings)
     database.create_all(Base)
 
-    app = create_app(settings, database=database)
+    tenant_manager = create_tenant_manager(settings, database)
+    app = create_app(settings, database=database, tenant_manager=tenant_manager)
     if settings.enable_graphql:
-        graphql_app = create_graphql_router(database)
+        graphql_app = create_graphql_router(database, tenant_manager=tenant_manager)
         app.include_router(graphql_app, prefix="/graphql")
     return app
 

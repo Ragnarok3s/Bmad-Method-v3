@@ -36,6 +36,8 @@ from ..domain.schemas import (
     KPIReportEntry,
     KPIReportRead,
     KPIReportSummary,
+    MultiTenantKPIReportRead,
+    TenantKPIReportRead,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     HousekeepingTaskRead,
@@ -103,6 +105,13 @@ from ..owners import ManualVerificationQueue, OwnerService
 from ..events import EventBus, NotificationCenter, WebhookDispatcher
 from ..notifications import NotificationRelay, PushNotificationService
 from ..security import AuthenticationError, AuthenticationService, SecurityService
+from ..tenancy import (
+    TenantIsolationError,
+    TenantLimitError,
+    TenantManager,
+    TenantNotFoundError,
+    create_tenant_manager,
+)
 from ..storage import SecureDocumentStorage, StorageError
 from .partners import router as marketplace_router
 from .webhooks import verify_webhook_signature
@@ -203,8 +212,42 @@ def configure_cors(app: FastAPI, settings: CoreSettings) -> None:
         )
 
 
-def get_session(db: Database = Depends(get_database)) -> Iterable[Session]:
+def get_session(
+    request: Request,
+    db: Database = Depends(get_database),
+) -> Iterable[Session]:
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
     with db.session_scope() as session:
+        if tenant_manager:
+            scope = (request.headers.get("x-tenant-scope") or "tenant").lower()
+            if scope == "platform":
+                token = request.headers.get("x-tenant-platform-token")
+                if not tenant_manager.validate_platform_token(token):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Escopo de plataforma não autorizado",
+                    )
+                tenant_manager.bind_platform_session(session)
+            else:
+                slug = request.headers.get("x-tenant-slug")
+                if not slug:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cabeçalho X-Tenant-Slug obrigatório",
+                    )
+                try:
+                    tenant = tenant_manager.require_tenant(session, slug)
+                except TenantNotFoundError as exc:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Tenant não encontrado",
+                    ) from exc
+                except TenantIsolationError as exc:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=str(exc),
+                    ) from exc
+                tenant_manager.bind_session(session, tenant)
         yield session
 
 
@@ -232,10 +275,12 @@ def _build_payment_service(request: Request, session: Session) -> PaymentService
 def _get_reservation_service(request: Request, session: Session) -> ReservationService:
     payment_settings = _get_payment_settings(request)
     payment_service = _build_payment_service(request, session)
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
     return ReservationService(
         session,
         payment_service=payment_service,
         payment_settings=None if payment_service else payment_settings,
+        tenant_manager=tenant_manager,
     )
 
 
@@ -613,14 +658,138 @@ def get_kpi_reports(
     return payload
 
 
+@router.get("/tenants/reports/kpis", response_model=MultiTenantKPIReportRead)
+def get_multi_tenant_kpi_reports(
+    request: Request,
+    session: Session = Depends(get_session),
+    start_date: date | None = Query(None),
+    end_date: date | None = Query(None),
+    tenant_slug: list[str] = Query(default_factory=list),
+):
+    if session.info.get("tenant_scope") != "platform":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Escopo de plataforma obrigatório para relatório consolidado",
+        )
+
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
+    database: Database | None = getattr(request.app.state, "database", None)
+    if not tenant_manager or not database:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gerenciador de tenants indisponível",
+        )
+
+    resolved_end = end_date or date.today()
+    resolved_start = start_date or (resolved_end - timedelta(days=29))
+
+    tenants = tenant_manager.list_active_tenants(session, slugs=tenant_slug or None)
+    generated_at = datetime.now(timezone.utc)
+
+    if not tenants:
+        empty_summary = KPIReportSummary(
+            properties_covered=0,
+            total_reservations=0,
+            total_occupied_nights=0,
+            total_available_nights=0,
+            average_occupancy_rate=0.0,
+            revenue_breakdown={},
+        )
+        return MultiTenantKPIReportRead(
+            generated_at=generated_at,
+            tenants=[],
+            total_summary=empty_summary,
+        )
+
+    tenant_payloads: list[TenantKPIReportRead] = []
+    total_properties = 0
+    total_reservations = 0
+    total_occupied = 0
+    total_available = 0
+    aggregated_revenue: dict[str | None, float] = {}
+
+    for tenant in tenants:
+        with database.session_scope() as scoped_session:
+            scoped_tenant = tenant_manager.require_tenant(scoped_session, tenant.slug)
+            tenant_manager.bind_session(scoped_session, scoped_tenant)
+            report = generate_kpi_report(
+                scoped_session,
+                resolved_start,
+                resolved_end,
+            )
+
+        summary = KPIReportSummary(
+            properties_covered=report.properties_covered,
+            total_reservations=report.total_reservations,
+            total_occupied_nights=report.total_occupied_nights,
+            total_available_nights=report.total_available_nights,
+            average_occupancy_rate=report.average_occupancy_rate,
+            revenue_breakdown=report.revenue_breakdown(),
+        )
+        tenant_payloads.append(
+            TenantKPIReportRead(
+                tenant_slug=tenant.slug,
+                tenant_name=tenant.name,
+                generated_at=report.generated_at,
+                items=[
+                    KPIReportEntry(
+                        property_id=row.property_id,
+                        property_name=row.property_name,
+                        currency=row.currency,
+                        reservations=row.reservations,
+                        occupied_nights=row.occupied_nights,
+                        available_nights=row.available_nights,
+                        occupancy_rate=row.occupancy_rate,
+                        adr=row.adr,
+                        revenue=row.revenue,
+                    )
+                    for row in report.items
+                ],
+                summary=summary,
+            )
+        )
+
+        total_properties += summary.properties_covered
+        total_reservations += summary.total_reservations
+        total_occupied += summary.total_occupied_nights
+        total_available += summary.total_available_nights
+        for currency, value in summary.revenue_breakdown.items():
+            aggregated_revenue[currency] = aggregated_revenue.get(currency, 0.0) + float(value)
+
+    average_rate = (
+        total_occupied / total_available if total_available else 0.0
+    )
+    total_summary = KPIReportSummary(
+        properties_covered=total_properties,
+        total_reservations=total_reservations,
+        total_occupied_nights=total_occupied,
+        total_available_nights=total_available,
+        average_occupancy_rate=average_rate,
+        revenue_breakdown=aggregated_revenue,
+    )
+
+    return MultiTenantKPIReportRead(
+        generated_at=generated_at,
+        tenants=tenant_payloads,
+        total_summary=total_summary,
+    )
+
+
 @router.post("/properties", response_model=PropertyRead, status_code=201)
 async def create_property(
     request: Request,
     session: Session = Depends(get_session),
 ):
     payload = await _parse_model(request, PropertyCreate)
-    service = PropertyService(session)
-    return service.create(payload)
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
+    service = PropertyService(session, tenant_manager=tenant_manager)
+    try:
+        return service.create(payload)
+    except TenantLimitError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
 
 
 @router.get("/playbooks", response_model=list[PlaybookTemplateRead])
@@ -660,8 +829,15 @@ async def create_workspace(
     session: Session = Depends(get_session),
 ):
     payload = await _parse_model(request, WorkspaceCreate)
-    service = WorkspaceService(session)
-    return service.create(payload)
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
+    service = WorkspaceService(session, tenant_manager=tenant_manager)
+    try:
+        return service.create(payload)
+    except TenantLimitError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
 
 
 @router.get("/properties", response_model=list[PropertyRead])
@@ -969,9 +1145,14 @@ async def receive_payment_webhook(
     return {"status": event.status.value, "event_type": event.event_type}
 
 
-def create_app(settings: CoreSettings | None = None, database: Database | None = None) -> FastAPI:
+def create_app(
+    settings: CoreSettings | None = None,
+    database: Database | None = None,
+    tenant_manager: TenantManager | None = None,
+) -> FastAPI:
     settings = settings or CoreSettings()
     database = database or get_database(settings)
+    tenant_manager = tenant_manager or create_tenant_manager(settings, database)
     app = FastAPI(title="Core Hospitality Service", version="0.1.0")
     configure_cors(app, settings)
 
@@ -985,6 +1166,8 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
     app.state.auth_session_timeout = timedelta(seconds=settings.auth_session_timeout_seconds)
     app.state.core_settings = settings
     app.state.payment_settings = settings.payments
+    app.state.tenant_manager = tenant_manager
+    app.state.database = database
     app.include_router(router)
     instrument_application(app)
     return app

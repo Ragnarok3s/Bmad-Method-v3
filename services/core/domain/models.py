@@ -26,6 +26,67 @@ class Base(DeclarativeBase):
     pass
 
 
+class Tenant(Base):
+    __tablename__ = "tenants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(160), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    _attributes: Mapped[dict[str, Any] | None] = mapped_column(
+        "attributes", JSON, nullable=True, default=None
+    )
+
+    workspaces: Mapped[list["Workspace"]] = relationship(
+        "Workspace", back_populates="tenant", cascade="all, delete-orphan"
+    )
+    properties: Mapped[list["Property"]] = relationship(
+        "Property", back_populates="tenant", cascade="all, delete-orphan"
+    )
+    limits: Mapped[list["TenantLimit"]] = relationship(
+        "TenantLimit", back_populates="tenant", cascade="all, delete-orphan"
+    )
+    migrations: Mapped[list["TenantMigrationState"]] = relationship(
+        "TenantMigrationState", back_populates="tenant", cascade="all, delete-orphan"
+    )
+
+    @property
+    def attributes(self) -> dict[str, Any]:
+        return dict(self._attributes or {})
+
+    @attributes.setter
+    def attributes(self, values: dict[str, Any]) -> None:
+        self._attributes = dict(values)
+
+
+class TenantLimit(Base):
+    __tablename__ = "tenant_limits"
+
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), primary_key=True)
+    key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    value: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    enforced: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    tenant: Mapped[Tenant] = relationship("Tenant", back_populates="limits")
+
+
+class TenantMigrationState(Base):
+    __tablename__ = "tenant_migrations"
+
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), primary_key=True)
+    name: Mapped[str] = mapped_column(String(160), primary_key=True)
+    applied_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    tenant: Mapped[Tenant] = relationship("Tenant", back_populates="migrations")
+
+
 class Workspace(Base):
     __tablename__ = "workspaces"
 
@@ -43,6 +104,9 @@ class Workspace(Base):
     require_mfa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     security_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True, index=True)
+
+    tenant: Mapped[Tenant | None] = relationship("Tenant", back_populates="workspaces")
 
     @property
     def invite_emails(self) -> list[str]:
@@ -75,15 +139,22 @@ class Property(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="UTC")
-    address: Mapped[str] = mapped_column(Text, nullable=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     units: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
-    reservations: Mapped[list["Reservation"]] = relationship("Reservation", back_populates="property", cascade="all, delete-orphan")
-    housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="property", cascade="all, delete-orphan")
+    tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True, index=True)
+
+    tenant: Mapped[Tenant | None] = relationship("Tenant", back_populates="properties")
+    reservations: Mapped[list["Reservation"]] = relationship(
+        "Reservation", back_populates="property", cascade="all, delete-orphan"
+    )
+    housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship(
+        "HousekeepingTask", back_populates="property", cascade="all, delete-orphan"
+    )
 
 
 class AgentRole(str, Enum):

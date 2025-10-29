@@ -5,16 +5,16 @@ import pytest
 from fastapi.testclient import TestClient
 from opentelemetry import trace
 
-from services.core.config import CoreSettings
+from services.core.config import CoreSettings, TenantSettings
 from services.core.main import build_application
 from services.core.metrics import record_dashboard_request
 
 
 @pytest.fixture(scope="module")
 def client() -> Iterator[TestClient]:
-    settings = CoreSettings()
+    settings = CoreSettings(tenancy=TenantSettings(platform_token="platform-secret"))
     app = build_application(settings)
-    with TestClient(app) as test_client:
+    with TestClient(app, headers={"x-tenant-slug": settings.tenancy.default_slug}) as test_client:
         yield test_client
 
 

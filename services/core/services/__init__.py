@@ -6,6 +6,7 @@ import logging
 import re
 from datetime import date, datetime, timedelta, timezone
 from math import ceil
+from typing import TYPE_CHECKING, Any
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, func, or_, select
@@ -70,6 +71,8 @@ from ..metrics import (
     record_reservation_status,
 )
 from ..security import assert_role
+from ..observability import record_audit_event
+from ..tenancy import TenantIsolationError
 from .automation import AutomationService
 from ..payments import (
     PaymentGatewayNotConfiguredError,
@@ -79,29 +82,65 @@ from ..payments import (
 
 from .knowledge_base import KnowledgeBaseService
 
+if TYPE_CHECKING:
+    from ..tenancy import TenantManager
+
+
+def _require_tenant_id(session: Session) -> int:
+    tenant_id = session.info.get("tenant_id")
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail="Contexto de tenant não definido",
+        )
+    return int(tenant_id)
+
+
+def _is_platform_scope(session: Session) -> bool:
+    return session.info.get("tenant_scope") == "platform"
+
 
 logger = logging.getLogger("bmad.core.services")
 
 
 class PropertyService:
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, tenant_manager: "TenantManager" | None = None) -> None:
         self.session = session
+        self._tenant_manager = tenant_manager
 
     def create(self, payload: PropertyCreate) -> Property:
+        if _is_platform_scope(self.session):
+            raise HTTPException(
+                status_code=status.HTTP_412_PRECONDITION_FAILED,
+                detail="Defina um tenant antes de criar propriedades",
+            )
+        tenant_id = _require_tenant_id(self.session)
+        if self._tenant_manager:
+            self._tenant_manager.ensure_property_capacity(self.session, tenant_id)
+
         property_obj = Property(**payload.model_dump())
+        property_obj.tenant_id = tenant_id
         self.session.add(property_obj)
         self.session.flush()
-        logger.info("property_created", extra={"property_id": property_obj.id})
+        logger.info(
+            "property_created",
+            extra={"property_id": property_obj.id, "tenant_id": tenant_id},
+        )
         return property_obj
 
     def list(self) -> list[Property]:
-        result = self.session.execute(select(Property).order_by(Property.name))
+        statement = select(Property).order_by(Property.name)
+        if not _is_platform_scope(self.session):
+            tenant_id = _require_tenant_id(self.session)
+            statement = statement.where(Property.tenant_id == tenant_id)
+        result = self.session.execute(statement)
         return list(result.scalars())
 
 
 class WorkspaceService:
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, tenant_manager: "TenantManager" | None = None) -> None:
         self.session = session
+        self._tenant_manager = tenant_manager
 
     def _generate_slug(self, name: str) -> str:
         base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "workspace"
@@ -116,6 +155,15 @@ class WorkspaceService:
         return slug
 
     def create(self, payload: WorkspaceCreate) -> Workspace:
+        if _is_platform_scope(self.session):
+            raise HTTPException(
+                status_code=status.HTTP_412_PRECONDITION_FAILED,
+                detail="Contexto de tenant obrigatório para criar workspaces",
+            )
+        tenant_id = _require_tenant_id(self.session)
+        if self._tenant_manager:
+            self._tenant_manager.ensure_workspace_capacity(self.session, tenant_id)
+
         normalized_name = payload.name.strip()
         slug = self._generate_slug(normalized_name)
         unique_roles = sorted({role.strip() for role in payload.team_roles if role.strip()})
@@ -130,6 +178,7 @@ class WorkspaceService:
             require_mfa=payload.require_mfa,
             security_notes=payload.security_notes,
             slug=slug,
+            tenant_id=tenant_id,
         )
         workspace.invite_emails = [email.lower() for email in payload.invite_emails]
         workspace.team_roles = unique_roles
@@ -170,6 +219,69 @@ class AgentService:
         result = self.session.execute(select(Agent).order_by(Agent.name))
         return list(result.scalars())
 
+    def update_profile(
+        self,
+        agent_id: int,
+        payload: AgentProfileUpdate,
+        *,
+        actor: Agent | None = None,
+    ) -> Agent:
+        agent = self.get(agent_id)
+        if actor:
+            assert_role(actor, {AgentRole.ADMIN})
+
+        changes: dict[str, Any] = {}
+
+        if payload.name is not None:
+            normalized = payload.name.strip()
+            if normalized and normalized != agent.name:
+                agent.name = normalized
+                changes["name"] = normalized
+
+        if payload.role is not None and payload.role != agent.role:
+            agent.role = payload.role
+            changes["role"] = payload.role.value
+
+        if payload.active is not None and payload.active != agent.active:
+            agent.active = payload.active
+            changes["active"] = payload.active
+
+        if not changes:
+            return agent
+
+        self.session.add(agent)
+        self.session.flush()
+
+        detail_payload = {
+            "agent_id": agent.id,
+            "changes": changes,
+            "actor_id": actor.id if actor else None,
+        }
+
+        log = AuditLog(
+            agent_id=actor.id if actor else None,
+            action="agent_profile_updated",
+            detail=json.dumps(detail_payload),
+        )
+        self.session.add(log)
+
+        record_audit_event(
+            "agent_profile_updated",
+            actor_id=actor.id if actor else None,
+            detail=detail_payload,
+        )
+
+        logger.info(
+            "agent_profile_updated",
+            extra={
+                "agent_id": agent.id,
+                "changes": changes,
+                "actor_id": actor.id if actor else None,
+            },
+        )
+
+        return agent
+
 
 class ReservationService:
     def __init__(
@@ -178,10 +290,12 @@ class ReservationService:
         *,
         payment_service: PaymentService | None = None,
         payment_settings: PaymentGatewaySettings | None = None,
+        tenant_manager: "TenantManager" | None = None,
     ) -> None:
         self.session = session
         self._payment_service = payment_service
         self._payment_settings = payment_settings
+        self._tenant_manager = tenant_manager
 
     def _get_payment_service(self) -> PaymentService | None:
         if self._payment_service:
@@ -211,6 +325,18 @@ class ReservationService:
         property_obj = self.session.get(Property, payload.property_id)
         if not property_obj:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propriedade não encontrada")
+        if self._tenant_manager:
+            try:
+                self._tenant_manager.assert_property_access(self.session, property_obj)
+            except TenantIsolationError as exc:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+        elif not _is_platform_scope(self.session):
+            tenant_id = _require_tenant_id(self.session)
+            if property_obj.tenant_id != tenant_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Propriedade pertence a outro tenant",
+                )
         self._check_conflict(payload.property_id, payload.check_in, payload.check_out)
 
         data = payload.model_dump(exclude={"payment"})
@@ -310,6 +436,22 @@ class ReservationService:
 
 
     def list_for_property(self, property_id: int) -> list[Reservation]:
+        property_obj = self.session.get(Property, property_id)
+        if not property_obj:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propriedade não encontrada")
+        if self._tenant_manager:
+            try:
+                self._tenant_manager.assert_property_access(self.session, property_obj)
+            except TenantIsolationError as exc:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+        elif not _is_platform_scope(self.session):
+            tenant_id = _require_tenant_id(self.session)
+            if property_obj.tenant_id != tenant_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Propriedade pertence a outro tenant",
+                )
+
         query = select(Reservation).where(Reservation.property_id == property_id).order_by(Reservation.check_in)
         result = self.session.execute(query)
         reservations = list(result.scalars())

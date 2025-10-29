@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from services.core.config import CoreSettings
+from services.core.config import CoreSettings, TenantSettings
 from services.core.main import build_application
 
 
 def build_client(tmp_path) -> TestClient:
-    settings = CoreSettings(database_url=f"sqlite:///{tmp_path}/governanca.db")
+    settings = CoreSettings(
+        database_url=f"sqlite:///{tmp_path}/governanca.db",
+        tenancy=TenantSettings(platform_token="platform-secret"),
+    )
     app = build_application(settings)
-    return TestClient(app)
+    return TestClient(app, headers={"x-tenant-slug": settings.tenancy.default_slug})
 
 
 def test_governance_permission_crud_and_audit(tmp_path) -> None:

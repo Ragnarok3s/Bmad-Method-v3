@@ -66,6 +66,7 @@ interface GetKpiReportOptions {
   endDate?: string;
   propertyIds?: number[];
   signal?: AbortSignal;
+  headers?: Record<string, string>;
 }
 
 function buildUrl(path: string, options: GetKpiReportOptions): URL {
@@ -88,7 +89,7 @@ export async function getKpiReport(
   const url = buildUrl('/reports/kpis', options);
   const response = await fetch(url, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...(options.headers ?? {}) },
     signal: options.signal,
     cache: 'no-store'
   });
@@ -110,7 +111,7 @@ export async function exportKpiReportCsv(
 
   const response = await fetch(url, {
     method: 'GET',
-    headers: { Accept: 'text/csv' },
+    headers: { Accept: 'text/csv', ...(options.headers ?? {}) },
     signal: options.signal,
     cache: 'no-store'
   });

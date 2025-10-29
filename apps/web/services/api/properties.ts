@@ -23,13 +23,14 @@ interface PropertyDto {
 
 interface ListPropertiesOptions {
   signal?: AbortSignal;
+  headers?: Record<string, string>;
 }
 
 export async function listProperties(options: ListPropertiesOptions = {}): Promise<Property[]> {
   const url = new URL('/properties', CORE_API_BASE_URL);
   const response = await fetch(url, {
     method: 'GET',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', ...(options.headers ?? {}) },
     signal: options.signal
   });
 
