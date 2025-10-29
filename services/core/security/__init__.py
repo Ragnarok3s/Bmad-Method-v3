@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping, Sequence
 
 from fastapi import HTTPException, status
@@ -333,7 +333,7 @@ class SecurityService:
                     current.category = definition.category
                     updated = True
                 if updated:
-                    current.updated_at = datetime.utcnow()
+                    current.updated_at = datetime.now(timezone.utc)
                 continue
             record = PermissionDefinition(
                 key=definition.key,
@@ -426,7 +426,7 @@ class SecurityService:
             permission.description = payload.description
         if payload.category is not None:
             permission.category = payload.category
-        permission.updated_at = datetime.utcnow()
+        permission.updated_at = datetime.now(timezone.utc)
         self.session.add(permission)
         self.session.flush()
         self._log(
@@ -515,7 +515,7 @@ class SecurityService:
         if payload.inherits is not None:
             policy.inherits = [role.value for role in payload.inherits]
             changes["inherits"] = [role.value for role in payload.inherits]
-        policy.updated_at = datetime.utcnow()
+        policy.updated_at = datetime.now(timezone.utc)
         self.session.add(policy)
         self.session.flush()
         self._log(
@@ -613,7 +613,7 @@ class SecurityService:
             action=action,
             agent_id=actor.id if actor else None,
             detail=json.dumps(detail),
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         self.session.add(payload)
 
