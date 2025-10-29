@@ -4,14 +4,14 @@ from __future__ import annotations
 import json
 import logging
 from datetime import date, datetime, timedelta, timezone
-from typing import Any, Iterable, Literal, TypeVar, Union
+from typing import Annotated, Any, Iterable, Literal, TypeVar, Union
 
-from fastapi import (APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status, File, UploadFile)
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ..analytics import PIPELINE
 from ..automation import (
@@ -377,8 +377,25 @@ def get_session(
         yield session
 
 
+def _require_tenant_slug(session: Session) -> str:
+    slug = session.info.get("tenant_slug")
+    if not slug:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Escopo de tenant obrigatório",
+        )
+    return slug
+
+
+def get_tenant_slug(session: Session = Depends(get_session)) -> str:
+    return _require_tenant_slug(session)
+
+
+TenantSlugDep = Annotated[str, Depends(get_tenant_slug)]
+
+
 @router.get("/communications/templates", response_model=list[CommunicationTemplateRead])
-def list_communication_templates() -> list[CommunicationTemplateRead]:
+def list_communication_templates(session: Session = Depends(get_session)) -> list[CommunicationTemplateRead]:
     return [
         CommunicationTemplateRead.model_validate(template.to_dict())
         for template in communication_service.list_templates()
@@ -386,7 +403,18 @@ def list_communication_templates() -> list[CommunicationTemplateRead]:
 
 
 @router.post("/communications/send", response_model=CommunicationMessageRead, status_code=status.HTTP_202_ACCEPTED)
-def send_guest_message(payload: CommunicationMessageSendRequest) -> CommunicationMessageRead:
+async def send_guest_message(
+    request: Request,
+    tenant_slug: TenantSlugDep,
+) -> CommunicationMessageRead:
+    try:
+        payload_data = await request.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Corpo inválido") from exc
+    try:
+        payload = CommunicationMessageSendRequest.model_validate(payload_data)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
     try:
         message = communication_service.send_message(
             payload.template_id,
@@ -396,6 +424,7 @@ def send_guest_message(payload: CommunicationMessageSendRequest) -> Communicatio
             variables=payload.variables,
             context=payload.context,
             author=payload.author or "automation",
+            tenant_slug=tenant_slug,
         )
     except KeyError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template não encontrado") from exc
@@ -405,7 +434,18 @@ def send_guest_message(payload: CommunicationMessageSendRequest) -> Communicatio
 
 
 @router.post("/communications/messages/inbound", response_model=CommunicationMessageRead, status_code=status.HTTP_201_CREATED)
-def register_inbound_message(payload: CommunicationInboundMessageRequest) -> CommunicationMessageRead:
+async def register_inbound_message(
+    request: Request,
+    tenant_slug: TenantSlugDep,
+) -> CommunicationMessageRead:
+    try:
+        payload_data = await request.json()
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Corpo inválido") from exc
+    try:
+        payload = CommunicationInboundMessageRequest.model_validate(payload_data)
+    except ValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=exc.errors()) from exc
     message = communication_service.record_inbound_message(
         channel=CommunicationChannel(payload.channel),
         sender=payload.sender,
@@ -414,21 +454,27 @@ def register_inbound_message(payload: CommunicationInboundMessageRequest) -> Com
         context=payload.context,
         in_reply_to=payload.in_reply_to,
         author=payload.author or "guest",
+        tenant_slug=tenant_slug,
     )
     return CommunicationMessageRead.model_validate({**message.to_dict(), "context": message.context})
 
 
 @router.get("/communications/messages", response_model=list[CommunicationMessageRead])
-def list_communication_messages() -> list[CommunicationMessageRead]:
+def list_communication_messages(
+    tenant_slug: TenantSlugDep,
+) -> list[CommunicationMessageRead]:
     return [
         CommunicationMessageRead.model_validate({**message.to_dict(), "context": message.context})
-        for message in communication_service.messages()
+        for message in communication_service.messages(tenant_slug=tenant_slug)
     ]
 
 
 @router.get("/communications/delivery/summary", response_model=CommunicationDeliverySummaryRead)
-def get_delivery_summary() -> CommunicationDeliverySummaryRead:
-    return CommunicationDeliverySummaryRead.model_validate(communication_service.delivery_summary())
+def get_delivery_summary(
+    tenant_slug: TenantSlugDep,
+) -> CommunicationDeliverySummaryRead:
+    summary = communication_service.delivery_summary(tenant_slug=tenant_slug)
+    return CommunicationDeliverySummaryRead.model_validate(summary)
 
 
 @router.post("/guest-experience/journey", response_model=GuestJourneySyncResponse, status_code=status.HTTP_202_ACCEPTED)
