@@ -217,6 +217,7 @@ class OTASyncService:
             select(OTASyncQueue)
             .where(OTASyncQueue.reservation_id == reservation.id)
             .order_by(OTASyncQueue.created_at.desc())
+            .limit(1)
         ).scalar_one_or_none()
 
         if latest_job is None:
