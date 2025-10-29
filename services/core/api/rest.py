@@ -6,7 +6,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Literal, TypeVar, Union
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import (APIRouter, Depends, FastAPI, HTTPException, Query, Request, Response, status, File, UploadFile)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -57,6 +57,15 @@ from ..domain.schemas import (
     KnowledgeBaseArticleRead,
     KnowledgeBaseCatalogRead,
     KnowledgeBaseTelemetryEvent,
+    OwnerDocumentUploadResponse,
+    OwnerIncidentReport,
+    OwnerInvoiceRead,
+    OwnerNotificationRead,
+    OwnerOverviewRead,
+    OwnerPayoutPreferencesRead,
+    OwnerPayoutPreferencesUpdate,
+    OwnerPropertySummaryRead,
+    OwnerReportRead,
     WorkspaceCreate,
     WorkspaceRead,
 )
@@ -74,7 +83,10 @@ from ..services import (
 )
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
+from ..owners import ManualVerificationQueue, OwnerService
+from ..events import EventBus, NotificationCenter, WebhookDispatcher
 from ..security import AuthenticationError, AuthenticationService, SecurityService
+from ..storage import SecureDocumentStorage, StorageError
 from .webhooks import verify_webhook_signature
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -83,6 +95,29 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 knowledge_base_service = KnowledgeBaseService()
+
+owner_event_bus = EventBus()
+owner_notifications = NotificationCenter(owner_event_bus)
+owner_webhooks = WebhookDispatcher(owner_event_bus)
+owner_queue = ManualVerificationQueue()
+owner_storage = SecureDocumentStorage()
+owner_service = OwnerService(
+    event_bus=owner_event_bus,
+    storage=owner_storage,
+    verification_queue=owner_queue,
+    notifications=owner_notifications,
+    webhooks=owner_webhooks,
+)
+owner_webhooks.register(
+    "owner.payment.processed",
+    "https://hooks.bmad.example/payments",
+    secret="owner-payments",
+)
+owner_webhooks.register(
+    "owner.incident.reported",
+    "https://hooks.bmad.example/incidents",
+    secret="owner-incidents",
+)
 
 
 def _auth_error_response(error: AuthenticationError) -> JSONResponse:
@@ -186,6 +221,15 @@ def _require_actor(session: Session, request: Request) -> Agent:
             detail="Agente responsável não encontrado",
         )
     return actor
+
+
+def _require_owner_access(request: Request, owner_id: int) -> None:
+    token = request.headers.get("x-owner-token")
+    if not token or not owner_service.validate_token(owner_id, token):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado ao portal do proprietário",
+        )
 
 
 @router.post("/auth/login", response_model=LoginResponse)
@@ -821,3 +865,85 @@ def create_app(settings: CoreSettings | None = None, database: Database | None =
     app.include_router(router)
     instrument_application(app)
     return app
+
+
+@router.get("/owners/{owner_id}/overview", response_model=OwnerOverviewRead)
+def get_owner_overview(owner_id: int, request: Request) -> OwnerOverviewRead:
+    _require_owner_access(request, owner_id)
+    try:
+        return owner_service.get_overview(owner_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.get("/owners/{owner_id}/properties", response_model=list[OwnerPropertySummaryRead])
+def list_owner_properties(owner_id: int, request: Request) -> list[OwnerPropertySummaryRead]:
+    _require_owner_access(request, owner_id)
+    try:
+        return owner_service.list_properties(owner_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.get("/owners/{owner_id}/invoices", response_model=list[OwnerInvoiceRead])
+def list_owner_invoices(owner_id: int, request: Request) -> list[OwnerInvoiceRead]:
+    _require_owner_access(request, owner_id)
+    try:
+        return owner_service.list_invoices(owner_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.get("/owners/{owner_id}/reports", response_model=list[OwnerReportRead])
+def list_owner_reports(owner_id: int, request: Request) -> list[OwnerReportRead]:
+    _require_owner_access(request, owner_id)
+    try:
+        return owner_service.list_reports(owner_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.get("/owners/{owner_id}/notifications", response_model=list[OwnerNotificationRead])
+def list_owner_notifications(owner_id: int, request: Request) -> list[OwnerNotificationRead]:
+    _require_owner_access(request, owner_id)
+    try:
+        return owner_service.list_notifications(owner_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.post("/owners/{owner_id}/payout-preferences", response_model=OwnerPayoutPreferencesRead)
+async def update_owner_payout_preferences(owner_id: int, request: Request) -> OwnerPayoutPreferencesRead:
+    _require_owner_access(request, owner_id)
+    payload = await _parse_model(request, OwnerPayoutPreferencesUpdate)
+    try:
+        return owner_service.update_payout_preferences(owner_id, payload)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.post(
+    "/owners/{owner_id}/kyc-documents",
+    response_model=OwnerDocumentUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_owner_document(owner_id: int, request: Request, file: UploadFile = File(...)) -> OwnerDocumentUploadResponse:
+    _require_owner_access(request, owner_id)
+    try:
+        file.file.seek(0)
+        return owner_service.submit_document(owner_id, file.filename, file.file, file.content_type)
+    except StorageError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+
+
+@router.post("/owners/{owner_id}/incidents", status_code=status.HTTP_202_ACCEPTED)
+async def report_owner_incident(owner_id: int, request: Request) -> dict[str, str]:
+    _require_owner_access(request, owner_id)
+    payload = await _parse_model(request, OwnerIncidentReport)
+    try:
+        owner_service.report_incident(owner_id, payload)
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proprietário não encontrado") from exc
+    return {"status": "received"}
