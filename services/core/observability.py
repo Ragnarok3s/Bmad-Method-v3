@@ -129,33 +129,76 @@ def record_audit_event(
     action: str,
     *,
     actor_id: int | None = None,
-    detail: str | None = None,
+    detail: Mapping[str, Any] | str | None = None,
     severity: str = "info",
 ) -> None:
+    detail_map: Mapping[str, str]
+    if isinstance(detail, Mapping):
+        detail_map = _stringify_attributes(detail)
+        detail_for_log: Any = {str(key): value for key, value in detail.items()}
+    elif detail is None:
+        detail_map = {}
+        detail_for_log = None
+    else:
+        detail_map = {"detail": str(detail)}
+        detail_for_log = str(detail)
+
     attributes = {
         "action": action,
         "actor_id": actor_id,
-        "detail": detail,
+        "detail": detail_for_log,
         "severity": severity,
     }
     mark_signal_event("logs", f"audit:{action}", attributes)
     level = getattr(logging, severity.upper(), logging.INFO)
     _AUDIT_LOGGER.log(level, "audit_event", extra=attributes)
 
+    event = _AuditEvent(
+        action=action,
+        actor_id=actor_id,
+        detail=dict(detail_map),
+        severity=severity,
+        observed_at=_now(),
+    )
+    _STATE.audit_events.appendleft(event)
+
 
 def record_critical_alert(
     name: str,
-    detail: str | None = None,
+    message: str | None = None,
     *,
+    detail: str | None = None,
     context: Mapping[str, Any] | None = None,
     severity: str = "critical",
 ) -> None:
-    attributes: dict[str, Any] = {"name": name, "detail": detail, "severity": severity}
-    if context:
-        attributes["context"] = {str(key): str(value) for key, value in context.items()}
+    """Regista alerta crítico e sincroniza telemetria/AIOps."""
+
+    severity = severity or "critical"
+    detail_value = detail if detail is not None else message
+    context_attributes = _stringify_attributes(context)
+
+    attributes: dict[str, Any] = {"name": name, "severity": severity}
+    if detail_value is not None:
+        attributes["detail"] = detail_value
+    if message is not None:
+        attributes["message"] = message
+    if context_attributes:
+        attributes["context"] = context_attributes
+
     mark_signal_event("logs", f"alert:{name}", attributes)
     level = getattr(logging, severity.upper(), logging.ERROR)
     _ALERT_LOGGER.log(level, "critical_alert", extra=attributes)
+
+    event = _AlertEvent(
+        kind=name,
+        message=message or detail_value or name,
+        severity=severity,
+        context=context_attributes,
+        observed_at=_now(),
+    )
+    _STATE.alert_events.appendleft(event)
+    _STATE.alert_totals[severity] += 1
+    _STATE.alert_totals["total"] += 1
 
 
 def get_signal_health_snapshot() -> Mapping[str, Mapping[str, Any]]:
@@ -291,48 +334,6 @@ def configure_observability(settings: ObservabilitySettings) -> None:
         log_state.endpoint = settings.otlp_endpoint
 
     _CONFIGURED = True
-
-
-def record_audit_event(
-    action: str,
-    *,
-    actor_id: int | None,
-    detail: Mapping[str, Any] | None = None,
-    severity: str = "info",
-) -> None:
-    """Regista evento de auditoria recente para health-checks."""
-
-    event = _AuditEvent(
-        action=action,
-        actor_id=actor_id,
-        detail=_stringify_attributes(detail),
-        severity=severity,
-        observed_at=_now(),
-    )
-    _STATE.audit_events.appendleft(event)
-
-
-def record_critical_alert(
-    kind: str,
-    message: str,
-    *,
-    context: Mapping[str, Any] | None = None,
-    severity: str = "critical",
-) -> None:
-    """Regista alerta crítico para observabilidade."""
-
-    severity = severity or "critical"
-    event = _AlertEvent(
-        kind=kind,
-        message=message,
-        severity=severity,
-        context=_stringify_attributes(context),
-        observed_at=_now(),
-    )
-    _STATE.alert_events.appendleft(event)
-    _STATE.alert_totals[severity] += 1
-    _STATE.alert_totals["total"] += 1
-
 
 def register_control_checkpoint(
     control_id: str,
