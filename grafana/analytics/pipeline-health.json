@@ -1,0 +1,51 @@
+{
+  "title": "Analytics Pipeline Health",
+  "tags": ["analytics", "ingestion"],
+  "schemaVersion": 38,
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Kafka Lag",
+      "id": 1,
+      "datasource": "observability-prometheus",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "max(kafka_consumer_lag{consumer_group='analytics-stream'})"
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Delta Lake Append Throughput",
+      "id": 2,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "min": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(delta_append_records_total{table='bronze_reservations'}[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Validation Success Rate",
+      "id": 3,
+      "datasource": "observability-prometheus",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(great_expectations_checkpoint_success_total[15m]) / rate(great_expectations_checkpoint_run_total[15m])",
+          "legendFormat": "Success Rate"
+        }
+      ]
+    }
+  ]
+}

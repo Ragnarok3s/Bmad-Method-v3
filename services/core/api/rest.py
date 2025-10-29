@@ -13,7 +13,16 @@ from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 
+from ..analytics import PIPELINE
 from ..analytics.reports import generate_kpi_report, kpi_report_to_csv
+from ..analytics.query import (
+    MetricSpec,
+    QueryFilter,
+    QueryResult,
+    parse_filter_expression,
+    parse_metric_expression,
+    run_query,
+)
 from ..config import CoreSettings, PaymentGatewaySettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
@@ -101,6 +110,23 @@ ModelT = TypeVar("ModelT", bound=BaseModel)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+class AnalyticsGroupResult(BaseModel):
+    dimensions: dict[str, Any]
+    count: int
+    metrics: dict[str, float | None]
+
+
+class AnalyticsQueryResponse(BaseModel):
+    dataset: str
+    total_records: int
+    applied_filters: list[str]
+    group_by: list[str]
+    metrics: list[str]
+    groups: list[AnalyticsGroupResult] | None
+    records: list[dict[str, Any]]
+
 
 knowledge_base_service = KnowledgeBaseService()
 
@@ -459,6 +485,64 @@ def get_dashboard_metrics(
 
     record_dashboard_request("overview", True)
     return overview
+
+
+@router.get("/analytics/query", response_model=AnalyticsQueryResponse)
+def query_analytics_dataset(
+    dataset: str = Query(..., description="Nome do *dataset* sincronizado"),
+    filter_expressions: list[str] | None = Query(None, alias="filter"),
+    group_by: list[str] | None = Query(None, description="Dimensões para agregação"),
+    metric_expressions: list[str] | None = Query(None, alias="metric"),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+):
+    sources = getattr(PIPELINE, "_sources", {})
+    if dataset not in sources:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="dataset desconhecido")
+
+    try:
+        filters: list[QueryFilter] = [
+            parse_filter_expression(expression)
+            for expression in (filter_expressions or [])
+        ]
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    try:
+        metrics: list[MetricSpec] = [
+            parse_metric_expression(expression)
+            for expression in (metric_expressions or [])
+        ]
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    dataset_records = PIPELINE.dataset(dataset)
+    try:
+        result: QueryResult = run_query(
+            dataset_records,
+            filters=filters,
+            group_by=group_by or [],
+            metrics=metrics,
+            limit=limit,
+            offset=offset,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    return AnalyticsQueryResponse(
+        dataset=dataset,
+        total_records=result.total_records,
+        applied_filters=filter_expressions or [],
+        group_by=group_by or [],
+        metrics=metric_expressions or [],
+        groups=[
+            AnalyticsGroupResult(**group)  # type: ignore[arg-type]
+            for group in (result.groups or [])
+        ]
+        if result.groups
+        else None,
+        records=result.records,
+    )
 
 
 @router.get("/reports/kpis", response_model=KPIReportRead)

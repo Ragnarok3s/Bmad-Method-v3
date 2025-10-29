@@ -1,0 +1,19 @@
+name: analytics_platform
+version: 1.0.0
+config-version: 2
+profile: analytics
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+models:
+  analytics_platform:
+    +materialized: view
+    bronze:
+      +materialized: table
+    silver:
+      +materialized: incremental
+      +unique_key: reservation_id
+    gold:
+      +materialized: table

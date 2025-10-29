@@ -16,3 +16,5 @@ opentelemetry-exporter-otlp==1.25.0
 opentelemetry-instrumentation-fastapi==0.46b0
 opentelemetry-instrumentation-sqlalchemy==0.46b0
 requests==2.32.3
+great-expectations==0.18.15
+pandas==2.2.2

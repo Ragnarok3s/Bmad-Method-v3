@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: silver_reservations
+    description: "Camada silver com enriquecimento e métricas de reservas."
+    columns:
+      - name: reservation_id
+        tests:
+          - not_null
+          - unique
+      - name: stay_length_nights
+        tests:
+          - not_null
+      - name: realized_revenue
+        tests:
+          - not_null

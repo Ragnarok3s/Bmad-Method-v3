@@ -1,0 +1,59 @@
+{
+  "title": "Executive Analytics Overview",
+  "tags": ["executive", "analytics"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "refresh": "5m",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Revenue (Last 30d)",
+      "id": 1,
+      "datasource": "lakehouse-gold",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT sum(revenue) AS revenue FROM analytics.gold_executive_metrics WHERE $__timeFilter(updated_at)",
+          "timeColumn": "updated_at",
+          "timeColumnType": "timestamp"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Revenue Trend",
+      "id": 2,
+      "datasource": "lakehouse-gold",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currency"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT $__timeGroupAlias(updated_at, '1d'), sum(revenue) AS revenue FROM analytics.gold_executive_metrics GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "timeColumn": "updated_at",
+          "timeColumnType": "timestamp"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Channel Conversion",
+      "id": 3,
+      "datasource": "lakehouse-gold",
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT property_id, channel, conversion_rate, revenue FROM analytics.gold_executive_metrics ORDER BY revenue DESC",
+          "timeColumn": "updated_at",
+          "timeColumnType": "timestamp"
+        }
+      ]
+    }
+  ]
+}
