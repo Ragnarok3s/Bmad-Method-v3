@@ -1,6 +1,7 @@
 """Endpoints REST que cobrem os módulos do MVP."""
 from __future__ import annotations
 
+import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, TypeVar, Union
@@ -70,6 +71,7 @@ from ..services import (
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
 from ..security import AuthenticationError, AuthenticationService, SecurityService
+from .webhooks import verify_webhook_signature
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -149,8 +151,6 @@ def _build_payment_service(request: Request, session: Session) -> PaymentService
             extra={"provider": payment_settings.provider},
         )
         return None
-
-
 def _get_reservation_service(request: Request, session: Session) -> ReservationService:
     payment_settings = _get_payment_settings(request)
     payment_service = _build_payment_service(request, session)
@@ -675,12 +675,58 @@ async def receive_payment_webhook(
     request: Request,
     session: Session = Depends(get_session),
 ) -> dict[str, str]:
-    payload = await request.json()
+    body = await request.body()
+    try:
+        raw_payload = body.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payload de webhook inválido",
+        ) from exc
+    try:
+        payload = json.loads(raw_payload or "{}")
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payload de webhook inválido",
+        ) from exc
+    payment_settings = _get_payment_settings(request)
     payment_service = _build_payment_service(request, session)
-    if not payment_service:
+    if not payment_service or not payment_settings:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Integração de pagamentos não configurada",
+        )
+    if not payment_settings.webhook_secret:
+        logger.error(
+            "payment_webhook_secret_missing",
+            extra={"provider": provider},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Integração de pagamentos não configurada",
+        )
+    signature_header = (
+        request.headers.get("x-payment-signature")
+        or request.headers.get("x-signature")
+        or request.headers.get("stripe-signature")
+        or request.headers.get("adyen-signature")
+    )
+    if not verify_webhook_signature(
+        provider,
+        payment_settings.webhook_secret,
+        body,
+        raw_payload,
+        payload,
+        signature_header,
+    ):
+        logger.warning(
+            "payment_webhook_invalid_signature",
+            extra={"provider": provider, "signature_present": bool(signature_header)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Assinatura de webhook inválida",
         )
     event = payment_service.handle_webhook_event(provider, payload)
     return {"status": event.status.value, "event_type": event.event_type}
