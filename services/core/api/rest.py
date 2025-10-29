@@ -14,6 +14,18 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from ..analytics import PIPELINE
+from ..automation import (
+    AutomationQueue,
+    GuestJourneyAutomationBridge,
+    GuestJourneySnapshot,
+    get_guest_journey_summary,
+)
+from ..communications import (
+    CommunicationChannel,
+    CommunicationService,
+    CommunicationTemplate,
+    TemplateTranslation,
+)
 from ..analytics.reports import generate_kpi_report, kpi_report_to_csv
 from ..analytics.query import (
     MetricSpec,
@@ -83,6 +95,15 @@ from ..domain.schemas import (
     OwnerPayoutPreferencesUpdate,
     OwnerPropertySummaryRead,
     OwnerReportRead,
+    CommunicationDeliverySummaryRead,
+    CommunicationInboundMessageRequest,
+    CommunicationMessageRead,
+    CommunicationMessageSendRequest,
+    CommunicationTemplateRead,
+    GuestExperienceOverviewRead,
+    GuestJourneySnapshotRequest,
+    GuestJourneySummaryRead,
+    GuestJourneySyncResponse,
     WorkspaceCreate,
     WorkspaceRead,
 )
@@ -140,6 +161,111 @@ class AnalyticsQueryResponse(BaseModel):
 
 
 knowledge_base_service = KnowledgeBaseService()
+
+communication_service = CommunicationService()
+automation_queue = AutomationQueue()
+guest_journey_bridge = GuestJourneyAutomationBridge(automation_queue)
+
+
+def _register_guest_communications() -> None:
+    if communication_service.list_templates():
+        return
+
+    communication_service.register_template(
+        CommunicationTemplate(
+            id="guest_prearrival_checkin",
+            name="Pré check-in digital",
+            category="guest_experience",
+            description="Convite automatizado para completar o check-in digital",
+            channels={CommunicationChannel.EMAIL, CommunicationChannel.WHATSAPP},
+            default_locale="pt-BR",
+            tags={"check-in", "journey"},
+            metadata={"journey_stage": "check_in.pre_arrival"},
+            translations={
+                "pt-BR": TemplateTranslation(
+                    locale="pt-BR",
+                    subject="Finalize seu check-in digital",
+                    body=(
+                        "Olá {guest_name}, faltam {days_to_check_in} dias para sua chegada em {property_name}. "
+                        "Complete o pré check-in em {check_in_url} para agilizar sua experiência."
+                    ),
+                ),
+                "en-US": TemplateTranslation(
+                    locale="en-US",
+                    subject="Complete your digital check-in",
+                    body=(
+                        "Hi {guest_name}, you're {days_to_check_in} days away from {property_name}. "
+                        "Finish your digital check-in at {check_in_url} to unlock early arrival tips."
+                    ),
+                ),
+            },
+        )
+    )
+
+    communication_service.register_template(
+        CommunicationTemplate(
+            id="guest_upsell_local_experience",
+            name="Upsell experiências locais",
+            category="guest_experience",
+            description="Sugestões de upgrades e experiências relevantes",
+            channels={CommunicationChannel.EMAIL, CommunicationChannel.WHATSAPP},
+            default_locale="pt-BR",
+            tags={"upsell", "revenue"},
+            metadata={"journey_stage": "in_stay.experience"},
+            translations={
+                "pt-BR": TemplateTranslation(
+                    locale="pt-BR",
+                    subject="Experiência exclusiva para sua estadia",
+                    body=(
+                        "{guest_name}, reservamos {experience_name} para {date_label}. "
+                        "Confirme respondendo SIM ou fale conosco pelo chat. Valor: {price_formatted}."
+                    ),
+                ),
+                "en-US": TemplateTranslation(
+                    locale="en-US",
+                    subject="Enhance your stay with {experience_name}",
+                    body=(
+                        "{guest_name}, we hand-picked {experience_name} for {date_label}. "
+                        "Reply YES to secure your spot. Rate: {price_formatted}."
+                    ),
+                ),
+            },
+        )
+    )
+
+    communication_service.register_template(
+        CommunicationTemplate(
+            id="guest_post_stay_feedback",
+            name="Feedback pós-estadia",
+            category="guest_experience",
+            description="Coleta NPS e preferências após o checkout",
+            channels={CommunicationChannel.EMAIL, CommunicationChannel.WHATSAPP},
+            default_locale="pt-BR",
+            tags={"feedback", "satisfacao"},
+            metadata={"journey_stage": "post_stay.feedback"},
+            translations={
+                "pt-BR": TemplateTranslation(
+                    locale="pt-BR",
+                    subject="Como foi sua estadia?",
+                    body=(
+                        "Obrigado por ficar conosco, {guest_name}! Em uma escala de 0 a 10, "
+                        "qual a probabilidade de indicar o {property_name}? Responda com um número."
+                    ),
+                ),
+                "en-US": TemplateTranslation(
+                    locale="en-US",
+                    subject="We'd love your feedback",
+                    body=(
+                        "Thank you for staying at {property_name}, {guest_name}! On a scale from 0 to 10, "
+                        "how likely are you to recommend us? Reply with a number."
+                    ),
+                ),
+            },
+        )
+    )
+
+
+_register_guest_communications()
 
 owner_event_bus = EventBus()
 owner_notifications = NotificationCenter(owner_event_bus)
@@ -251,6 +377,96 @@ def get_session(
         yield session
 
 
+@router.get("/communications/templates", response_model=list[CommunicationTemplateRead])
+def list_communication_templates() -> list[CommunicationTemplateRead]:
+    return [
+        CommunicationTemplateRead.model_validate(template.to_dict())
+        for template in communication_service.list_templates()
+    ]
+
+
+@router.post("/communications/send", response_model=CommunicationMessageRead, status_code=status.HTTP_202_ACCEPTED)
+def send_guest_message(payload: CommunicationMessageSendRequest) -> CommunicationMessageRead:
+    try:
+        message = communication_service.send_message(
+            payload.template_id,
+            channel=CommunicationChannel(payload.channel),
+            recipient=payload.recipient,
+            locale=payload.locale,
+            variables=payload.variables,
+            context=payload.context,
+            author=payload.author or "automation",
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template não encontrado") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return CommunicationMessageRead.model_validate({**message.to_dict(), "context": message.context})
+
+
+@router.post("/communications/messages/inbound", response_model=CommunicationMessageRead, status_code=status.HTTP_201_CREATED)
+def register_inbound_message(payload: CommunicationInboundMessageRequest) -> CommunicationMessageRead:
+    message = communication_service.record_inbound_message(
+        channel=CommunicationChannel(payload.channel),
+        sender=payload.sender,
+        body=payload.body,
+        locale=payload.locale,
+        context=payload.context,
+        in_reply_to=payload.in_reply_to,
+        author=payload.author or "guest",
+    )
+    return CommunicationMessageRead.model_validate({**message.to_dict(), "context": message.context})
+
+
+@router.get("/communications/messages", response_model=list[CommunicationMessageRead])
+def list_communication_messages() -> list[CommunicationMessageRead]:
+    return [
+        CommunicationMessageRead.model_validate({**message.to_dict(), "context": message.context})
+        for message in communication_service.messages()
+    ]
+
+
+@router.get("/communications/delivery/summary", response_model=CommunicationDeliverySummaryRead)
+def get_delivery_summary() -> CommunicationDeliverySummaryRead:
+    return CommunicationDeliverySummaryRead.model_validate(communication_service.delivery_summary())
+
+
+@router.post("/guest-experience/journey", response_model=GuestJourneySyncResponse, status_code=status.HTTP_202_ACCEPTED)
+def sync_guest_journey(payload: GuestJourneySnapshotRequest) -> GuestJourneySyncResponse:
+    snapshot = GuestJourneySnapshot(
+        reservation_id=payload.reservation_id,
+        guest_email=payload.guest_email,
+        guest_name=payload.guest_name,
+        preferences=payload.preferences,
+        journey_stage=payload.journey_stage,
+        satisfaction_score=payload.satisfaction_score,
+        check_in_completed=payload.check_in_completed,
+        upsell_acceptance=payload.upsell_acceptance,
+        response_minutes=payload.response_minutes,
+        response_channel=payload.response_channel,
+    )
+    enqueued = guest_journey_bridge.sync(snapshot, [], triggered_by="guest_experience")
+    return GuestJourneySyncResponse(enqueued=len(enqueued), pending=len(guest_journey_bridge.pending()))
+
+
+@router.get("/guest-experience/journey", response_model=GuestJourneySummaryRead)
+def get_guest_journey_snapshot() -> GuestJourneySummaryRead:
+    summary = get_guest_journey_summary()
+    return GuestJourneySummaryRead(**summary)
+
+
+@router.get("/guest-experience/{reservation_id}", response_model=GuestExperienceOverviewRead)
+def get_guest_experience_overview(
+    reservation_id: int,
+    session: Session = Depends(get_session),
+) -> GuestExperienceOverviewRead:
+    service = ReservationService(
+        session,
+        communication_service=communication_service,
+    )
+    return service.get_guest_experience_overview(reservation_id)
+
+
 async def _parse_model(request: Request, model_type: type[ModelT]) -> ModelT:
     data = await request.json()
     return model_type.model_validate(data)
@@ -281,6 +497,7 @@ def _get_reservation_service(request: Request, session: Session) -> ReservationS
         payment_service=payment_service,
         payment_settings=None if payment_service else payment_settings,
         tenant_manager=tenant_manager,
+        communication_service=communication_service,
     )
 
 
@@ -522,7 +739,7 @@ def get_dashboard_metrics(
     target_date: date | None = Query(None),
     session: Session = Depends(get_session),
 ):
-    service = OperationalMetricsService(session)
+    service = OperationalMetricsService(session, communications=communication_service)
     try:
         overview = service.get_overview(target_date)
     except Exception:

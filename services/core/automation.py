@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterable
@@ -9,6 +10,11 @@ from uuid import uuid4
 
 from .domain.playbooks import PlaybookTemplate
 from .recommendations import Recommendation
+from .metrics import (
+    record_guest_message_latency,
+    record_guest_preference_sync,
+    record_guest_satisfaction,
+)
 
 AutomationPredicate = Callable[[Recommendation], bool]
 
@@ -121,3 +127,103 @@ def anomaly_trigger(metric: str, *, min_score: float = 0.6) -> TriggerCriteria:
         minimum_score=min_score,
         metadata=metadata,
     )
+
+
+@dataclass(slots=True)
+class GuestJourneySnapshot:
+    reservation_id: int
+    guest_email: str
+    guest_name: str | None = None
+    preferences: dict[str, Any] = field(default_factory=dict)
+    journey_stage: str | None = None
+    satisfaction_score: float | None = None
+    check_in_completed: bool = False
+    upsell_acceptance: float | None = None
+    response_minutes: float | None = None
+    response_channel: str | None = None
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+_SNAPSHOTS: dict[int, GuestJourneySnapshot] = {}
+_SATISFACTION_HISTORY: deque[float] = deque(maxlen=200)
+_RESPONSE_HISTORY: deque[float] = deque(maxlen=200)
+
+
+def _register_snapshot(snapshot: GuestJourneySnapshot) -> None:
+    _SNAPSHOTS[snapshot.reservation_id] = snapshot
+    record_guest_preference_sync(snapshot.journey_stage)
+    if snapshot.satisfaction_score is not None:
+        record_guest_satisfaction(snapshot.satisfaction_score, touchpoint=snapshot.journey_stage)
+        _SATISFACTION_HISTORY.append(snapshot.satisfaction_score)
+    if snapshot.response_minutes is not None:
+        record_guest_message_latency(snapshot.response_channel or "unknown", snapshot.response_minutes)
+        _RESPONSE_HISTORY.append(snapshot.response_minutes)
+
+
+def get_guest_snapshot(reservation_id: int) -> GuestJourneySnapshot | None:
+    return _SNAPSHOTS.get(reservation_id)
+
+
+def get_guest_journey_summary() -> dict[str, Any]:
+    snapshots = list(_SNAPSHOTS.values())
+    total = len(snapshots)
+    check_in_completed = sum(1 for item in snapshots if item.check_in_completed)
+    upsell_samples = [item.upsell_acceptance for item in snapshots if item.upsell_acceptance is not None]
+    preferences: dict[str, int] = {}
+    last_updated: datetime | None = None
+    for snapshot in snapshots:
+        if last_updated is None or snapshot.updated_at > last_updated:
+            last_updated = snapshot.updated_at
+        for key, value in snapshot.preferences.items():
+            if isinstance(value, bool) and not value:
+                continue
+            normalized = key if isinstance(value, bool) else f"{key}:{value}"
+            preferences[normalized] = preferences.get(normalized, 0) + 1
+
+    satisfaction_average = (
+        sum(_SATISFACTION_HISTORY) / len(_SATISFACTION_HISTORY)
+        if _SATISFACTION_HISTORY
+        else None
+    )
+    response_average = (
+        sum(_RESPONSE_HISTORY) / len(_RESPONSE_HISTORY)
+        if _RESPONSE_HISTORY
+        else None
+    )
+    upsell_average = (
+        sum(upsell_samples) / len(upsell_samples)
+        if upsell_samples
+        else None
+    )
+
+    completion_rate = (check_in_completed / total) if total else 0.0
+
+    return {
+        "active_journeys": total,
+        "check_in_completion_rate": round(completion_rate, 4),
+        "upsell_acceptance_rate": round(upsell_average, 4) if upsell_average is not None else None,
+        "average_satisfaction": round(satisfaction_average, 2) if satisfaction_average is not None else None,
+        "average_response_minutes": round(response_average, 2) if response_average is not None else None,
+        "preferences": preferences,
+        "last_updated_at": last_updated,
+    }
+
+
+class GuestJourneyAutomationBridge:
+    """Sincroniza instantâneos de jornadas com a fila de automação."""
+
+    def __init__(self, queue: AutomationQueue) -> None:
+        self._queue = queue
+
+    def sync(
+        self,
+        snapshot: GuestJourneySnapshot,
+        recommendations: Iterable[Recommendation],
+        *,
+        triggered_by: str,
+    ) -> list[AutomationQueueItem]:
+        _register_snapshot(snapshot)
+        return self._queue.evaluate(recommendations, triggered_by=triggered_by)
+
+    def pending(self) -> list[AutomationQueueItem]:
+        return self._queue.pending()

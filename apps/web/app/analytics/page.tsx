@@ -94,6 +94,37 @@ export default function AnalyticsPage() {
             </p>
           )}
         </Card>
+        <Card title="Jornada digital" description="Health-check da experiência do hóspede" accent="info">
+          <p className="valor" data-testid="dashboard-metric-guest-satisfaction">
+            {data
+              ? data.guest_experience.satisfaction_score != null
+                ? data.guest_experience.satisfaction_score.toFixed(1)
+                : '—'
+              : isLoading
+                ? 'Carregando…'
+                : '--'}
+          </p>
+          {data && (
+            <ul className="details" data-testid="dashboard-guest-experience-breakdown">
+              <li>
+                Check-in digital {formatPercent(data.guest_experience.check_in_completion_rate * 100)} ·{' '}
+                {data.guest_experience.active_journeys} jornadas ativas
+              </li>
+              <li>
+                Tempo médio resposta{' '}
+                {data.guest_experience.avg_response_minutes != null
+                  ? `${data.guest_experience.avg_response_minutes.toFixed(1)} min`
+                  : '—'}
+              </li>
+              <li>
+                Conversão upsell{' '}
+                {data.guest_experience.upsell_conversion_rate != null
+                  ? formatPercent(data.guest_experience.upsell_conversion_rate * 100)
+                  : '—'}
+              </li>
+            </ul>
+          )}
+        </Card>
       </ResponsiveGrid>
 
       {data && (

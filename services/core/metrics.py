@@ -31,6 +31,11 @@ _pricing_simulations = None
 _pricing_bulk_updates = None
 _pricing_accuracy = None
 _pricing_impact = None
+_guest_messages_sent = None
+_guest_messages_failed = None
+_guest_message_latency = None
+_guest_satisfaction = None
+_guest_preference_sync = None
 
 
 def _ensure_counters() -> None:
@@ -54,6 +59,11 @@ def _ensure_counters() -> None:
     global _pricing_bulk_updates
     global _pricing_accuracy
     global _pricing_impact
+    global _guest_messages_sent
+    global _guest_messages_failed
+    global _guest_message_latency
+    global _guest_satisfaction
+    global _guest_preference_sync
 
     if _COUNTERS_INITIALIZED:
         return
@@ -141,6 +151,28 @@ def _ensure_counters() -> None:
             "bmad_core_pricing_revenue_delta_minor",
             description="Impacto financeiro estimado das atualizações de tarifa (minor units)",
             unit="1",
+        )
+        _guest_messages_sent = meter.create_counter(
+            "bmad_core_guest_messages_sent_total",
+            description="Mensagens transacionais enviadas para hóspedes",
+        )
+        _guest_messages_failed = meter.create_counter(
+            "bmad_core_guest_messages_failed_total",
+            description="Falhas em mensagens transacionais para hóspedes",
+        )
+        _guest_message_latency = meter.create_histogram(
+            "bmad_core_guest_message_response_time_minutes",
+            description="Tempo entre mensagem e resposta do hóspede",
+            unit="min",
+        )
+        _guest_satisfaction = meter.create_histogram(
+            "bmad_core_guest_satisfaction_score",
+            description="Distribuição de satisfação dos hóspedes",
+            unit="score",
+        )
+        _guest_preference_sync = meter.create_counter(
+            "bmad_core_guest_preference_sync_total",
+            description="Sincronizações de preferências e jornadas de hóspedes",
         )
 
         _COUNTERS_INITIALIZED = True
@@ -418,3 +450,55 @@ def record_pricing_impact(property_id: int, delta_minor: int) -> None:
     tracked = dict(attributes)
     tracked["delta_minor"] = str(delta_minor)
     _track_metric("bmad_core_pricing_revenue_delta_minor", tracked)
+
+
+def record_guest_message_delivery(channel: str, template: str) -> None:
+    _ensure_counters()
+    attributes = _stringify({"channel": channel, "template": template})
+    _guest_messages_sent.add(1, attributes)
+    _track_metric("bmad_core_guest_messages_sent_total", attributes)
+
+
+def record_guest_message_failure(channel: str, template: str) -> None:
+    _ensure_counters()
+    attributes = _stringify({"channel": channel, "template": template})
+    _guest_messages_failed.add(1, attributes)
+    _track_metric("bmad_core_guest_messages_failed_total", attributes)
+
+
+def record_guest_message_latency(channel: str, latency_minutes: float) -> None:
+    _ensure_counters()
+    attributes = _stringify({"channel": channel})
+    _guest_message_latency.record(latency_minutes, attributes)
+    _track_metric(
+        "bmad_core_guest_message_response_time_minutes",
+        {"channel": channel, "latency_minutes": f"{latency_minutes:.2f}"},
+    )
+
+
+def record_guest_satisfaction(score: float, *, touchpoint: str | None = None) -> None:
+    _ensure_counters()
+    attributes = _stringify({"touchpoint": touchpoint or "unknown"})
+    _guest_satisfaction.record(score, attributes)
+    _track_metric(
+        "bmad_core_guest_satisfaction_score",
+        {"touchpoint": touchpoint or "unknown", "score": f"{score:.2f}"},
+    )
+
+
+def record_guest_preference_sync(stage: str | None = None) -> None:
+    _ensure_counters()
+    attributes = _stringify({"stage": stage or "unspecified"})
+    _guest_preference_sync.add(1, attributes)
+    _track_metric(
+        "bmad_core_guest_preference_sync_total",
+        {"stage": stage or "unspecified"},
+    )
+
+
+def record_dashboard_guest_experience(metric: str, value: float) -> None:
+    _ensure_counters()
+    _track_metric(
+        "bmad_core_dashboard_guest_experience",
+        {"metric": metric, "value": f"{value:.4f}"},
+    )
