@@ -149,6 +149,78 @@ class ReservationUpdateStatus(BaseModel):
     status: ReservationStatus
 
 
+class PricingCompetitorRate(BaseModel):
+    channel: str = Field(min_length=1)
+    amount_minor: int = Field(gt=0)
+
+
+class PricingSimulationRequest(BaseModel):
+    property_id: int
+    base_rate_minor: int = Field(gt=0)
+    currency_code: str = Field(min_length=3, max_length=3)
+    check_in: datetime
+    check_out: datetime
+    competitor_rates: list[PricingCompetitorRate] | None = None
+
+
+class PricingComponentRead(BaseModel):
+    name: Literal["occupancy", "seasonality", "competition"]
+    weight: float
+    factor: float
+    contribution_minor: int
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+class PricingSimulationRead(BaseModel):
+    property_id: int
+    check_in: datetime
+    check_out: datetime
+    base_rate_minor: int
+    recommended_rate_minor: int
+    currency_code: str
+    nights: int
+    occupancy_rate: float
+    historical_rate: float
+    seasonal_index: float
+    competitor_index: float
+    confidence: float
+    components: list[PricingComponentRead]
+    expected_revenue_delta_minor: int
+    generated_at: datetime
+    actor_id: int | None = None
+
+
+class ReservationPricingUpdate(BaseModel):
+    reservation_id: int
+    rate_minor: int = Field(gt=0)
+    currency_code: str = Field(min_length=3, max_length=3)
+    reason: str | None = None
+    expected_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+class PricingBulkUpdateRequest(BaseModel):
+    property_id: int
+    updates: list[ReservationPricingUpdate]
+
+
+class ReservationPricingUpdateResult(BaseModel):
+    reservation_id: int
+    previous_rate_minor: int | None
+    new_rate_minor: int
+    currency_code: str
+    ota_job_id: int | None = None
+    status: Literal["synced", "manual"]
+    manual_fallback_reason: str | None = None
+    audit_log_id: int
+
+
+class PricingBulkUpdateResponse(BaseModel):
+    property_id: int
+    processed: int
+    manual_actions: int
+    results: list[ReservationPricingUpdateResult]
+
+
 class HousekeepingTaskCreate(BaseModel):
     property_id: int
     scheduled_date: datetime

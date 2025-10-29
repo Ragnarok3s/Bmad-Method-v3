@@ -27,6 +27,10 @@ _payment_captured = None
 _payment_failed = None
 _invoices_issued = None
 _payment_reconciliations = None
+_pricing_simulations = None
+_pricing_bulk_updates = None
+_pricing_accuracy = None
+_pricing_impact = None
 
 
 def _ensure_counters() -> None:
@@ -115,6 +119,24 @@ def _ensure_counters() -> None:
         _payment_reconciliations = meter.create_counter(
             "bmad_core_payments_reconciliation_total",
             description="Execuções de reconciliação de pagamentos",
+        )
+        _pricing_simulations = meter.create_counter(
+            "bmad_core_pricing_simulations_total",
+            description="Simulações de precificação realizadas",
+        )
+        _pricing_bulk_updates = meter.create_counter(
+            "bmad_core_pricing_bulk_updates_total",
+            description="Atualizações em lote de tarifas aplicadas",
+        )
+        _pricing_accuracy = meter.create_histogram(
+            "bmad_core_pricing_accuracy",
+            description="Acurácia prevista para recomendações de tarifa",
+            unit="ratio",
+        )
+        _pricing_impact = meter.create_histogram(
+            "bmad_core_pricing_revenue_delta_minor",
+            description="Impacto financeiro estimado das atualizações de tarifa (minor units)",
+            unit="1",
         )
 
         _COUNTERS_INITIALIZED = True
@@ -360,3 +382,35 @@ def record_dashboard_kpi(name: str, value: float, unit: str) -> None:
             "unit": unit,
         },
     )
+
+
+def record_pricing_simulation(property_id: int, nights: int) -> None:
+    _ensure_counters()
+    attributes = _stringify({"property_id": property_id, "nights": nights})
+    _pricing_simulations.add(1, attributes)
+    _track_metric("bmad_core_pricing_simulations_total", attributes)
+
+
+def record_pricing_bulk_update(property_id: int, reservations: int) -> None:
+    _ensure_counters()
+    attributes = _stringify({"property_id": property_id, "reservations": reservations})
+    _pricing_bulk_updates.add(reservations, attributes)
+    _track_metric("bmad_core_pricing_bulk_updates_total", attributes)
+
+
+def record_pricing_accuracy(property_id: int, accuracy_ratio: float) -> None:
+    _ensure_counters()
+    attributes = _stringify({"property_id": property_id})
+    _pricing_accuracy.record(accuracy_ratio, attributes)
+    tracked = dict(attributes)
+    tracked["accuracy_ratio"] = f"{accuracy_ratio:.4f}"
+    _track_metric("bmad_core_pricing_accuracy", tracked)
+
+
+def record_pricing_impact(property_id: int, delta_minor: int) -> None:
+    _ensure_counters()
+    attributes = _stringify({"property_id": property_id})
+    _pricing_impact.record(delta_minor, attributes)
+    tracked = dict(attributes)
+    tracked["delta_minor"] = str(delta_minor)
+    _track_metric("bmad_core_pricing_revenue_delta_minor", tracked)
