@@ -9,7 +9,7 @@ interface NavItem {
   description: string;
 }
 
-const NAV_SECTIONS: { heading: string; items: NavItem[] } = [
+const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   {
     heading: 'Operação diária',
     items: [
