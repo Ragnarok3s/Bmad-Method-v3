@@ -55,6 +55,41 @@ class WorkspaceRead(WorkspaceCreate):
         from_attributes = True
 
 
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1)
+
+
+class LoginResponse(BaseModel):
+    session_id: str
+    agent_id: int
+    mfa_required: bool
+    expires_at: datetime
+    session_timeout_seconds: int | None = None
+    recovery_codes_remaining: int = 0
+
+
+class MFAVerificationRequest(BaseModel):
+    session_id: str
+    code: str = Field(min_length=1)
+    method: Literal["totp", "sms", "email"] | None = Field(default="totp")
+
+
+class RecoveryInitiateRequest(BaseModel):
+    email: EmailStr
+
+
+class RecoveryInitiateResponse(BaseModel):
+    email: EmailStr
+    issued_at: datetime
+    recovery_codes: list[str] = Field(default_factory=list)
+
+
+class RecoveryCompleteRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=1)
+
+
 class AgentCreate(BaseModel):
     name: str
     email: EmailStr
@@ -68,6 +103,12 @@ class AgentRead(AgentCreate):
 
     class Config:
         from_attributes = True
+
+
+class AgentProfileUpdate(BaseModel):
+    name: str | None = None
+    role: AgentRole | None = None
+    active: bool | None = None
 
 
 class ReservationCreate(BaseModel):
