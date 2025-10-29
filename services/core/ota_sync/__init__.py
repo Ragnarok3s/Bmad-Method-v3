@@ -113,6 +113,7 @@ class OTASyncService:
                 sla_version=sla_version,
                 next_action_at=contract.received_at + timedelta(minutes=1),
             )
+            self._update_sla_progress(sla_version, latency_minutes)
             return item
 
         job_payload = {
@@ -176,6 +177,7 @@ class OTASyncService:
             job.status = OTASyncStatus.FAILED
             job.updated_at = contract.processed_at
             self.session.add(job)
+            self._update_sla_progress(sla_version, latency_minutes)
             return item
 
         job.status = OTASyncStatus.SUCCESS if contract.status == "acknowledged" else OTASyncStatus.FAILED
@@ -252,15 +254,17 @@ class OTASyncService:
             return latest_version
 
         next_version = (latest_version.version if latest_version else 0) + 1
+        effective_from = datetime.now(timezone.utc)
         version = PartnerSLAVersion(
             sla_id=sla.id,
             version=next_version,
             target_minutes=target_minutes,
             warning_minutes=warning_minutes,
             breach_minutes=breach_minutes,
+            effective_from=effective_from,
         )
         if latest_version and latest_version.effective_to is None:
-            latest_version.effective_to = version.effective_from
+            latest_version.effective_to = effective_from
             self.session.add(latest_version)
         self.session.add(version)
         self.session.flush()
