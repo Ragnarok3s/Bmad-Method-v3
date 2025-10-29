@@ -105,3 +105,19 @@ class AutomationQueue:
 
     def registered_templates(self) -> list[RegisteredTemplate]:
         return list(self._registry.values())
+
+
+def anomaly_trigger(metric: str, *, min_score: float = 0.6) -> TriggerCriteria:
+    """Cria um critério padrão para acionar automações a partir de anomalias de AIOps."""
+
+    metadata = {"metric": metric, "source": "aiops"}
+
+    def _predicate(recommendation: Recommendation) -> bool:
+        return recommendation.metadata.get("aiops_metric") == metric and recommendation.score >= min_score
+
+    return TriggerCriteria(
+        name=f"aiops::{metric}",
+        predicate=_predicate,
+        minimum_score=min_score,
+        metadata=metadata,
+    )

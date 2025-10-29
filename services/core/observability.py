@@ -158,6 +158,24 @@ def record_critical_alert(
     _ALERT_LOGGER.log(level, "critical_alert", extra=attributes)
 
 
+def get_signal_health_snapshot() -> Mapping[str, Mapping[str, Any]]:
+    """Retorna o estado atual dos sinais instrumentados para consumo por AIOps."""
+
+    snapshot: dict[str, dict[str, Any]] = {}
+    for signal, state in _STATE.signals.items():
+        last_event_at = state.last_event_at.isoformat() if state.last_event_at else None
+        snapshot[signal] = {
+            "expected": state.expected,
+            "configured": state.configured,
+            "exporter": state.exporter,
+            "endpoint": state.endpoint,
+            "last_event_name": state.last_event_name,
+            "last_event_at": last_event_at,
+            "last_event_attributes": dict(state.last_event_attributes or {}),
+        }
+    return snapshot
+
+
 class _TelemetryLoggingHandler(LoggingHandler):
     """Envia logs via OTLP e regista atividade para health-check."""
 
