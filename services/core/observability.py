@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 import os
+from collections import Counter, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, Mapping
+from typing import Any, Deque, Dict, Mapping
 
 from opentelemetry import metrics, trace
 from opentelemetry._logs import set_logger_provider
@@ -24,6 +25,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from .config import ObservabilitySettings
 
 
+_MAX_AUDIT_EVENTS = 100
+_MAX_ALERT_EVENTS = 100
 _CONFIGURED = False
 
 
@@ -51,6 +54,13 @@ class _RuntimeState:
             "logs": _SignalState(expected=False),
         }
     )
+    audit_events: Deque["_AuditEvent"] = field(
+        default_factory=lambda: deque(maxlen=_MAX_AUDIT_EVENTS)
+    )
+    alert_events: Deque["_AlertEvent"] = field(
+        default_factory=lambda: deque(maxlen=_MAX_ALERT_EVENTS)
+    )
+    alert_totals: Counter = field(default_factory=Counter)
 
 
 _STATE = _RuntimeState()
@@ -66,6 +76,24 @@ def _stringify_attributes(attributes: Mapping[str, Any] | None) -> Mapping[str, 
     if not attributes:
         return {}
     return {str(key): str(value) for key, value in attributes.items()}
+
+
+@dataclass
+class _AuditEvent:
+    action: str
+    actor_id: int | None
+    detail: Mapping[str, str]
+    severity: str
+    observed_at: datetime
+
+
+@dataclass
+class _AlertEvent:
+    kind: str
+    message: str
+    severity: str
+    context: Mapping[str, str]
+    observed_at: datetime
 
 
 def mark_signal_event(
@@ -233,6 +261,47 @@ def configure_observability(settings: ObservabilitySettings) -> None:
     _CONFIGURED = True
 
 
+def record_audit_event(
+    action: str,
+    *,
+    actor_id: int | None,
+    detail: Mapping[str, Any] | None = None,
+    severity: str = "info",
+) -> None:
+    """Regista evento de auditoria recente para health-checks."""
+
+    event = _AuditEvent(
+        action=action,
+        actor_id=actor_id,
+        detail=_stringify_attributes(detail),
+        severity=severity,
+        observed_at=_now(),
+    )
+    _STATE.audit_events.appendleft(event)
+
+
+def record_critical_alert(
+    kind: str,
+    message: str,
+    *,
+    context: Mapping[str, Any] | None = None,
+    severity: str = "critical",
+) -> None:
+    """Regista alerta crítico para observabilidade."""
+
+    severity = severity or "critical"
+    event = _AlertEvent(
+        kind=kind,
+        message=message,
+        severity=severity,
+        context=_stringify_attributes(context),
+        observed_at=_now(),
+    )
+    _STATE.alert_events.appendleft(event)
+    _STATE.alert_totals[severity] += 1
+    _STATE.alert_totals["total"] += 1
+
+
 def get_observability_status() -> dict[str, Any]:
     """Devolve snapshot da configuração OTEL (usado pelos health-checks)."""
 
@@ -261,6 +330,42 @@ def get_observability_status() -> dict[str, Any]:
             "last_event": last_event,
         }
 
+    recent_audit = [
+        {
+            "action": event.action,
+            "actor_id": event.actor_id,
+            "detail": dict(event.detail),
+            "severity": event.severity,
+            "observed_at": event.observed_at.isoformat().replace("+00:00", "Z"),
+        }
+        for event in list(_STATE.audit_events)[:20]
+    ]
+
+    grouped_alerts: dict[str, list[dict[str, Any]]] = {}
+    for event in _STATE.alert_events:
+        bucket = grouped_alerts.setdefault(event.severity, [])
+        if len(bucket) >= 20:
+            continue
+        bucket.append(
+            {
+                "kind": event.kind,
+                "message": event.message,
+                "severity": event.severity,
+                "context": dict(event.context),
+                "observed_at": event.observed_at.isoformat().replace("+00:00", "Z"),
+            }
+        )
+
+    alerts_snapshot: dict[str, Any] = {
+        "total": int(_STATE.alert_totals.get("total", 0)),
+        "by_severity": dict(_STATE.alert_totals),
+        "critical": grouped_alerts.get("critical", []),
+    }
+    for severity, events in grouped_alerts.items():
+        if severity == "critical":
+            continue
+        alerts_snapshot[severity] = events
+
     return {
         "configured": _CONFIGURED,
         "ready": ready,
@@ -272,6 +377,11 @@ def get_observability_status() -> dict[str, Any]:
         },
         "resource": dict(_STATE.resource),
         "signals": signals,
+        "audit": {
+            "total": len(_STATE.audit_events),
+            "recent": recent_audit,
+        },
+        "alerts": alerts_snapshot,
     }
 
 

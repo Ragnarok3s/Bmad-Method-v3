@@ -61,6 +61,41 @@ class WorkspaceRead(WorkspaceCreate):
         from_attributes = True
 
 
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1)
+
+
+class LoginResponse(BaseModel):
+    session_id: str
+    agent_id: int
+    mfa_required: bool
+    expires_at: datetime
+    session_timeout_seconds: int | None = None
+    recovery_codes_remaining: int = 0
+
+
+class MFAVerificationRequest(BaseModel):
+    session_id: str
+    code: str = Field(min_length=1)
+    method: Literal["totp", "sms", "email"] | None = Field(default="totp")
+
+
+class RecoveryInitiateRequest(BaseModel):
+    email: EmailStr
+
+
+class RecoveryInitiateResponse(BaseModel):
+    email: EmailStr
+    issued_at: datetime
+    recovery_codes: list[str] = Field(default_factory=list)
+
+
+class RecoveryCompleteRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=1)
+
+
 class AgentCreate(BaseModel):
     name: str
     email: EmailStr
@@ -77,101 +112,9 @@ class AgentRead(AgentCreate):
 
 
 class AgentProfileUpdate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
     name: str | None = None
-    email: EmailStr | None = None
     role: AgentRole | None = None
     active: bool | None = None
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class LoginResponse(BaseModel):
-    session_id: str
-    agent_id: int
-    mfa_required: bool
-    expires_at: datetime
-    session_timeout_seconds: int
-    recovery_codes_remaining: int
-
-
-class MFAVerificationRequest(BaseModel):
-    session_id: str
-    code: str
-    method: Literal["totp", "recovery"] = "totp"
-
-
-class RecoveryInitiateRequest(BaseModel):
-    email: EmailStr
-
-
-class RecoveryInitiateResponse(BaseModel):
-    email: EmailStr
-    issued_at: datetime
-    recovery_codes: list[str]
-
-
-class RecoveryCompleteRequest(BaseModel):
-    email: EmailStr
-    code: str
-
-
-class PaymentMethodCreate(BaseModel):
-    provider: PaymentProvider
-    customer_reference: str
-    payment_method_nonce: str
-    guest_email: EmailStr | None = None
-    metadata: dict[str, Any] | None = None
-
-
-class PaymentMethodRead(BaseModel):
-    id: int
-    provider: PaymentProvider
-    customer_reference: str
-    guest_email: EmailStr
-    status: PaymentMethodStatus
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class PaymentAuthorizationRequest(BaseModel):
-    method: PaymentMethodCreate
-    amount_minor: int = Field(ge=0)
-    currency: str = Field(min_length=3, max_length=3)
-    capture_on_check_in: bool = True
-    metadata: dict[str, Any] | None = None
-
-
-class PaymentIntentRead(BaseModel):
-    id: int
-    provider: PaymentProvider
-    amount_minor: int
-    currency_code: str
-    status: PaymentIntentStatus
-    provider_reference: str
-    created_at: datetime
-    captured_at: datetime | None
-
-    class Config:
-        from_attributes = True
-
-
-class InvoiceRead(BaseModel):
-    id: int
-    amount_minor: int
-    currency_code: str
-    status: InvoiceStatus
-    issued_at: datetime
-    due_at: datetime | None
-
-    class Config:
-        from_attributes = True
 
 
 class ReservationCreate(BaseModel):
