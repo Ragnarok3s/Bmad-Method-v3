@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from datetime import datetime, timedelta, timezone
 import threading
 import uuid
@@ -91,6 +92,7 @@ class OwnerService:
         verification_queue: Optional[ManualVerificationQueue] = None,
         notifications: Optional[NotificationCenter] = None,
         webhooks: Optional[WebhookDispatcher] = None,
+        portal_token: str | None = None,
     ) -> None:
         self.event_bus = event_bus or EventBus()
         self.storage = storage or SecureDocumentStorage()
@@ -103,6 +105,9 @@ class OwnerService:
             self.webhooks.bind(self.event_bus)
         self._lock = threading.Lock()
         self._owners: Dict[int, OwnerRecord] = {}
+        self._portal_token = portal_token or os.environ.get(
+            "NEXT_PUBLIC_OWNER_TOKEN", "demo-owner-token"
+        )
         self._bootstrap()
 
     def _bootstrap(self) -> None:
@@ -204,7 +209,7 @@ class OwnerService:
             name="Helena Pereira",
             email="helena.pereira@example.com",
             phone="(+351) 912 345 678",
-            token="demo-owner-token",
+            token=self._portal_token,
             metrics=metrics,
             payout_preferences=payout,
             properties=properties,
