@@ -50,6 +50,10 @@ def _ensure_counters() -> None:
     global _payment_failed
     global _invoices_issued
     global _payment_reconciliations
+    global _pricing_simulations
+    global _pricing_bulk_updates
+    global _pricing_accuracy
+    global _pricing_impact
 
     if _COUNTERS_INITIALIZED:
         return
