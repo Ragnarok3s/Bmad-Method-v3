@@ -1,6 +1,11 @@
 """Endpoints REST que cobrem os módulos do MVP."""
 from __future__ import annotations
 
+import base64
+import binascii
+import hashlib
+import hmac
+import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Literal, TypeVar, Union
@@ -153,6 +158,43 @@ def _build_payment_service(request: Request, session: Session) -> PaymentService
             extra={"provider": payment_settings.provider},
         )
         return None
+
+
+def _extract_signature_value(signature: str | None) -> str | None:
+    if not signature:
+        return None
+    value = signature.strip()
+    if not value:
+        return None
+    lowered = value.lower()
+    if "v1=" in lowered or "signature=" in lowered or "sig=" in lowered:
+        for part in value.split(","):
+            part = part.strip()
+            if "=" not in part:
+                continue
+            key, candidate = part.split("=", 1)
+            if key.strip().lower() in {"v1", "signature", "sig"}:
+                candidate = candidate.strip()
+                if candidate:
+                    return candidate
+        return None
+    return value
+
+
+def _verify_webhook_signature(secret: str, payload: bytes, signature: str | None) -> bool:
+    signature_value = _extract_signature_value(signature)
+    if not signature_value:
+        return False
+    digest = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256)
+    expected_hex = digest.hexdigest()
+    if hmac.compare_digest(expected_hex, signature_value):
+        return True
+    try:
+        expected_bytes = digest.digest()
+        provided_bytes = base64.b64decode(signature_value, validate=True)
+    except (binascii.Error, ValueError):
+        return False
+    return hmac.compare_digest(expected_bytes, provided_bytes)
 
 
 def _get_reservation_service(request: Request, session: Session) -> ReservationService:
@@ -745,12 +787,51 @@ async def receive_payment_webhook(
     request: Request,
     session: Session = Depends(get_session),
 ) -> dict[str, str]:
-    payload = await request.json()
+    body = await request.body()
+    try:
+        raw_payload = body.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payload de webhook inválido",
+        ) from exc
+    try:
+        payload = json.loads(raw_payload or "{}")
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payload de webhook inválido",
+        ) from exc
+    payment_settings = _get_payment_settings(request)
     payment_service = _build_payment_service(request, session)
-    if not payment_service:
+    if not payment_service or not payment_settings:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Integração de pagamentos não configurada",
+        )
+    if not payment_settings.webhook_secret:
+        logger.error(
+            "payment_webhook_secret_missing",
+            extra={"provider": provider},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Integração de pagamentos não configurada",
+        )
+    signature_header = (
+        request.headers.get("x-payment-signature")
+        or request.headers.get("x-signature")
+        or request.headers.get("stripe-signature")
+        or request.headers.get("adyen-signature")
+    )
+    if not _verify_webhook_signature(payment_settings.webhook_secret, body, signature_header):
+        logger.warning(
+            "payment_webhook_invalid_signature",
+            extra={"provider": provider, "signature_present": bool(signature_header)},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Assinatura de webhook inválida",
         )
     event = payment_service.handle_webhook_event(provider, payload)
     return {"status": event.status.value, "event_type": event.event_type}
