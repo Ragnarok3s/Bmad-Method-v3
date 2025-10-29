@@ -2,16 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useMemo, useState } from 'react';
 
 import { Card } from '@/components/ui/Card';
 import { CoreApiError } from '@/services/api/housekeeping';
 import { verifyMfa } from '@/services/api/auth';
-
-const METHODS: Array<{ value: 'totp' | 'recovery'; label: string }> = [
-  { value: 'totp', label: 'Código do autenticador' },
-  { value: 'recovery', label: 'Código de recuperação' }
-];
+import { useTranslation } from '@/lib/i18n';
 
 export default function MfaPage() {
   const search = useSearchParams();
@@ -21,14 +17,36 @@ export default function MfaPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { t } = useTranslation('auth.mfa');
+  const methods = useMemo(
+    () => [
+      { value: 'totp' as const, label: t('methods.totp') },
+      { value: 'recovery' as const, label: t('methods.recovery') }
+    ],
+    [t]
+  );
+  const renderLinkedCopy = useCallback(
+    (template: string, href: string) => {
+      const segments = template.split(/<link>|<\/link>/g);
+      if (segments.length < 3) {
+        return template;
+      }
+      const [prefix, anchor, suffix] = segments as [string, string, string];
+      return (
+        <>
+          {prefix}
+          <Link href={href}>{anchor}</Link>
+          {suffix}
+        </>
+      );
+    },
+    []
+  );
 
   if (!sessionId) {
     return (
-      <Card title="Validação MFA" description="Sessão inválida">
-        <p>
-          Não recebemos um identificador de sessão válido. Regresse ao{' '}
-          <Link href="/login">ecrã de login</Link> para reiniciar o processo.
-        </p>
+      <Card title={t('invalidSessionTitle')} description={t('invalidSessionDescription')}>
+        <p>{renderLinkedCopy(t('invalidSessionBody'), '/login')}</p>
       </Card>
     );
   }
@@ -38,7 +56,7 @@ export default function MfaPage() {
     const form = new FormData(event.currentTarget);
     const code = String(form.get('code') ?? '').trim();
     if (!code) {
-      setError('Informe o código enviado pelo autenticador ou recovery.');
+      setError(t('errors.missingCode'));
       return;
     }
     setIsSubmitting(true);
@@ -46,7 +64,7 @@ export default function MfaPage() {
     setSuccess(null);
     try {
       await verifyMfa({ sessionId, code, method });
-      setSuccess('MFA confirmado com sucesso. Está pronto para avançar.');
+      setSuccess(t('success.confirmed'));
       router.prefetch('/');
     } catch (apiError) {
       if (apiError instanceof CoreApiError) {
@@ -54,10 +72,10 @@ export default function MfaPage() {
         if (typeof detail === 'string') {
           setError(detail);
         } else {
-          setError('Código inválido. Tente novamente.');
+          setError(t('errors.invalidCode'));
         }
       } else {
-        setError('Não foi possível validar o MFA.');
+        setError(t('errors.unexpected'));
       }
     } finally {
       setIsSubmitting(false);
@@ -65,14 +83,11 @@ export default function MfaPage() {
   }
 
   return (
-    <Card
-      title="Validar segundo fator"
-      description="Introduza o código de 6 dígitos ou utilize um código de recuperação."
-    >
+    <Card title={t('cardTitle')} description={t('cardDescription')}>
       <form className="auth-form" onSubmit={handleSubmit}>
         <fieldset className="method">
-          <legend>Método</legend>
-          {METHODS.map((item) => (
+          <legend>{t('methodLegend')}</legend>
+          {methods.map((item) => (
             <label key={item.value} className="option">
               <input
                 type="radio"
@@ -86,12 +101,16 @@ export default function MfaPage() {
           ))}
         </fieldset>
         <label className="field">
-          <span>{method === 'totp' ? 'Código do autenticador' : 'Código de recuperação'}</span>
+          <span>
+            {method === 'totp' ? t('methods.totp') : t('methods.recovery')}
+          </span>
           <input
             name="code"
             inputMode="numeric"
-            pattern="[0-9A-Za-z-]{6,}" 
-            placeholder={method === 'totp' ? '000000' : 'ABCDE-12345'}
+            pattern="[0-9A-Za-z-]{6,}"
+            placeholder={
+              method === 'totp' ? t('placeholders.totp') : t('placeholders.recovery')
+            }
             required
           />
         </label>
@@ -102,10 +121,11 @@ export default function MfaPage() {
         )}
         {success && <p className="feedback success">{success}</p>}
         <button type="submit" className="primary" disabled={isSubmitting}>
-          {isSubmitting ? 'A validar…' : 'Confirmar MFA'}
+          {isSubmitting ? t('actions.submitting') : t('actions.submit')}
         </button>
         <p className="aux">
-          Precisa de novos códigos? <Link href="/recover">Solicitar recuperação</Link>
+          {t('links.needNewCodes')}{' '}
+          <Link href="/recover">{t('links.recover')}</Link>
         </p>
       </form>
       <style jsx>{`

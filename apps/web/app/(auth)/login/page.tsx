@@ -7,12 +7,14 @@ import { FormEvent, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { CoreApiError } from '@/services/api/housekeeping';
 import { login, LoginResult } from '@/services/api/auth';
+import { useTranslation } from '@/lib/i18n';
 
 export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<LoginResult | null>(null);
+  const { t } = useTranslation('auth.login');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,7 +23,7 @@ export default function LoginPage() {
     const password = String(form.get('password') ?? '');
 
     if (!email || !password) {
-      setError('Informe email e palavra-passe.');
+      setError(t('errors.missingCredentials'));
       return;
     }
 
@@ -42,10 +44,10 @@ export default function LoginPage() {
         } else if (detail && typeof detail === 'object' && 'message' in detail) {
           setError(String(detail.message));
         } else {
-          setError('Falha na autenticação. Verifique as credenciais.');
+          setError(t('errors.coreFailure'));
         }
       } else {
-        setError('Erro inesperado ao contactar a API.');
+        setError(t('errors.unexpected'));
       }
       setResult(null);
     } finally {
@@ -54,14 +56,14 @@ export default function LoginPage() {
   }
 
   return (
-    <Card title="Autenticação" description="Aceda à plataforma com MFA reforçado.">
+    <Card title={t('cardTitle')} description={t('cardDescription')}>
       <form onSubmit={handleSubmit} className="auth-form" noValidate>
         <label className="field">
-          <span>Email corporativo</span>
+          <span>{t('labels.email')}</span>
           <input type="email" name="email" autoComplete="username" required />
         </label>
         <label className="field">
-          <span>Palavra-passe</span>
+          <span>{t('labels.password')}</span>
           <input type="password" name="password" autoComplete="current-password" required />
         </label>
         {error && (
@@ -71,16 +73,18 @@ export default function LoginPage() {
         )}
         {result && !result.mfaRequired && (
           <p className="feedback success">
-            Sessão iniciada para o agente #{result.agentId}. Expira em{' '}
-            {Math.round(result.sessionTimeoutSeconds / 60)} minutos.
+            {t('success.sessionStarted', {
+              agentId: result.agentId,
+              minutes: Math.round(result.sessionTimeoutSeconds / 60)
+            })}
           </p>
         )}
         <button type="submit" className="primary" disabled={isSubmitting}>
-          {isSubmitting ? 'A validar…' : 'Entrar'}
+          {isSubmitting ? t('actions.submitting') : t('actions.submit')}
         </button>
         <p className="aux">
-          Perdeu acesso ao segundo fator?{' '}
-          <Link href="/recover">Inicie a recuperação</Link>
+          {t('links.recoverPrompt')}{' '}
+          <Link href="/recover">{t('links.recoverCta')}</Link>
         </p>
       </form>
       <style jsx>{`

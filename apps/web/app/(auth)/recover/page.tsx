@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
 
 import { Card } from '@/components/ui/Card';
 import { CoreApiError } from '@/services/api/housekeeping';
@@ -11,6 +11,7 @@ import {
   LoginResult,
   RecoveryInitiation
 } from '@/services/api/auth';
+import { useTranslation } from '@/lib/i18n';
 
 export default function RecoveryPage() {
   const [initError, setInitError] = useState<string | null>(null);
@@ -19,13 +20,31 @@ export default function RecoveryPage() {
   const [completionResult, setCompletionResult] = useState<LoginResult | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const { t, locale } = useTranslation('auth.recover');
+  const renderLinkedCopy = useCallback(
+    (template: string, href: string) => {
+      const segments = template.split(/<link>|<\/link>/g);
+      if (segments.length < 3) {
+        return template;
+      }
+      const [prefix, anchor, suffix] = segments as [string, string, string];
+      return (
+        <>
+          {prefix}
+          <Link href={href}>{anchor}</Link>
+          {suffix}
+        </>
+      );
+    },
+    []
+  );
 
   async function handleInitiate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get('email') ?? '').trim();
     if (!email) {
-      setInitError('Informe o email associado ao agente.');
+      setInitError(t('errors.missingEmail'));
       return;
     }
     setIsRequesting(true);
@@ -37,9 +56,9 @@ export default function RecoveryPage() {
     } catch (apiError) {
       if (apiError instanceof CoreApiError) {
         const detail = (apiError.body as Record<string, any>)?.detail;
-        setInitError(typeof detail === 'string' ? detail : 'Não foi possível gerar novos códigos.');
+        setInitError(typeof detail === 'string' ? detail : t('errors.generateFailure'));
       } else {
-        setInitError('Falha inesperada ao contactar a API.');
+        setInitError(t('errors.generateUnexpected'));
       }
     } finally {
       setIsRequesting(false);
@@ -52,7 +71,7 @@ export default function RecoveryPage() {
     const email = String(form.get('email') ?? '').trim();
     const code = String(form.get('code') ?? '').trim();
     if (!email || !code) {
-      setCompletionError('Informe email e código de recuperação.');
+      setCompletionError(t('errors.missingEmailAndCode'));
       return;
     }
     setIsCompleting(true);
@@ -64,9 +83,9 @@ export default function RecoveryPage() {
     } catch (apiError) {
       if (apiError instanceof CoreApiError) {
         const detail = (apiError.body as Record<string, any>)?.detail;
-        setCompletionError(typeof detail === 'string' ? detail : 'Código inválido ou expirado.');
+        setCompletionError(typeof detail === 'string' ? detail : t('errors.completeInvalid'));
       } else {
-        setCompletionError('Não foi possível concluir a recuperação.');
+        setCompletionError(t('errors.completeUnexpected'));
       }
     } finally {
       setIsCompleting(false);
@@ -76,12 +95,12 @@ export default function RecoveryPage() {
   return (
     <div className="recovery-grid">
       <Card
-        title="Gerar novos códigos"
-        description="Produz um novo conjunto de códigos de recuperação com validade imediata."
+        title={t('generateCardTitle')}
+        description={t('generateCardDescription')}
       >
         <form className="auth-form" onSubmit={handleInitiate}>
           <label className="field">
-            <span>Email do agente</span>
+            <span>{t('labels.agentEmail')}</span>
             <input type="email" name="email" required />
           </label>
           {initError && (
@@ -92,8 +111,9 @@ export default function RecoveryPage() {
           {initResult && (
             <div className="recovery-codes" aria-live="polite">
               <p>
-                Guardar estes códigos num local seguro. Emitidos em{' '}
-                {new Date(initResult.issuedAt).toLocaleString('pt-PT')}.
+                {t('feedback.generatedAt', {
+                  issuedAt: new Date(initResult.issuedAt).toLocaleString(locale)
+                })}
               </p>
               <ul>
                 {initResult.recoveryCodes.map((item) => (
@@ -105,21 +125,21 @@ export default function RecoveryPage() {
             </div>
           )}
           <button type="submit" className="primary" disabled={isRequesting}>
-            {isRequesting ? 'Gerando…' : 'Gerar códigos'}
+            {isRequesting ? t('actions.generating') : t('actions.generate')}
           </button>
         </form>
       </Card>
       <Card
-        title="Concluir recuperação"
-        description="Use um dos códigos emitidos para criar uma sessão autenticada."
+        title={t('completeCardTitle')}
+        description={t('completeCardDescription')}
       >
         <form className="auth-form" onSubmit={handleComplete}>
           <label className="field">
-            <span>Email do agente</span>
+            <span>{t('labels.agentEmail')}</span>
             <input type="email" name="email" required />
           </label>
           <label className="field">
-            <span>Código de recuperação</span>
+            <span>{t('labels.recoveryCode')}</span>
             <input name="code" placeholder="ABCDE-12345" required />
           </label>
           {completionError && (
@@ -129,12 +149,11 @@ export default function RecoveryPage() {
           )}
           {completionResult && (
             <p className="feedback success">
-              Recuperação concluída. <Link href="/login">Regresse ao login</Link> para iniciar
-              uma nova sessão.
+              {renderLinkedCopy(t('feedback.completeSuccess'), '/login')}
             </p>
           )}
           <button type="submit" className="primary" disabled={isCompleting}>
-            {isCompleting ? 'Validando…' : 'Concluir recuperação'}
+            {isCompleting ? t('actions.completing') : t('actions.complete')}
           </button>
         </form>
       </Card>

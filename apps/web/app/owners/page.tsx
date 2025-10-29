@@ -15,20 +15,11 @@ import {
   uploadOwnerDocument
 } from '@/services/api/owners';
 import { useOwnerAccess } from './OwnerAccessContext';
-
-const currencyFormatter = new Intl.NumberFormat('pt-PT', {
-  style: 'currency',
-  currency: 'EUR'
-});
-
-const percentFormatter = new Intl.NumberFormat('pt-PT', {
-  style: 'percent',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0
-});
+import { useTranslation } from '@/lib/i18n';
 
 export default function OwnersOverviewPage() {
   const { ownerId, token } = useOwnerAccess();
+  const { t, locale } = useTranslation('owners.overview');
   const [overview, setOverview] = useState<OwnerOverview | null>(null);
   const [notifications, setNotifications] = useState<OwnerNotification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +30,25 @@ export default function OwnersOverviewPage() {
   const resolvedToken = useMemo(() => resolveOwnerToken(token), [token]);
 
   const [payoutForm, setPayoutForm] = useState<OwnerPayoutPreferencesInput | null>(null);
+  const metricsCurrency = overview?.payoutPreferences.currency ?? 'EUR';
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: metricsCurrency
+      }),
+    [locale, metricsCurrency]
+  );
+  const percentFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(locale, {
+        style: 'percent',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }),
+    [locale]
+  );
+  const integerFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -56,7 +66,7 @@ export default function OwnersOverviewPage() {
         }
       } catch (err) {
         if (!abort.signal.aborted) {
-          setError('Falha ao carregar dados do proprietário. Utilize o suporte para obter ajuda.');
+          setError(t('errors.loadFailed'));
         }
       } finally {
         if (!abort.signal.aborted) {
@@ -66,7 +76,7 @@ export default function OwnersOverviewPage() {
     }
     load();
     return () => abort.abort();
-  }, [ownerId, resolvedToken]);
+  }, [ownerId, resolvedToken, t]);
 
   useEffect(() => {
     if (overview) {
@@ -119,9 +129,9 @@ export default function OwnersOverviewPage() {
       );
       const notificationData = await fetchOwnerNotifications(ownerId, resolvedToken);
       setNotifications(notificationData);
-      setFeedback('Preferências de pagamento actualizadas com sucesso.');
+      setFeedback(t('cards.payout.success'));
     } catch (err) {
-      setError('Não foi possível actualizar preferências de pagamento neste momento.');
+      setError(t('errors.updateFailed'));
     }
   };
 
@@ -131,7 +141,7 @@ export default function OwnersOverviewPage() {
     const fileInput = form.elements.namedItem('documento') as HTMLInputElement | null;
     const file = fileInput?.files?.[0];
     if (!file) {
-      setUploadFeedback('Selecione um documento válido antes de enviar.');
+      setUploadFeedback(t('errors.uploadMissing'));
       return;
     }
     try {
@@ -144,57 +154,81 @@ export default function OwnersOverviewPage() {
       setOverview(overviewData);
       setNotifications(notificationData);
       form.reset();
-      setUploadFeedback('Documento submetido e encaminhado para verificação manual.');
+      setUploadFeedback(t('cards.documents.success'));
     } catch (err) {
-      setUploadFeedback('Falha ao submeter documento. Tente novamente.');
+      setUploadFeedback(t('errors.uploadFailed'));
     }
   };
 
   return (
     <div className="owners-overview">
-      <SectionHeader subtitle="Indicadores financeiros e operacionais actualizados a cada 15 minutos">
-        Overview financeiro do proprietário
+      <SectionHeader subtitle={t('section.subtitle')}>
+        {t('section.title')}
       </SectionHeader>
       {error && <p className="owners-error" role="alert">{error}</p>}
-      {loading && <p className="owners-loading">A carregar dados consolidados…</p>}
+      {loading && <p className="owners-loading">{t('loading')}</p>}
       {!loading && overview && (
         <>
           <ResponsiveGrid columns={3}>
-            <Card title="Taxa de ocupação" description="Últimos 30 dias" accent="info">
+            <Card
+              title={t('cards.occupancy.title')}
+              description={t('cards.occupancy.description')}
+              accent="info"
+            >
               <p className="owners-metric" data-testid="owner-overview-metric-occupancy">
                 {percentFormatter.format(overview.metrics.occupancyRate)}
               </p>
               <p className="owners-muted">
-                {overview.metrics.propertiesActive} propriedades activas
+                {t('cards.occupancy.properties', {
+                  count: integerFormatter.format(overview.metrics.propertiesActive)
+                })}
               </p>
             </Card>
-            <Card title="Receita acumulada" description="Mês corrente" accent="success">
+            <Card
+              title={t('cards.revenue.title')}
+              description={t('cards.revenue.description')}
+              accent="success"
+            >
               <p className="owners-metric" data-testid="owner-overview-metric-revenue">
                 {currencyFormatter.format(overview.metrics.revenueMtd)}
               </p>
               <p className="owners-muted">
-                ADR médio {currencyFormatter.format(overview.metrics.averageDailyRate)}
+                {t('cards.revenue.adr', {
+                  value: currencyFormatter.format(overview.metrics.averageDailyRate)
+                })}
               </p>
             </Card>
-            <Card title="Compliance" description="Revisões KYC e auditorias" accent="warning">
+            <Card
+              title={t('cards.compliance.title')}
+              description={t('cards.compliance.description')}
+              accent="warning"
+            >
               <p className="owners-metric" data-testid="owner-overview-metric-compliance">
-                {overview.complianceStatus === 'clear' ? 'Em conformidade' : 'Revisão pendente'}
+                {overview.complianceStatus === 'clear'
+                  ? t('cards.compliance.clear')
+                  : t('cards.compliance.pending')}
               </p>
               <p className="owners-muted">
-                {overview.pendingVerifications} verificações por concluir · {overview.documentsSubmitted} documentos entregues
+                {t('cards.compliance.summary', {
+                  pending: integerFormatter.format(overview.pendingVerifications),
+                  documents: integerFormatter.format(overview.documentsSubmitted)
+                })}
               </p>
             </Card>
           </ResponsiveGrid>
 
           <div className="owners-panels">
-            <Card title="Preferências de pagamento" description="Actualize dados bancários e frequência de liquidação.">
+            <Card
+              title={t('cards.payout.title')}
+              description={t('cards.payout.description')}
+            >
               {feedback && (
                 <p className="owners-feedback" data-testid="owner-update-feedback">
                   {feedback}
                 </p>
               )}
               <form className="owners-form" onSubmit={handlePayoutSubmit}>
-                <label htmlFor="beneficiary">Beneficiário</label>
+                <label htmlFor="beneficiary">{t('cards.payout.labels.beneficiary')}</label>
                 <input
                   id="beneficiary"
                   name="beneficiary"
@@ -202,7 +236,7 @@ export default function OwnersOverviewPage() {
                   onChange={(event) => handlePayoutChange('beneficiaryName', event.target.value)}
                   required
                 />
-                <label htmlFor="method">Método</label>
+                <label htmlFor="method">{t('cards.payout.labels.method')}</label>
                 <select
                   id="method"
                   name="method"
@@ -210,11 +244,11 @@ export default function OwnersOverviewPage() {
                   onChange={(event) => handlePayoutChange('method', event.target.value)}
                   data-testid="owner-payout-method"
                 >
-                  <option value="bank_transfer">Transferência bancária</option>
-                  <option value="pix">PIX (Brasil)</option>
-                  <option value="paypal">PayPal</option>
+                  <option value="bank_transfer">{t('cards.payout.options.bank_transfer')}</option>
+                  <option value="pix">{t('cards.payout.options.pix')}</option>
+                  <option value="paypal">{t('cards.payout.options.paypal')}</option>
                 </select>
-                <label htmlFor="iban">Últimos 4 dígitos da conta</label>
+                <label htmlFor="iban">{t('cards.payout.labels.lastDigits')}</label>
                 <input
                   id="iban"
                   name="iban"
@@ -224,14 +258,14 @@ export default function OwnersOverviewPage() {
                   pattern="[0-9]{0,4}"
                   placeholder="1234"
                 />
-                <label htmlFor="currency">Moeda</label>
+                <label htmlFor="currency">{t('cards.payout.labels.currency')}</label>
                 <input
                   id="currency"
                   name="currency"
                   value={payoutForm?.currency ?? 'EUR'}
                   onChange={(event) => handlePayoutChange('currency', event.target.value)}
                 />
-                <label htmlFor="threshold">Valor mínimo por pagamento</label>
+                <label htmlFor="threshold">{t('cards.payout.labels.threshold')}</label>
                 <input
                   id="threshold"
                   name="threshold"
@@ -241,38 +275,38 @@ export default function OwnersOverviewPage() {
                   value={payoutForm?.payoutThreshold ?? 0}
                   onChange={(event) => handlePayoutChange('payoutThreshold', event.target.value)}
                 />
-                <label htmlFor="schedule">Periodicidade</label>
+                <label htmlFor="schedule">{t('cards.payout.labels.schedule')}</label>
                 <select
                   id="schedule"
                   name="schedule"
                   value={payoutForm?.schedule ?? 'monthly'}
                   onChange={(event) => handlePayoutChange('schedule', event.target.value)}
                 >
-                  <option value="monthly">Mensal</option>
-                  <option value="weekly">Semanal</option>
+                  <option value="monthly">{t('cards.payout.options.monthly')}</option>
+                  <option value="weekly">{t('cards.payout.options.weekly')}</option>
                 </select>
-                <button type="submit">Guardar preferências</button>
+                <button type="submit">{t('cards.payout.submit')}</button>
               </form>
             </Card>
 
             <Card
-              title="Documentos de verificação"
-              description="Envie contratos sociais, comprovativos bancários ou identidade."
+              title={t('cards.documents.title')}
+              description={t('cards.documents.description')}
             >
               <form className="owners-form" onSubmit={handleDocumentUpload}>
-                <label htmlFor="document-type">Tipo de documento</label>
+                <label htmlFor="document-type">{t('cards.documents.labels.type')}</label>
                 <select
                   id="document-type"
                   value={documentType}
                   onChange={(event) => setDocumentType(event.target.value)}
                 >
-                  <option value="identidade">Identidade</option>
-                  <option value="comprovativo-bancario">Comprovativo bancário</option>
-                  <option value="contrato-social">Contrato social</option>
+                  <option value="identidade">{t('cards.documents.options.identidade')}</option>
+                  <option value="comprovativo-bancario">{t('cards.documents.options.comprovativo-bancario')}</option>
+                  <option value="contrato-social">{t('cards.documents.options.contrato-social')}</option>
                 </select>
-                <label htmlFor="documento">Ficheiro</label>
+                <label htmlFor="documento">{t('cards.documents.labels.file')}</label>
                 <input id="documento" name="documento" type="file" accept="application/pdf,image/*" />
-                <button type="submit">Submeter documento</button>
+                <button type="submit">{t('cards.documents.submit')}</button>
               </form>
               {uploadFeedback && (
                 <p className="owners-feedback" data-testid="owner-document-upload-feedback">
@@ -282,15 +316,21 @@ export default function OwnersOverviewPage() {
             </Card>
           </div>
 
-          <Card title="Alertas e notificações" description="Eventos mais recentes do portal do proprietário.">
+          <Card
+            title={t('cards.notifications.title')}
+            description={t('cards.notifications.description')}
+          >
             <ul className="owners-notifications" data-testid="owner-notifications-list">
-              {notifications.length === 0 && <li>Nenhuma notificação no momento.</li>}
+              {notifications.length === 0 && <li>{t('cards.notifications.empty')}</li>}
               {notifications.map((item) => (
                 <li key={item.id} data-read={item.read}>
                   <p className="owners-notification-title">{item.title}</p>
                   <p className="owners-notification-message">{item.message}</p>
                   <p className="owners-notification-meta">
-                    {new Date(item.createdAt).toLocaleString('pt-PT')} · {item.category}
+                    {t('cards.notifications.meta', {
+                      timestamp: new Date(item.createdAt).toLocaleString(locale),
+                      category: item.category
+                    })}
                   </p>
                 </li>
               ))}
