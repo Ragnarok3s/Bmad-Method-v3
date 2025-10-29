@@ -202,6 +202,31 @@ class PaymentService:
         )
         self.session.add(log)
 
+    def _extract_webhook_amount(self, payload: dict[str, Any], default: int) -> int:
+        value = payload.get("amount_minor") or payload.get("amount")
+        if isinstance(value, (int, float)):
+            return int(value)
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                return default
+        return default
+
+    def _resolve_capture_reference(self, intent: PaymentIntent, payload: dict[str, Any]) -> str:
+        for key in (
+            "capture_reference",
+            "transaction_reference",
+            "provider_reference",
+            "charge_id",
+            "id",
+            "reference",
+        ):
+            value = payload.get(key)
+            if value:
+                return str(value)
+        return intent.provider_reference
+
     def _resolve_provider(self, provider: str) -> PaymentProvider:
         try:
             return PaymentProvider(provider.lower())
@@ -389,9 +414,80 @@ class PaymentService:
                 self._audit(intent.reservation, "payment_failed", f"intent_id={intent.id}")
             elif status in {"captured", "succeeded", "paid"}:
                 intent.status = PaymentIntentStatus.CAPTURED
-                intent.captured_at = intent.captured_at or datetime.now(timezone.utc)
+                processed_at = datetime.now(timezone.utc)
+                intent.captured_at = intent.captured_at or processed_at
                 event.status = PaymentWebhookStatus.PROCESSED
-                event.processed_at = datetime.now(timezone.utc)
+                event.processed_at = processed_at
+                reservation = intent.reservation
+                amount_minor = self._extract_webhook_amount(payload, intent.amount_minor)
+                existing_transaction = next(
+                    (
+                        txn
+                        for txn in intent.transactions
+                        if txn.transaction_type == PaymentTransactionType.CAPTURE
+                        and txn.status == PaymentTransactionStatus.SUCCEEDED
+                    ),
+                    None,
+                )
+                created_transaction = False
+                if not existing_transaction:
+                    transaction = PaymentTransaction(
+                        intent=intent,
+                        transaction_type=PaymentTransactionType.CAPTURE,
+                        status=PaymentTransactionStatus.SUCCEEDED,
+                        amount_minor=amount_minor,
+                        raw_response=payload,
+                        processed_at=processed_at,
+                    )
+                    self.session.add(transaction)
+                    created_transaction = True
+                if reservation:
+                    capture_reference = self._resolve_capture_reference(intent, payload)
+                    reservation.capture_on_check_in = False
+                    invoice = next(
+                        (
+                            inv
+                            for inv in reservation.invoices
+                            if inv.payload
+                            and inv.payload.get("provider_reference") == capture_reference
+                        ),
+                        None,
+                    )
+                    invoice_created = False
+                    if not invoice:
+                        currency_value = payload.get("currency") or intent.currency_code
+                        invoice = Invoice(
+                            reservation_id=reservation.id,
+                            amount_minor=amount_minor,
+                            currency_code=str(currency_value).upper(),
+                            status=InvoiceStatus.ISSUED,
+                            issued_at=processed_at,
+                            payload={"provider_reference": capture_reference},
+                        )
+                        self.session.add(invoice)
+                        record_invoice_issued(
+                            reservation.property_id, amount_minor, invoice.currency_code
+                        )
+                        invoice_created = True
+                    if created_transaction or invoice_created:
+                        record_payment_capture(
+                            resolved_provider.value,
+                            reservation.property_id,
+                            amount_minor,
+                        )
+                        self._audit(
+                            reservation,
+                            "payment_capture_success",
+                            f"intent_id={intent.id};invoice_id={invoice.id if invoice.id else 'pending'}",
+                        )
+                        logger.info(
+                            "payment_capture_success",
+                            extra={
+                                "reservation_id": reservation.id,
+                                "intent_id": intent.id,
+                                "invoice_amount_minor": amount_minor,
+                            },
+                        )
         logger.info(
             "payment_webhook_received",
             extra={
