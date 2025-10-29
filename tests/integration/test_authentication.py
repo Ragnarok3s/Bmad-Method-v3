@@ -67,7 +67,7 @@ def test_mfa_login_and_recovery_flow(tmp_path) -> None:
     # Force session expiration and validate rejection
     with database.session_scope() as session:
         stored_session = session.get(AuthSession, session_id)
-        stored_session.expires_at = datetime.utcnow() - timedelta(seconds=1)
+        stored_session.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
         session.add(stored_session)
 
     expired_attempt = client.post(
