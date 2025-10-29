@@ -632,11 +632,169 @@ class OperationalKPIs(BaseModel):
     ota_sync_backlog: OperationalKPIEntry
 
 
+class CommunicationTemplateTranslationRead(BaseModel):
+    locale: str
+    subject: str | None = None
+    body: str
+
+
+class CommunicationTemplateRead(BaseModel):
+    id: str
+    name: str
+    category: str
+    description: str | None = None
+    channels: list[str]
+    default_locale: str
+    translations: list[CommunicationTemplateTranslationRead]
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime
+    updated_at: datetime
+
+
+class CommunicationMessageContext(BaseModel):
+    reservation_id: int | None = None
+    journey_stage: str | None = None
+    upsell_offer: str | None = None
+    upsell_response: Literal["accepted", "declined", "pending"] | None = None
+    template_id: str | None = None
+    in_reply_to: str | None = None
+    extra: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(extra="allow")
+
+
+class CommunicationMessageRead(BaseModel):
+    id: str
+    template_id: str
+    channel: str
+    direction: Literal["inbound", "outbound"]
+    author: str
+    status: str
+    recipient: str
+    locale: str
+    subject: str | None = None
+    body: str
+    sent_at: datetime
+    context: CommunicationMessageContext | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CommunicationMessageSendRequest(BaseModel):
+    template_id: str
+    channel: Literal["email", "whatsapp"]
+    recipient: str
+    locale: str | None = None
+    variables: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=dict)
+    author: str | None = None
+
+
+class CommunicationInboundMessageRequest(BaseModel):
+    channel: Literal["email", "whatsapp"]
+    sender: str
+    body: str
+    locale: str | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    in_reply_to: str | None = None
+    author: str | None = None
+
+
+class CommunicationDeliverySummaryRead(BaseModel):
+    total: int
+    status_counts: dict[str, int]
+    channels: dict[str, dict[str, int]]
+    average_response_minutes: float | None = None
+    upsell: dict[str, Any] = Field(default_factory=dict)
+    journey_events: dict[str, int] = Field(default_factory=dict)
+    templates: dict[str, int] = Field(default_factory=dict)
+    last_message_at: datetime | None = None
+    inbound_engagement_rate: float | None = None
+    pending_followups: int = 0
+
+
+class GuestJourneySnapshotRequest(BaseModel):
+    reservation_id: int
+    guest_email: EmailStr
+    guest_name: str | None = None
+    preferences: dict[str, Any] = Field(default_factory=dict)
+    journey_stage: str | None = None
+    satisfaction_score: float | None = Field(default=None, ge=0.0, le=10.0)
+    check_in_completed: bool = False
+    upsell_acceptance: float | None = Field(default=None, ge=0.0, le=1.0)
+    response_minutes: float | None = Field(default=None, ge=0.0)
+    response_channel: Literal["email", "whatsapp", "app"] | None = None
+
+
+class GuestJourneySyncResponse(BaseModel):
+    enqueued: int
+    pending: int
+
+
+class GuestJourneySummaryRead(BaseModel):
+    active_journeys: int
+    check_in_completion_rate: float
+    upsell_acceptance_rate: float | None = None
+    average_satisfaction: float | None = None
+    average_response_minutes: float | None = None
+    preferences: dict[str, int] = Field(default_factory=dict)
+    last_updated_at: datetime | None = None
+
+
+class GuestExperienceCheckInStep(BaseModel):
+    id: str
+    title: str
+    description: str | None = None
+    completed: bool
+    completed_at: datetime | None = None
+
+
+class GuestExperienceChatMessage(BaseModel):
+    id: str
+    author: str
+    direction: Literal["inbound", "outbound"]
+    channel: str
+    content: str
+    sent_at: datetime
+    status: str
+    template_id: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GuestExperienceUpsell(BaseModel):
+    id: str
+    title: str
+    description: str
+    price_minor: int | None = None
+    currency: str | None = None
+    status: Literal["recommended", "accepted", "declined", "pending"]
+    conversion_probability: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+class GuestExperienceOverviewRead(BaseModel):
+    reservation: ReservationRead
+    check_in: list[GuestExperienceCheckInStep]
+    chat: list[GuestExperienceChatMessage]
+    upsells: list[GuestExperienceUpsell]
+    preferences: dict[str, Any] = Field(default_factory=dict)
+    satisfaction_score: float | None = None
+    journey_stage: str | None = None
+
+
+class GuestExperienceAnalytics(BaseModel):
+    satisfaction_score: float | None
+    check_in_completion_rate: float
+    avg_response_minutes: float | None
+    upsell_conversion_rate: float | None
+    active_journeys: int
+
+
 class DashboardMetricsRead(BaseModel):
     occupancy: OccupancySnapshot
     nps: NPSSnapshot
     sla: SLAMetricSummary
     operational: OperationalKPIs
+    guest_experience: GuestExperienceAnalytics
 
 
 class PlaybookTemplateBase(BaseModel):

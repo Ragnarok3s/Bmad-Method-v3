@@ -50,6 +50,13 @@ export type DashboardMetrics = {
       status: string | null;
     };
   };
+  guest_experience: {
+    satisfaction_score: number | null;
+    check_in_completion_rate: number;
+    avg_response_minutes: number | null;
+    upsell_conversion_rate: number | null;
+    active_journeys: number;
+  };
 };
 
 type DashboardState =
@@ -76,7 +83,8 @@ function isEmptyPayload(payload: DashboardMetrics) {
   return (
     payload.nps.total_responses === 0 &&
     payload.operational.critical_alerts.total === 0 &&
-    payload.operational.playbook_adoption.total_executions === 0
+    payload.operational.playbook_adoption.total_executions === 0 &&
+    payload.guest_experience.active_journeys === 0
   );
 }
 

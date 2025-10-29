@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 from quality.privacy import enforce_retention_policy, mask_personal_identifiers
 
 from ..analytics import PIPELINE
+from ..automation import get_guest_journey_summary, get_guest_snapshot
+from ..communications import CommunicationChannel, CommunicationMessage, CommunicationService
 from ..config import PaymentGatewaySettings
 from ..domain.models import (
     Agent,
@@ -39,6 +41,11 @@ from ..domain.schemas import (
     CriticalAlertExample,
     CriticalAlertSummary,
     DashboardMetricsRead,
+    GuestExperienceAnalytics,
+    GuestExperienceChatMessage,
+    GuestExperienceCheckInStep,
+    GuestExperienceOverviewRead,
+    GuestExperienceUpsell,
     HousekeepingTaskCollection,
     HousekeepingTaskCreate,
     NPSSnapshot,
@@ -52,12 +59,14 @@ from ..domain.schemas import (
     PlaybookTemplateCreate,
     PropertyCreate,
     ReservationCreate,
+    ReservationRead,
     ReservationUpdateStatus,
     SLAMetricSummary,
     WorkspaceCreate,
 )
 from ..metrics import (
     record_dashboard_alerts,
+    record_dashboard_guest_experience,
     record_dashboard_kpi,
     record_dashboard_nps,
     record_dashboard_occupancy,
@@ -291,11 +300,13 @@ class ReservationService:
         payment_service: PaymentService | None = None,
         payment_settings: PaymentGatewaySettings | None = None,
         tenant_manager: "TenantManager" | None = None,
+        communication_service: CommunicationService | None = None,
     ) -> None:
         self.session = session
         self._payment_service = payment_service
         self._payment_settings = payment_settings
         self._tenant_manager = tenant_manager
+        self._communications = communication_service
 
     def _get_payment_service(self) -> PaymentService | None:
         if self._payment_service:
@@ -525,6 +536,137 @@ class ReservationService:
         )
         self.session.add(log)
 
+    def get_guest_experience_overview(
+        self,
+        reservation_id: int,
+    ) -> GuestExperienceOverviewRead:
+        reservation = self.session.get(Reservation, reservation_id)
+        if not reservation:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reserva não encontrada")
+
+        reservation_payload = ReservationRead.model_validate(reservation, from_attributes=True)
+        history: list[CommunicationMessage] = []
+        if self._communications:
+            history = sorted(
+                self._communications.history_for_reservation(reservation_id),
+                key=lambda message: message.sent_at,
+            )
+
+        snapshot = get_guest_snapshot(reservation_id)
+        preferences = dict(snapshot.preferences) if snapshot else {}
+        journey_stage = snapshot.journey_stage if snapshot else None
+        satisfaction = snapshot.satisfaction_score if snapshot else None
+
+        if journey_stage is None:
+            for message in reversed(history):
+                stage = message.context.get("journey_stage") if message.context else None
+                if stage:
+                    journey_stage = stage
+                    break
+
+        precheck = next(
+            (
+                message
+                for message in history
+                if message.template_id == "guest_prearrival_checkin" and message.direction == "outbound"
+            ),
+            None,
+        )
+
+        identity_verified = bool(
+            preferences.get("identity_verified")
+            or (snapshot and snapshot.journey_stage and "identity" in snapshot.journey_stage)
+        )
+
+        check_in_completed = bool(
+            (snapshot.check_in_completed if snapshot else False)
+            or reservation.status in {ReservationStatus.CHECKED_IN, ReservationStatus.CHECKED_OUT}
+        )
+
+        steps: list[GuestExperienceCheckInStep] = [
+            GuestExperienceCheckInStep(
+                id="digital_precheck",
+                title="Pré check-in digital",
+                description="Formulário de check-in enviado ao hóspede",
+                completed=precheck is not None,
+                completed_at=precheck.sent_at if precheck else None,
+            ),
+            GuestExperienceCheckInStep(
+                id="identity_verification",
+                title="Documentos verificados",
+                description="Validação de identidade concluída",
+                completed=identity_verified,
+                completed_at=(snapshot.updated_at if snapshot and identity_verified else None),
+            ),
+            GuestExperienceCheckInStep(
+                id="arrival",
+                title="Check-in concluído",
+                description="Hóspede com acesso liberado",
+                completed=check_in_completed,
+                completed_at=reservation.check_in if check_in_completed else None,
+            ),
+        ]
+
+        chat_timeline: list[GuestExperienceChatMessage] = [
+            GuestExperienceChatMessage(
+                id=message.id,
+                author=message.author,
+                direction=message.direction,
+                channel=message.channel.value,
+                content=message.body,
+                sent_at=message.sent_at,
+                status=message.status.value,
+                template_id=None if message.template_id == "inbound.freeform" else message.template_id,
+                metadata=message.context or {},
+            )
+            for message in history
+        ]
+
+        upsell_map: dict[str, GuestExperienceUpsell] = {}
+        for message in history:
+            context = message.context or {}
+            offer_code = context.get("upsell_offer")
+            if not offer_code:
+                continue
+            metadata = message.metadata.get("variables", {}) if message.metadata else {}
+            key = offer_code
+            if message.direction == "outbound":
+                upsell_map[key] = GuestExperienceUpsell(
+                    id=f"{offer_code}-{message.id}",
+                    title=str(metadata.get("title") or offer_code.replace("_", " ").title()),
+                    description=str(metadata.get("description") or message.body),
+                    price_minor=metadata.get("price_minor"),
+                    currency=metadata.get("currency_code"),
+                    status="recommended",
+                    conversion_probability=metadata.get("conversion_probability"),
+                )
+            else:
+                response = context.get("upsell_response")
+                if key not in upsell_map:
+                    upsell_map[key] = GuestExperienceUpsell(
+                        id=f"{offer_code}-{message.id}",
+                        title=offer_code.replace("_", " ").title(),
+                        description=message.body,
+                        status="pending",
+                        conversion_probability=None,
+                    )
+                if response == "accepted":
+                    upsell_map[key].status = "accepted"
+                elif response == "declined":
+                    upsell_map[key].status = "declined"
+
+        upsells = sorted(upsell_map.values(), key=lambda item: item.title)
+
+        return GuestExperienceOverviewRead(
+            reservation=reservation_payload,
+            check_in=steps,
+            chat=chat_timeline,
+            upsells=upsells,
+            preferences=preferences,
+            satisfaction_score=satisfaction,
+            journey_stage=journey_stage,
+        )
+
 
 class PlaybookTemplateService:
     def __init__(self, session: Session) -> None:
@@ -707,8 +849,9 @@ class OTASynchronizer:
 class OperationalMetricsService:
     """Calcula métricas agregadas para o dashboard operacional."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, communications: CommunicationService | None = None) -> None:
         self.session = session
+        self._communications = communications
 
     def get_overview(self, target_date: date | None = None) -> DashboardMetricsRead:
         PIPELINE.sync(self.session)
@@ -719,6 +862,7 @@ class OperationalMetricsService:
         nps = self._calculate_nps()
         sla = self._calculate_sla_summary()
         operational = self._calculate_operational_kpis(alerts, playbook)
+        guest = self._calculate_guest_experience_metrics()
 
         record_dashboard_occupancy(
             occupancy.occupancy_rate,
@@ -743,6 +887,14 @@ class OperationalMetricsService:
             operational.ota_sync_backlog.value,
             operational.ota_sync_backlog.unit,
         )
+        if guest.satisfaction_score is not None:
+            record_dashboard_guest_experience("satisfaction_score", guest.satisfaction_score)
+        record_dashboard_guest_experience("check_in_completion_rate", guest.check_in_completion_rate)
+        if guest.avg_response_minutes is not None:
+            record_dashboard_guest_experience("avg_response_minutes", guest.avg_response_minutes)
+        if guest.upsell_conversion_rate is not None:
+            record_dashboard_guest_experience("upsell_conversion_rate", guest.upsell_conversion_rate)
+        record_dashboard_guest_experience("active_journeys", float(guest.active_journeys))
 
         logger.info(
             "dashboard_metrics_computed",
@@ -753,6 +905,7 @@ class OperationalMetricsService:
                 "playbook_adoption_rate": playbook.adoption_rate,
                 "nps_score": nps.score,
                 "sla_breached": sla.breached,
+                "guest_satisfaction": guest.satisfaction_score,
             },
         )
 
@@ -761,6 +914,7 @@ class OperationalMetricsService:
             nps=nps,
             sla=sla,
             operational=operational,
+            guest_experience=guest,
         )
 
     def _calculate_occupancy(self, target_date: date) -> OccupancySnapshot:
@@ -900,6 +1054,38 @@ class OperationalMetricsService:
             completed=int(completed_executions),
             adoption_rate=round(adoption_rate, 4),
             active_properties=int(active_properties),
+        )
+
+    def _calculate_guest_experience_metrics(self) -> GuestExperienceAnalytics:
+        summary = get_guest_journey_summary()
+        delivery = self._communications.delivery_summary() if self._communications else {}
+
+        satisfaction = summary.get("average_satisfaction")
+        check_in_rate = summary.get("check_in_completion_rate", 0.0)
+        active = summary.get("active_journeys", 0)
+
+        response_minutes = delivery.get("average_response_minutes") if isinstance(delivery, dict) else None
+        if response_minutes is None:
+            response_minutes = summary.get("average_response_minutes")
+        if response_minutes is not None:
+            response_minutes = round(float(response_minutes), 2)
+
+        upsell_info = delivery.get("upsell", {}) if isinstance(delivery, dict) else {}
+        upsell_rate = upsell_info.get("conversion_rate")
+        if upsell_rate is None:
+            upsell_rate = summary.get("upsell_acceptance_rate")
+        if upsell_rate is not None:
+            upsell_rate = round(float(upsell_rate), 4)
+
+        if satisfaction is not None:
+            satisfaction = round(float(satisfaction), 2)
+
+        return GuestExperienceAnalytics(
+            satisfaction_score=satisfaction,
+            check_in_completion_rate=round(float(check_in_rate), 4),
+            avg_response_minutes=response_minutes,
+            upsell_conversion_rate=upsell_rate,
+            active_journeys=int(active),
         )
 
     def _calculate_nps(self) -> NPSSnapshot:
