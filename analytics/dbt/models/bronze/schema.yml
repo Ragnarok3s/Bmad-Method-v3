@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: kafka_raw
+    schema: analytics_raw
+    tables:
+      - name: reservations
+        description: "Mensagens brutas de reservas em Kafka." 
+
+models:
+  - name: bronze_reservations
+    description: "Camada bronze derivada das mensagens Kafka/Delta."
+    columns:
+      - name: reservation_id
+        tests:
+          - not_null
+          - unique
+      - name: status
+        tests:
+          - accepted_values:
+              values: ["booked", "cancelled", "completed"]
+      - name: revenue
+        tests:
+          - not_null

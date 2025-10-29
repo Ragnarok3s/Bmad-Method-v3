@@ -18,3 +18,6 @@ fi
 
 python3 "$ROOT_DIR/scripts/verify_quality_gates.py"
 python3 "$ROOT_DIR/scripts/verify_observability_gates.py" --artifact-dir "$OBSERVABILITY_DIR"
+
+echo "[quality-gates] Executando Great Expectations"
+python3 "$ROOT_DIR/scripts/validate_data_quality.py"

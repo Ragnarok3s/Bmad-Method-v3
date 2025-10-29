@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: gold_executive_metrics
+    description: "Visão executiva com indicadores consolidados para dashboards."
+    columns:
+      - name: property_id
+        tests:
+          - not_null
+      - name: channel
+        tests:
+          - not_null
+      - name: conversion_rate
+        tests:
+          - not_null
+      - name: updated_at
+        tests:
+          - not_null
