@@ -68,7 +68,7 @@ export class IncidentRepository {
     await db.runAsync(
       `INSERT OR REPLACE INTO incident_queue (
         id, owner_id, incident, severity, reported_by, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         queued.id,
         queued.ownerId,
