@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timezone
 
 from enum import Enum
+from typing import Iterable
 
 from sqlalchemy import (
     Boolean,
@@ -102,6 +103,59 @@ class Agent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="assigned_agent")
+    credentials: Mapped["AgentCredential | None"] = relationship(
+        "AgentCredential", back_populates="agent", uselist=False, cascade="all, delete-orphan"
+    )
+    sessions: Mapped[list["AuthSession"]] = relationship(
+        "AuthSession", back_populates="agent", cascade="all, delete-orphan"
+    )
+
+
+class AgentCredential(Base):
+    __tablename__ = "agent_credentials"
+
+    agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), primary_key=True)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    mfa_secret: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    mfa_enrolled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    _recovery_codes: Mapped[str] = mapped_column("recovery_codes", Text, nullable=False, default="[]")
+    failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    agent: Mapped[Agent] = relationship("Agent", back_populates="credentials")
+
+    @property
+    def recovery_codes(self) -> list[str]:
+        try:
+            data = json.loads(self._recovery_codes or "[]")
+        except json.JSONDecodeError:
+            return []
+        return [str(item) for item in data if isinstance(item, str)]
+
+    @recovery_codes.setter
+    def recovery_codes(self, values: Iterable[str]) -> None:
+        self._recovery_codes = json.dumps([str(item) for item in values])
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    last_active_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(160), nullable=True)
+
+    agent: Mapped[Agent] = relationship("Agent", back_populates="sessions")
 
 
 class PermissionDefinition(Base):
