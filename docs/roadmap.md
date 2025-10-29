@@ -10,6 +10,7 @@ Este documento resume o estado de readiness das iniciativas prioritárias e apon
 | BL-01 | Onboarding | UX hand-off, APIs de cadastro, smoke tests Sprint 1 | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-01-onboarding) |
 | BL-04 | Observabilidade | Dashboards seed, SLAs operacionais, alertas revisados com Platform Engineering | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-04-observabilidade-fundacional) |
 | BL-05 | Governança | Matriz STRIDE identitária, runbooks de acesso, owners confirmados | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-05-governança-perfis-básicos) |
+| BL-PAY01 | Pagamentos PCI Ready | Drivers `services/payments/gateways` (Stripe/Adyen), cofre de tokens (`SecureTokenVault`), suíte de testes PCI | [Controles PCI](compliance/controles.md#pci-dss-—-tokenização-e-fluxo-de-pagamentos) |
 
 ## Responsáveis e Próximos Marcos
 - **Product Owner (Ana Ribeiro)**: mantém prioridade dos épicos BL-HK01/02 e aprova alterações via RFCs `RFC-2024-07-22-HK-SYNC` e `RFC-2024-07-22-PARTNER-WEBHOOKS`.
@@ -20,3 +21,4 @@ Este documento resume o estado de readiness das iniciativas prioritárias e apon
 1. Atualizar quadro de planning com owners e dependências confirmadas (ver `comms/sprint-1-planning.md`).
 2. Validar execução dos runbooks de monitoramento e onboarding com squads (owners listados acima).
 3. Resolver pendências documentadas nas RFCs antes da cerimônia de kick-off.
+4. Executar `scripts/payments/run_reconciliation.py` com gateways homologados para validar tokenização + reconciliação antes do go-live.

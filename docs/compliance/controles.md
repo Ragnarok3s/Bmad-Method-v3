@@ -29,6 +29,14 @@ materializam o requisito, bem como às evidências geradas automaticamente.
 | A.8.16 – Monitoramento de atividades | Instrumentação OTEL com rastreabilidade de controles. | `services/core/observability.py` (`mark_signal_event`, `register_control_checkpoint`, `get_compliance_snapshot`). | Artefatos `compliance-report-<AAAA-MM>.json` e alertas de integridade dos sinais OTEL.
 | A.12.1 – Registro e monitorização de eventos | Correlação entre eventos de segurança e observabilidade. | Integração entre `record_audit_event`, `register_control_checkpoint` e pipeline `compliance-checks.yml`. | Scripts geram `hashes.json` de arquivos críticos e disponibilizam no relatório mensal.
 
+## PCI DSS — Tokenização e Fluxo de Pagamentos
+
+| Requisito | Controle | Implementação | Evidências |
+| --- | --- | --- | --- |
+| 3.4 – Proteção de PAN e dados sensíveis | Tokenização isolada com cofre lógico e mascaramento obrigatório. | `services/payments/api.py` (`PaymentGatewayService.tokenize`) delega para drivers e persiste somente referências mascaradas via `services/payments/storage.py` (`SecureTokenVault`). | Testes `tests/unit/test_payment_gateway_service.py::test_tokenization_stores_masked_token` e relatório do script `scripts/payments/run_reconciliation.py` demonstrando que apenas tokens mascarados são emitidos.
+| 3.5 – Gestão de chaves e segregação | Cofre de tokens com chave HMAC dedicada e rotação programática. | `SecureTokenVault` exige chave >=16 bytes e expõe `verify_checksum`/`purge` para rodízio; instanciado com segredos distintos por ambiente. | Evidência via testes de integração `tests/integration/test_payments_gateway.py` (checagem de net volume + checksum) e checklist de execução `scripts/payments/run_reconciliation.py --skip-capture`.
+| 10.8 – Monitoramento de integrações de pagamento | Drivers e webhooks autenticados por HMAC com trilha de auditoria. | `services/payments/gateways/memory.py` (`validate_webhook`, `parse_webhook`) expõe contrato para gateways reais; `services/payments/webhooks.py` registra handlers e valida assinatura. | Teste unitário `tests/unit/test_payment_gateway_service.py::test_webhook_dispatch_validates_signature` comprova validação de assinatura.
+
 ## Controles Complementares
 
 1. **Dashboards de Conformidade:**
