@@ -5,22 +5,51 @@ import { useOffline } from '@/components/offline/OfflineContext';
 import { OfflineBanner } from '@/components/offline/OfflineBanner';
 import { MainNav } from '@/components/navigation/MainNav';
 import { TourDialog } from '@/components/tour/TourDialog';
-import { TourLauncher } from '@/components/tour/TourLauncher';
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long'
+});
+
+const TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
+  hour: '2-digit',
+  minute: '2-digit'
+});
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const { isOffline } = useOffline();
+  const now = new Date();
+  const todayLabel = DATE_FORMATTER.format(now);
+  const timeLabel = TIME_FORMATTER.format(now);
 
   return (
     <div className="shell" data-offline={isOffline}>
       <header className="shell__header" role="banner">
-        <div>
-          <p className="shell__product">Bmad Method v3 · Hospitality</p>
-          <h1>Operações conectadas para equipas hoteleiras</h1>
-          <p className="shell__subtitle">
-            Monitorize agentes, automatize playbooks e sincronize tarefas mesmo offline.
+        <div className="shell__brand">
+          <span className="shell__logo" aria-hidden="true">
+            BM
+          </span>
+          <div>
+            <p className="shell__product">Bmad Local Stays</p>
+            <h1>Centro operacional para alojamentos locais</h1>
+          </div>
+        </div>
+        <div className="shell__context" aria-live="polite">
+          <p className="shell__context-label">Portefólio ativo</p>
+          <p className="shell__context-title">Porto Riverside Collection</p>
+          <p className="shell__context-meta">
+            {todayLabel} · {timeLabel}
           </p>
         </div>
-        <TourLauncher />
+        <div className="shell__actions">
+          <button type="button" className="shell__action shell__action--primary">
+            Sincronizar OTAs
+          </button>
+          <button type="button" className="shell__action shell__action--secondary">
+            Registar incidente
+          </button>
+        </div>
       </header>
       <OfflineBanner />
       <div className="shell__body">
@@ -39,25 +68,97 @@ export function AppChrome({ children }: { children: ReactNode }) {
           padding: var(--space-5) var(--space-6);
         }
         .shell__header {
-          display: flex;
-          justify-content: space-between;
+          display: grid;
+          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
           align-items: center;
           gap: var(--space-5);
-          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.9));
-          color: #fff;
-          padding: var(--space-5);
+          background: #fff;
+          padding: var(--space-4) var(--space-5);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
+          border: 1px solid rgba(11, 60, 93, 0.08);
+        }
+        .shell__brand {
+          display: flex;
+          align-items: center;
+          gap: var(--space-4);
+        }
+        .shell__logo {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.8));
+          color: #fff;
         }
         .shell__product {
           margin: 0 0 var(--space-2) 0;
           letter-spacing: 0.08em;
           text-transform: uppercase;
           font-weight: 600;
+          color: var(--color-neutral-2);
         }
-        .shell__subtitle {
-          margin: var(--space-3) 0 0;
-          max-width: 38rem;
+        .shell__brand h1 {
+          margin: 0;
+          font-size: 1.5rem;
+          color: var(--color-deep-blue);
+        }
+        .shell__context {
+          display: grid;
+          gap: var(--space-1);
+          justify-items: start;
+        }
+        .shell__context-label {
+          margin: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          font-size: 0.75rem;
+          color: var(--color-neutral-2);
+        }
+        .shell__context-title {
+          margin: 0;
+          font-weight: 600;
+          font-size: 1.125rem;
+          color: var(--color-deep-blue);
+        }
+        .shell__context-meta {
+          margin: 0;
+          color: var(--color-neutral-2);
+        }
+        .shell__actions {
+          display: inline-flex;
+          gap: var(--space-3);
+          flex-wrap: wrap;
+          justify-content: flex-end;
+        }
+        .shell__action {
+          font-weight: 600;
+          border-radius: var(--radius-sm);
+          padding: var(--space-2) var(--space-4);
+          cursor: pointer;
+          border: 1px solid transparent;
+          transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+        }
+        .shell__action--primary {
+          background: var(--color-deep-blue);
+          color: #fff;
+        }
+        .shell__action--primary:hover,
+        .shell__action--primary:focus-visible {
+          background: #07273b;
+        }
+        .shell__action--secondary {
+          background: rgba(46, 196, 182, 0.12);
+          color: var(--color-deep-blue);
+          border-color: rgba(46, 196, 182, 0.35);
+        }
+        .shell__action--secondary:hover,
+        .shell__action--secondary:focus-visible {
+          background: rgba(46, 196, 182, 0.2);
         }
         .shell__body {
           display: grid;
@@ -75,6 +176,13 @@ export function AppChrome({ children }: { children: ReactNode }) {
           .shell {
             padding: var(--space-5);
           }
+          .shell__header {
+            grid-template-columns: minmax(0, 1fr);
+            justify-items: stretch;
+          }
+          .shell__actions {
+            justify-content: flex-start;
+          }
           .shell__body {
             grid-template-columns: minmax(0, 1fr);
           }
@@ -83,9 +191,12 @@ export function AppChrome({ children }: { children: ReactNode }) {
           .shell {
             padding: var(--space-4);
           }
-          .shell__header {
-            flex-direction: column;
-            align-items: flex-start;
+          .shell__actions {
+            width: 100%;
+          }
+          .shell__actions .shell__action {
+            flex: 1 1 auto;
+            text-align: center;
           }
         }
       `}</style>
