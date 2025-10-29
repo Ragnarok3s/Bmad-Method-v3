@@ -86,14 +86,27 @@ def _match_filter(record: Any, filter_: QueryFilter) -> bool:
         return value not in filter_.values
     if filter_.operator == "in":
         return value in filter_.values
-    if filter_.operator == "gte":
-        return value >= filter_.values[0]
-    if filter_.operator == "lte":
-        return value <= filter_.values[0]
-    if filter_.operator == "gt":
-        return value > filter_.values[0]
-    if filter_.operator == "lt":
-        return value < filter_.values[0]
+    if filter_.operator in {"gte", "lte", "gt", "lt"}:
+        if not filter_.values:
+            raise ValueError(
+                f"filtro '{filter_.field}__{filter_.operator}' requer ao menos um valor"
+            )
+        comparison = filter_.values[0]
+        if value is None or comparison is None:
+            return False
+        try:
+            if filter_.operator == "gte":
+                return value >= comparison
+            if filter_.operator == "lte":
+                return value <= comparison
+            if filter_.operator == "gt":
+                return value > comparison
+            if filter_.operator == "lt":
+                return value < comparison
+        except TypeError as error:
+            raise ValueError(
+                f"valor de filtro inválido para '{filter_.field}': {comparison}"
+            ) from error
     if filter_.operator == "contains":
         return any(str(token).lower() in str(value).lower() for token in filter_.values)
     raise ValueError(f"operador de filtro não suportado: {filter_.operator}")
