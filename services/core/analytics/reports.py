@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from io import StringIO
 from typing import Dict, Sequence
@@ -98,7 +98,7 @@ def generate_kpi_report(
         return KPIReport(
             period_start=period_start,
             period_end=period_end,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
             items=[],
             properties_covered=0,
             total_reservations=0,
@@ -221,7 +221,7 @@ def generate_kpi_report(
     return KPIReport(
         period_start=period_start,
         period_end=period_end,
-        generated_at=datetime.utcnow(),
+        generated_at=datetime.now(timezone.utc),
         items=rows,
         properties_covered=len(property_map),
         total_reservations=total_reservations,
