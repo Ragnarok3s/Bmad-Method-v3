@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 from fastapi import HTTPException, status
@@ -55,7 +55,7 @@ class InventoryReconciliationService:
     def mark_for_manual_review(self, item_id: int) -> InventoryReconciliationQueue:
         item = self._get_item(item_id)
         item.status = ReconciliationStatus.IN_REVIEW
-        item.updated_at = datetime.utcnow()
+        item.updated_at = datetime.now(timezone.utc)
         self.session.add(item)
         return item
 
@@ -72,7 +72,7 @@ class InventoryReconciliationService:
             item.payload = json.dumps(decoded, ensure_ascii=False, sort_keys=True)
         item.status = ReconciliationStatus.RESOLVED
         item.next_action_at = None
-        item.updated_at = datetime.utcnow()
+        item.updated_at = datetime.now(timezone.utc)
         self.session.add(item)
         return item
 
@@ -84,7 +84,7 @@ class InventoryReconciliationService:
         scheduled_retry_in_minutes: int | None = None,
     ) -> InventoryReconciliationQueue:
         item = self._get_item(item_id)
-        item.last_attempt_at = datetime.utcnow()
+        item.last_attempt_at = datetime.now(timezone.utc)
         item.attempts += 1
         if success:
             item.status = ReconciliationStatus.RESOLVED
@@ -92,8 +92,10 @@ class InventoryReconciliationService:
         else:
             item.status = ReconciliationStatus.CONFLICT
             if scheduled_retry_in_minutes:
-                item.next_action_at = datetime.utcnow() + timedelta(minutes=scheduled_retry_in_minutes)
-        item.updated_at = datetime.utcnow()
+                item.next_action_at = datetime.now(timezone.utc) + timedelta(
+                    minutes=scheduled_retry_in_minutes
+                )
+        item.updated_at = datetime.now(timezone.utc)
         self.session.add(item)
         return item
 
@@ -122,7 +124,7 @@ class InventoryReconciliationService:
         return list(self.session.execute(query).scalars())
 
     def due_items(self, reference: datetime | None = None) -> list[InventoryReconciliationQueue]:
-        reference = reference or datetime.utcnow()
+        reference = reference or datetime.now(timezone.utc)
         query = (
             select(InventoryReconciliationQueue)
             .where(InventoryReconciliationQueue.status == ReconciliationStatus.PENDING)

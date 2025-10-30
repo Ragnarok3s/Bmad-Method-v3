@@ -23,6 +23,12 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _ensure_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _pad_base32(secret: str) -> str:
     padding = (-len(secret)) % 8
     if padding:
@@ -90,7 +96,7 @@ class AuthenticationService:
         credential.recovery_codes = [self._hash_recovery_code(code) for code in codes]
         credential.failed_attempts = 0
         credential.locked_until = None
-        credential.updated_at = self._now_pair()[1]
+        credential.updated_at = _utcnow()
         self.session.add(credential)
         self._persist_audit(
             "auth_mfa_enrolled",
@@ -121,8 +127,8 @@ class AuthenticationService:
             )
             raise AuthenticationError(status.HTTP_401_UNAUTHORIZED, "Credenciais inválidas")
 
-        now, now_naive = self._now_pair()
-        if credential.locked_until and credential.locked_until > now_naive:
+        now = _utcnow()
+        if credential.locked_until and _ensure_utc(credential.locked_until) > now:
             self._persist_audit(
                 "auth_login_blocked",
                 agent_id=agent.id,
@@ -145,7 +151,7 @@ class AuthenticationService:
                 "max": self._max_attempts,
             }
             if credential.failed_attempts >= self._max_attempts:
-                credential.locked_until = now_naive + self._lockout_window
+                credential.locked_until = now + self._lockout_window
                 record_critical_alert(
                     "auth.account_locked",
                     "Conta bloqueada por tentativas inválidas",
@@ -181,7 +187,7 @@ class AuthenticationService:
                 detail={"email": agent.email, "mfa_required": True},
             )
         else:
-            credential.last_login_at = now_naive
+            credential.last_login_at = now
             self.session.add(credential)
             self._persist_audit(
                 "auth_login_success",
@@ -200,8 +206,9 @@ class AuthenticationService:
         if not session_obj or session_obj.revoked_at is not None:
             raise AuthenticationError(status.HTTP_404_NOT_FOUND, "Sessão não encontrada")
 
-        now, now_naive = self._now_pair()
-        if session_obj.expires_at <= now_naive:
+        now = _utcnow()
+        expires_at = _ensure_utc(session_obj.expires_at)
+        if expires_at <= now:
             self._persist_audit(
                 "auth_session_expired",
                 agent_id=session_obj.agent_id,
@@ -233,9 +240,9 @@ class AuthenticationService:
             )
             raise AuthenticationError(status.HTTP_401_UNAUTHORIZED, "Código inválido")
 
-        session_obj.mfa_verified_at = now_naive
-        session_obj.last_active_at = now_naive
-        credential.last_login_at = now_naive
+        session_obj.mfa_verified_at = now
+        session_obj.last_active_at = now
+        credential.last_login_at = now
         self.session.add_all([session_obj, credential])
         self._persist_audit(
             "auth_login_success",
@@ -252,7 +259,7 @@ class AuthenticationService:
         credential = self._get_or_create_credentials(agent)
         codes = self.generate_recovery_codes()
         credential.recovery_codes = [self._hash_recovery_code(code) for code in codes]
-        credential.updated_at = self._now_pair()[1]
+        credential.updated_at = _utcnow()
         self.session.add(credential)
         record_critical_alert(
             "auth.recovery_codes_issued",
@@ -294,7 +301,7 @@ class AuthenticationService:
             mfa_verified=True,
             method="recovery",
         )
-        credential.last_login_at = self._now_pair()[1]
+        credential.last_login_at = _utcnow()
         self.session.add(credential)
         self._persist_audit(
             "auth_recovery_completed",
@@ -306,10 +313,6 @@ class AuthenticationService:
     # endregion --------------------------------------------------------
 
     # region helpers ---------------------------------------------------
-    def _now_pair(self) -> tuple[datetime, datetime]:
-        now = _utcnow()
-        return now, now.replace(tzinfo=None)
-
     def _lookup_agent(self, email: str) -> Agent:
         query: Select[Agent] = select(Agent).where(Agent.email == email)
         agent = self.session.execute(query).scalar_one_or_none()
@@ -340,16 +343,16 @@ class AuthenticationService:
         mfa_verified: bool,
         method: str,
     ) -> AuthSession:
-        now, now_naive = self._now_pair()
-        expires_at = now_naive + self._session_timeout
+        now = _utcnow()
+        expires_at = now + self._session_timeout
         session_id = secrets.token_urlsafe(32)
         auth_session = AuthSession(
             id=session_id,
             agent_id=agent.id,
-            created_at=now_naive,
-            last_active_at=now_naive,
+            created_at=now,
+            last_active_at=now,
             expires_at=expires_at,
-            mfa_verified_at=now_naive if mfa_verified else None,
+            mfa_verified_at=now if mfa_verified else None,
             ip_address=ip_address,
             user_agent=user_agent[:160] if user_agent else None,
         )
@@ -375,7 +378,7 @@ class AuthenticationService:
             action=action,
             agent_id=agent_id,
             detail=json.dumps(detail),
-            created_at=_utcnow().replace(tzinfo=None),
+            created_at=_utcnow(),
         )
         self.session.add(payload)
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -45,10 +45,10 @@ class DeltaLakeWriter:
                 table_path=self._config.table_path,
                 records_written=0,
                 partitions_touched=(),
-                updated_at=datetime.utcnow(),
+                updated_at=datetime.now(timezone.utc),
             )
 
-        timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
         file_path = self._config.table_path / f"batch_{timestamp}.jsonl"
         with file_path.open("w", encoding="utf-8") as handler:
             for record in batch:
@@ -60,7 +60,7 @@ class DeltaLakeWriter:
             table_path=self._config.table_path,
             records_written=len(batch),
             partitions_touched=partitions,
-            updated_at=datetime.utcnow(),
+            updated_at=datetime.now(timezone.utc),
         )
 
     def _resolve_partitions(self, batch: Sequence[dict]) -> Sequence[str]:

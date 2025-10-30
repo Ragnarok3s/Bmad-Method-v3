@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Sequence
 
 from .delta import DeltaLakeWriter, DeltaWriteResult
@@ -40,7 +40,7 @@ class StreamingIngestionPipeline:
             total_messages=len(batch),
             committed_offsets=committed,
             delta_result=delta_result,
-            completed_at=datetime.utcnow(),
+            completed_at=datetime.now(timezone.utc),
         )
 
     def _commit_offsets(self, batch: Sequence[KafkaMessage]) -> dict[int, int]:
