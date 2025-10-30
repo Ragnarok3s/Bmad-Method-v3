@@ -7,7 +7,7 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
 
 1. **Validar Exporters**
    - Backend: confirmar variáveis `CORE_OTEL_*` no ambiente (collector gRPC `4317`).
-   - Frontend: confirmar `NEXT_PUBLIC_OTEL_*` expostas pelo `next.config.mjs` (collector HTTP `4318`).
+   - Frontend: confirmar `NEXT_PUBLIC_ENABLE_TELEMETRY` habilitada e `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` configurada quando a exportação OTLP for necessária; se ausente, apenas instrumentação local (sem exportadores) será registrada.
    - API Core: verificar `GET /health/otel` com `status=ok` e `signals.metrics.last_event` preenchido.
 2. **Confirmar Receção de Dados**
    - Métricas: painel Grafana `bmad-agents-001` (latência P95, throughput, erro 5xx) e `bmad-ops-002` (reservas, housekeeping, engajamento web). Utilize `scripts/run-quality-gates.sh` para exportar evidências automaticamente.【F:scripts/run-quality-gates.sh†L1-L20】
@@ -22,7 +22,7 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
 
 1. **Collector Inacessível**
    - Backend: conferir reachability `nc <collector-host> 4317`; habilitar logs debug em `CORE_OTEL_LOGS_ENABLED`.
-   - Frontend: validar se `TelemetryProvider` foi carregado (console `TelemetryProvider configured`).
+   - Frontend: validar se `TelemetryProvider` foi carregado (console `TelemetryProvider configured`) e observar mensagens `console.info` indicando telemetria desativada (`NEXT_PUBLIC_ENABLE_TELEMETRY=false`) ou ausência de endpoint (`NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` vazio).
    - API Core: `GET /health/otel` deve retornar `status=degraded`; avaliar `collector.endpoint` retornado.
 2. **Métricas Ausentes**
    - Backend: revisar contador `bmad_core_reservations_confirmed_total` em Prometheus (`increase(...[5m])`).
