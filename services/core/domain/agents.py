@@ -6,7 +6,7 @@ from enum import Enum
 from math import ceil
 from typing import Iterable, Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .schemas import PaginationMeta
 
@@ -22,8 +22,7 @@ class AgentFilterOption(BaseModel):
     label: str
     count: int
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 class AgentAvailabilityFilterOption(AgentFilterOption):
@@ -34,8 +33,7 @@ class AgentCatalogFilters(BaseModel):
     competencies: list[AgentFilterOption] = Field(default_factory=list)
     availability: list[AgentAvailabilityFilterOption] = Field(default_factory=list)
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 class AgentCatalogItem(BaseModel):
@@ -52,8 +50,7 @@ class AgentCatalogItem(BaseModel):
     integrations: list[str] = Field(default_factory=list)
     languages: list[str] = Field(default_factory=list)
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 class AgentCatalogPage(BaseModel):
@@ -61,8 +58,7 @@ class AgentCatalogPage(BaseModel):
     pagination: PaginationMeta
     available_filters: AgentCatalogFilters
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 @dataclass(frozen=True)

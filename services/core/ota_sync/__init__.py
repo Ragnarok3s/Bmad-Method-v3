@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -44,7 +44,7 @@ class OTAIngestionContract(BaseModel):
     received_at: datetime
     payload: dict[str, Any]
 
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     def validate_times(cls, values: dict[str, Any]) -> dict[str, Any]:
         emitted = values.get("emitted_at")
         received = values.get("received_at")
@@ -52,8 +52,7 @@ class OTAIngestionContract(BaseModel):
             raise ValueError("received_at deve ser posterior a emitted_at")
         return values
 
-    class Config:
-        anystr_strip_whitespace = True
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class OTAReturnContract(BaseModel):
@@ -66,8 +65,7 @@ class OTAReturnContract(BaseModel):
     processed_at: datetime
     payload: dict[str, Any]
 
-    class Config:
-        anystr_strip_whitespace = True
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class OTASyncService:

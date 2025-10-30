@@ -115,6 +115,9 @@ def test_role_assignment_lifecycle(tmp_path) -> None:
     assert listing.status_code == 200
     items = listing.json()
     assert any(item["agent_id"] == agent_id and item["role"] == AgentRole.HOUSEKEEPING.value for item in items)
+    assigned = next(item for item in items if item["agent_id"] == agent_id)
+    assert assigned["agent_email"] == "mario@example.com"
+    assert assigned["assigned_at"]
 
     updated = client.put(
         f"/tenants/{tenant_slug}/roles/{agent_id}",
@@ -126,6 +129,9 @@ def test_role_assignment_lifecycle(tmp_path) -> None:
     listing_after_update = client.get(f"/tenants/{tenant_slug}/roles")
     assert listing_after_update.status_code == 200
     assert any(item["role"] == AgentRole.PROPERTY_MANAGER.value for item in listing_after_update.json())
+    updated_record = next(item for item in listing_after_update.json() if item["agent_id"] == agent_id)
+    assert updated_record["agent_email"] == "mario@example.com"
+    assert updated_record["updated_at"]
 
     revoked = client.delete(f"/tenants/{tenant_slug}/roles/{agent_id}")
     assert revoked.status_code == 204
