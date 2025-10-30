@@ -14,10 +14,11 @@ describe('MainNav', () => {
       render(<MainNav />);
     });
 
-    expect(screen.getByRole('navigation', { name: 'Módulos principais' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument();
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(16);
-    expect(links.map((link) => link.textContent)).toEqual([
+    const linkLabels = links.map((link) => link.querySelector('.main-nav__label')?.textContent?.trim());
+    expect(linkLabels).toEqual([
       'Dashboard',
       'Reservas',
       'Calendário',
@@ -25,16 +26,16 @@ describe('MainNav', () => {
       'Faturação',
       'Portal Proprietários',
       'Onboarding',
+      'App Housekeeping',
+      'App Gestor',
       'Catálogo de Agentes',
       'Playbooks Automatizados',
       'Recomendações',
       'Observabilidade',
       'Governança',
       'Analytics',
-      'Base de Conhecimento',
-      'App Housekeeping',
-      'App Gestor'
+      'Base de Conhecimento'
     ]);
-    expect(screen.getByRole('link', { name: 'Housekeeping' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: /^Housekeeping/ })).toHaveAttribute('aria-current', 'page');
   });
 });

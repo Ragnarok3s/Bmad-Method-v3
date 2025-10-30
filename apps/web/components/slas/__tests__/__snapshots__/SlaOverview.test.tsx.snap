@@ -11,9 +11,20 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
       role="alert"
     >
       <span
-        class="jsx-2409091550 status-badge"
+        class="jsx-3638802884 status-badge"
+        data-variant="critical"
       >
-        Violação de SLA
+        <span
+          aria-hidden="true"
+          class="jsx-3638802884 status-badge__icon"
+        >
+          ⨉
+        </span>
+        <span
+          class="jsx-3638802884 status-badge__text"
+        >
+          Violação de SLA
+        </span>
       </span>
       <span
         class="jsx-f2db18b9b3d57b67"
@@ -48,9 +59,20 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-3832166939 status-badge"
+              class="jsx-3632567003 status-badge"
+              data-variant="success"
             >
-              No prazo
+              <span
+                aria-hidden="true"
+                class="jsx-3632567003 status-badge__icon"
+              >
+                ✔︎
+              </span>
+              <span
+                class="jsx-3632567003 status-badge__text"
+              >
+                No prazo
+              </span>
             </span>
             <span
               class="jsx-f2db18b9b3d57b67"
@@ -144,9 +166,20 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-3677700344 status-badge"
+              class="jsx-3142698214 status-badge"
+              data-variant="warning"
             >
-              Em risco
+              <span
+                aria-hidden="true"
+                class="jsx-3142698214 status-badge__icon"
+              >
+                ⚠︎
+              </span>
+              <span
+                class="jsx-3142698214 status-badge__text"
+              >
+                Em risco
+              </span>
             </span>
             <span
               class="jsx-f2db18b9b3d57b67"
@@ -240,9 +273,20 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-2409091550 status-badge"
+              class="jsx-3638802884 status-badge"
+              data-variant="critical"
             >
-              Violado
+              <span
+                aria-hidden="true"
+                class="jsx-3638802884 status-badge__icon"
+              >
+                ⨉
+              </span>
+              <span
+                class="jsx-3638802884 status-badge__text"
+              >
+                Violado
+              </span>
             </span>
             <span
               class="jsx-f2db18b9b3d57b67"

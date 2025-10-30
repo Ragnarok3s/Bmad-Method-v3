@@ -4,12 +4,12 @@ import { PropsWithChildren } from 'react';
 
 type Variant = 'success' | 'warning' | 'critical' | 'info' | 'neutral';
 
-const variantStyles: Record<Variant, { background: string; color: string }> = {
-  success: { background: 'rgba(46, 196, 182, 0.12)', color: 'var(--color-soft-aqua)' },
-  warning: { background: 'rgba(224, 164, 88, 0.18)', color: 'var(--color-calm-gold)' },
-  critical: { background: 'rgba(239, 99, 81, 0.15)', color: 'var(--color-coral)' },
-  info: { background: 'rgba(11, 60, 93, 0.12)', color: 'var(--color-deep-blue)' },
-  neutral: { background: 'rgba(107, 114, 128, 0.16)', color: 'var(--color-neutral-2)' }
+const variantStyles: Record<Variant, { background: string; color: string; icon: string }> = {
+  success: { background: '#0f766e', color: '#ffffff', icon: '✔︎' },
+  warning: { background: '#b45309', color: '#ffffff', icon: '⚠︎' },
+  critical: { background: '#b91c1c', color: '#ffffff', icon: '⨉' },
+  info: { background: '#1d4ed8', color: '#ffffff', icon: 'ℹ︎' },
+  neutral: { background: '#374151', color: '#ffffff', icon: '●' }
 };
 
 interface StatusBadgeProps extends PropsWithChildren {
@@ -17,22 +17,34 @@ interface StatusBadgeProps extends PropsWithChildren {
 }
 
 export function StatusBadge({ children, variant = 'neutral' }: StatusBadgeProps) {
-  const { background, color } = variantStyles[variant];
+  const { background, color, icon } = variantStyles[variant];
   return (
-    <span className="status-badge">
-      {children}
+    <span className="status-badge" data-variant={variant}>
+      <span aria-hidden="true" className="status-badge__icon">
+        {icon}
+      </span>
+      <span className="status-badge__text">{children}</span>
       <style jsx>{`
         .status-badge {
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-          padding: 0 var(--space-2);
-          min-height: 24px;
+          justify-content: flex-start;
+          gap: var(--space-2);
+          padding: 0 var(--space-3);
+          min-height: 28px;
           border-radius: var(--radius-xs);
-          font-size: 0.75rem;
+          font-size: 0.8125rem;
           font-weight: 600;
           background: ${background};
           color: ${color};
+          border: 1px solid rgba(255, 255, 255, 0.24);
+        }
+        .status-badge__icon {
+          font-size: 0.875rem;
+          line-height: 1;
+        }
+        .status-badge__text {
+          line-height: 1.2;
         }
       `}</style>
     </span>
