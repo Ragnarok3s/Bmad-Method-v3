@@ -123,9 +123,13 @@ export default function HousekeepingPage() {
     setSlaError(null);
 
     getPartnerSlas({ signal: controller.signal })
-      .then((response) => {
-        if (!controller.signal.aborted) {
-          setPartnerSlas(response);
+      .then((result) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        setPartnerSlas(result.data);
+        if (result.status === 'degraded') {
+          setSlaError(t('errors.slaOffline'));
         }
       })
       .catch((apiError: unknown) => {

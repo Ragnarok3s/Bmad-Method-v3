@@ -1,7 +1,12 @@
 import { CoreApiError } from './housekeeping';
+import { partnerSlasFixture } from './__mocks__/partners';
 
+const CORE_API_BASE_URL_ENV = process.env.NEXT_PUBLIC_CORE_API_BASE_URL;
+const CORE_API_CONFIGURED = Boolean(CORE_API_BASE_URL_ENV?.trim());
 const CORE_API_BASE_URL =
-  process.env.NEXT_PUBLIC_CORE_API_BASE_URL ?? 'http://localhost:8000';
+  CORE_API_BASE_URL_ENV && CORE_API_BASE_URL_ENV.trim().length > 0
+    ? CORE_API_BASE_URL_ENV
+    : 'http://localhost:8000';
 
 export type PartnerSlaStatus = 'on_track' | 'at_risk' | 'breached';
 
@@ -51,6 +56,10 @@ interface GetPartnerSlasOptions {
   signal?: AbortSignal;
 }
 
+export type PartnerSlasResponse =
+  | { status: 'live'; data: PartnerSla[] }
+  | { status: 'degraded'; data: PartnerSla[]; message: string };
+
 function mapPartnerSummary(dto: PartnerSummaryDto): PartnerSummary {
   return {
     id: dto.id,
@@ -78,24 +87,46 @@ function mapPartnerSla(dto: PartnerSlaDto): PartnerSla {
 
 export async function getPartnerSlas(
   options: GetPartnerSlasOptions = {}
-): Promise<PartnerSla[]> {
-  const url = new URL('/partners/slas', CORE_API_BASE_URL);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json'
-    },
-    signal: options.signal,
-    cache: 'no-store'
-  });
-
-  if (!response.ok) {
-    const body = await safeReadJson(response);
-    throw new CoreApiError('Failed to load partner SLAs', response.status, body);
+): Promise<PartnerSlasResponse> {
+  if (!CORE_API_CONFIGURED) {
+    return {
+      status: 'degraded',
+      data: partnerSlasFixture,
+      message:
+        'Sem URL configurada para o Core API. A mostrar SLAs de referência até restabelecer a ligação.'
+    };
   }
 
-  const payload = (await response.json()) as PartnerSlaDto[];
-  return payload.map(mapPartnerSla);
+  const url = new URL('/partners/slas', CORE_API_BASE_URL);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      },
+      signal: options.signal,
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      const body = await safeReadJson(response);
+      throw new CoreApiError('Failed to load partner SLAs', response.status, body);
+    }
+
+    const payload = (await response.json()) as PartnerSlaDto[];
+    return { status: 'live', data: payload.map(mapPartnerSla) };
+  } catch (error) {
+    if (error instanceof CoreApiError) {
+      throw error;
+    }
+
+    return {
+      status: 'degraded',
+      data: partnerSlasFixture,
+      message:
+        'Não foi possível contactar o Core API. A mostrar SLAs de exemplo até à reconexão.'
+    };
+  }
 }
 
 async function safeReadJson(response: Response): Promise<unknown> {

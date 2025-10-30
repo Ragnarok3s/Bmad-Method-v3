@@ -14,12 +14,13 @@ const variantStyles: Record<Variant, { background: string; color: string; icon: 
 
 interface StatusBadgeProps extends PropsWithChildren {
   variant?: Variant;
+  tooltip?: string;
 }
 
-export function StatusBadge({ children, variant = 'neutral' }: StatusBadgeProps) {
+export function StatusBadge({ children, variant = 'neutral', tooltip }: StatusBadgeProps) {
   const { background, color, icon } = variantStyles[variant];
   return (
-    <span className="status-badge" data-variant={variant}>
+    <span className="status-badge" data-variant={variant} title={tooltip ?? undefined}>
       <span aria-hidden="true" className="status-badge__icon">
         {icon}
       </span>
