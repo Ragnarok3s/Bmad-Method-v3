@@ -36,6 +36,7 @@ _guest_messages_failed = None
 _guest_message_latency = None
 _guest_satisfaction = None
 _guest_preference_sync = None
+_dashboard_alerts = None
 
 
 def _ensure_counters() -> None:
@@ -64,6 +65,7 @@ def _ensure_counters() -> None:
     global _guest_message_latency
     global _guest_satisfaction
     global _guest_preference_sync
+    global _dashboard_alerts
 
     if _COUNTERS_INITIALIZED:
         return
@@ -174,6 +176,10 @@ def _ensure_counters() -> None:
             "bmad_core_guest_preference_sync_total",
             description="Sincronizações de preferências e jornadas de hóspedes",
         )
+        _dashboard_alerts = meter.create_counter(
+            "bmad_core_dashboard_alerts_total",
+            description="Alertas acompanhados no dashboard operacional",
+        )
 
         _COUNTERS_INITIALIZED = True
 
@@ -256,6 +262,16 @@ def record_dashboard_occupancy(occupancy_rate: float, total_units: int, snapshot
 
 
 def record_dashboard_alerts(total: int, blocked: int, overdue: int) -> None:
+    _ensure_counters()
+
+    total_attributes = _stringify({"state": "total"})
+    blocked_attributes = _stringify({"state": "blocked"})
+    overdue_attributes = _stringify({"state": "overdue"})
+
+    _dashboard_alerts.add(total, total_attributes)
+    _dashboard_alerts.add(blocked, blocked_attributes)
+    _dashboard_alerts.add(overdue, overdue_attributes)
+
     _track_metric(
         "bmad_core_dashboard_alerts_summary",
         {
