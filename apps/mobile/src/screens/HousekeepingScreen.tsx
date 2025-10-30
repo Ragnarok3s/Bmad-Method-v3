@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import type { HousekeepingTask, HousekeepingStatus } from '@bmad/api-client';
 
 import { useApiClient } from '../providers/ApiProvider';
 import { HousekeepingRepository } from '../modules/housekeeping/repository';
+import { AccessibleModal } from '../components/AccessibleModal';
+import { useDetoxCommand, useIsDetoxEnvironment } from '../modules/testing/useDetoxCommand';
 
 const DEFAULT_PROPERTY_ID = 1;
 const PAGE_SIZE = 25;
@@ -15,6 +24,12 @@ export function HousekeepingScreen(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    confirmLabel?: string;
+  } | null>(null);
+  const isDetoxEnv = useIsDetoxEnvironment();
 
   const loadCached = useCallback(async () => {
     const cached = await repository.listCached(DEFAULT_PROPERTY_ID);
@@ -31,7 +46,11 @@ export function HousekeepingScreen(): JSX.Element {
       setLastSync(new Date());
     } catch (error) {
       console.warn('housekeeping_sync_failed', error);
-      Alert.alert('Sincronização falhou', 'Não foi possível atualizar as tarefas agora.');
+      setFeedback({
+        title: 'Sincronização falhou',
+        message: 'Não foi possível atualizar as tarefas agora.',
+        confirmLabel: 'Tentar mais tarde'
+      });
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -47,6 +66,14 @@ export function HousekeepingScreen(): JSX.Element {
   const handleToggle = useCallback(
     async (task: HousekeepingTask) => {
       const nextStatus: HousekeepingStatus = task.status === 'completed' ? 'pending' : 'completed';
+      if (isDetoxEnv) {
+        setTasks((items) =>
+          items.map((current) =>
+            current.id === task.id ? { ...current, status: nextStatus } : current
+          )
+        );
+        return;
+      }
       try {
         const updated = await repository.updateTask(task.id, { status: nextStatus });
         setTasks((items) =>
@@ -54,24 +81,54 @@ export function HousekeepingScreen(): JSX.Element {
         );
       } catch (error) {
         console.warn('housekeeping_update_failed', error);
-        Alert.alert('Erro', 'Não foi possível atualizar a tarefa agora.');
+        setFeedback({
+          title: 'Erro',
+          message: 'Não foi possível atualizar a tarefa agora.',
+          confirmLabel: 'Repetir mais tarde'
+        });
       }
     },
-    [repository]
+    [isDetoxEnv, repository]
   );
 
   const renderItem = useCallback(
     ({ item }: { item: HousekeepingTask }) => {
+      const statusText = translateStatus(item.status);
+      const toggleLabel =
+        item.status === 'completed' ? 'Reabrir tarefa' : 'Marcar como concluída';
       return (
-        <View style={styles.card}>
-          <Text style={styles.title}>Tarefa #{item.id}</Text>
-          <Text style={styles.subtitle}>Reserva: {item.reservationId ?? '—'}</Text>
-          <Text style={styles.subtitle}>Estado: {translateStatus(item.status)}</Text>
-          <Text style={styles.notes}>{item.notes ?? 'Sem notas adicionais.'}</Text>
-          <TouchableOpacity style={styles.button} onPress={() => handleToggle(item)}>
-            <Text style={styles.buttonText}>
-              {item.status === 'completed' ? 'Reabrir tarefa' : 'Marcar como concluída'}
+        <View style={styles.card} testID={`housekeeping-card-${item.id}`}>
+          <Text
+            style={styles.title}
+            accessibilityRole="header"
+            testID={`housekeeping-card-${item.id}-title`}
+          >
+            Tarefa #{item.id}
+          </Text>
+          <View style={styles.metaBlock}>
+            <Text style={styles.metaLabel}>Estado</Text>
+            <Text style={styles.subtitle} testID={`housekeeping-card-${item.id}-status`}>
+              {statusText}
             </Text>
+          </View>
+          <View style={styles.metaBlock}>
+            <Text style={styles.metaLabel}>Reserva</Text>
+            <Text style={styles.subtitle} testID={`housekeeping-card-${item.id}-reservation`}>
+              {item.reservationId ?? '—'}
+            </Text>
+          </View>
+          <Text style={styles.notes} testID={`housekeeping-card-${item.id}-notes`}>
+            {item.notes ?? 'Sem notas adicionais.'}
+          </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleToggle(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`${toggleLabel} para a tarefa ${item.id}. Estado atual: ${statusText}.`}
+            focusable
+            testID={`housekeeping-card-${item.id}-toggle`}
+          >
+            <Text style={styles.buttonText}>{toggleLabel}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -90,6 +147,28 @@ export function HousekeepingScreen(): JSX.Element {
     );
   }, [lastSync]);
 
+  const handleSeed = useCallback(
+    (params?: Record<string, unknown>) => {
+      const payload = params as
+        | {
+            tasks?: HousekeepingTask[];
+            lastSync?: string;
+          }
+        | undefined;
+      if (!payload?.tasks) {
+        return;
+      }
+      setTasks(payload.tasks);
+      setLastSync(payload.lastSync ? new Date(payload.lastSync) : new Date());
+      setLoading(false);
+    },
+    []
+  );
+
+  useDetoxCommand('seed-housekeeping', handleSeed);
+
+  const closeFeedback = useCallback(() => setFeedback(null), []);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -100,6 +179,15 @@ export function HousekeepingScreen(): JSX.Element {
         ListEmptyComponent={!loading ? <Text style={styles.emptyText}>Nenhuma tarefa encontrada.</Text> : null}
         ListHeaderComponent={listHeader}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={syncRemote} />}
+      />
+      <AccessibleModal
+        visible={Boolean(feedback)}
+        title={feedback?.title ?? ''}
+        message={feedback?.message ?? ''}
+        confirmLabel={feedback?.confirmLabel ?? 'Fechar'}
+        onConfirm={closeFeedback}
+        onDismiss={closeFeedback}
+        testID="housekeeping-feedback-modal"
       />
     </View>
   );
@@ -144,6 +232,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1a1a1a'
+  },
+  metaBlock: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8
+  },
+  metaLabel: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500'
   },
   subtitle: {
     fontSize: 14,
