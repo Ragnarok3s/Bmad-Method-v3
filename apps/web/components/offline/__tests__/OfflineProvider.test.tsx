@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useEffect, useState } from 'react';
 
 import {
@@ -31,17 +32,19 @@ describe('OfflineProvider queue behaviour', () => {
     jest.clearAllMocks();
   });
 
-  function goOffline() {
-    act(() => {
-      onlineState = false;
-      window.dispatchEvent(new Event('offline'));
+  async function goOffline() {
+    onlineState = false;
+    window.dispatchEvent(new Event('offline'));
+    await waitFor(() => {
+      expect(screen.getByTestId('is-offline').textContent).toBe('true');
     });
   }
 
-  function goOnline() {
-    act(() => {
-      onlineState = true;
-      window.dispatchEvent(new Event('online'));
+  async function goOnline() {
+    onlineState = true;
+    window.dispatchEvent(new Event('online'));
+    await waitFor(() => {
+      expect(screen.getByTestId('is-offline').textContent).toBe('false');
     });
   }
 
@@ -87,6 +90,8 @@ describe('OfflineProvider queue behaviour', () => {
 
     (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
+    const user = userEvent.setup();
+
     render(
       <OfflineProvider>
         <QueueTestHarness />
@@ -95,18 +100,14 @@ describe('OfflineProvider queue behaviour', () => {
 
     expect(screen.getByTestId('is-offline').textContent).toBe('false');
 
-    goOffline();
+    await goOffline();
 
-    expect(screen.getByTestId('is-offline').textContent).toBe('true');
-
-    await act(async () => {
-      fireEvent.click(screen.getByText('enqueue'));
-    });
+    await user.click(screen.getByRole('button', { name: 'enqueue' }));
 
     expect(screen.getByTestId('pending-count').textContent).toBe('1');
     expect(fetch).not.toHaveBeenCalled();
 
-    goOnline();
+    await goOnline();
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledTimes(1);
@@ -162,18 +163,21 @@ describe('OfflineProvider queue behaviour', () => {
 
     (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
+    const user = userEvent.setup();
+
     render(
       <OfflineProvider>
         <ManualSyncHarness />
       </OfflineProvider>
     );
 
-    await act(async () => {
-      fireEvent.click(screen.getByText('manual-sync'));
-    });
+    await user.click(screen.getByRole('button', { name: 'manual-sync' }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
       expect(screen.getByTestId('manual-count').textContent).toBe('1');
     });
   });

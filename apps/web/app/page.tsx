@@ -984,7 +984,7 @@ export default function DashboardPage() {
             >
               <ul className="dashboard__bullet-list">
                 <li>Checklist de acessibilidade validado na Iteração 2.</li>
-                <li>Artigos "Primeiros Passos" incluídos no tour contextual.</li>
+                  <li>Artigos &ldquo;Primeiros Passos&rdquo; incluídos no tour contextual.</li>
               </ul>
             </Card>
             <Card

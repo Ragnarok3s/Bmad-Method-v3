@@ -42,6 +42,11 @@ Workflow definido em `.github/workflows/ci.yml` roda em pushes e PRs para `main`
 
 > **Caching**: os caches de `npm` e `pip` utilizam `package-lock.json` e `requirements.txt` como chaves. Atualize os arquivos de lock/requirements sempre que adicionar dependências.
 
+### Lint do Frontend Web
+
+- Execute `npm run lint` (na raiz ou dentro do workspace `apps/web`) para validar o projeto Next.js com o preset `next/core-web-vitals` e as regras compartilhadas do design system.
+- Corrija quaisquer violações apontadas antes de abrir pull requests; os _exports_ do design system (`apps/web/components/ui`) devem permanecer nomeados e os testes seguir as recomendações do `eslint-plugin-testing-library`.
+
 ### Templates e Scripts Padronizados
 
 - **Template de Pull Request**: localizado em `.github/pull_request_template.md`, inclui checklist de testes (unitários, integração, E2E) e confirmação de checklist regulatório.

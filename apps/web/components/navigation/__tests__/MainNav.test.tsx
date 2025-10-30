@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MainNav } from '../MainNav';
 import { usePathname } from 'next/navigation';
 
@@ -10,15 +10,10 @@ describe('MainNav', () => {
   it('lista todos os módulos principais com link acessível', async () => {
     (usePathname as jest.Mock).mockReturnValue('/housekeeping');
 
-    await act(async () => {
-      render(<MainNav />);
-    });
+    render(<MainNav />);
 
     expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument();
-    const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(16);
-    const linkLabels = links.map((link) => link.querySelector('.main-nav__label')?.textContent?.trim());
-    expect(linkLabels).toEqual([
+    const expectedLinks = [
       'Dashboard',
       'Reservas',
       'Calendário',
@@ -35,7 +30,12 @@ describe('MainNav', () => {
       'Governança',
       'Analytics',
       'Base de Conhecimento'
-    ]);
+    ];
+
+    expectedLinks.forEach((name) => {
+      expect(screen.getByRole('link', { name })).toBeInTheDocument();
+    });
+    expect(screen.getAllByRole('link')).toHaveLength(expectedLinks.length);
     expect(screen.getByRole('link', { name: /^Housekeeping/ })).toHaveAttribute('aria-current', 'page');
   });
 });
