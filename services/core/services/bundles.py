@@ -231,9 +231,9 @@ class BundleUsageService:
                 offsets.get(message.partition, message.offset), message.offset
             )
 
+        self.session.flush()
         if offsets:
             stream.commit(offsets)
-        self.session.flush()
 
     def _apply_event(
         self,
