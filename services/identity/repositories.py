@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import status
 from sqlalchemy import Select, delete, select
@@ -78,7 +78,7 @@ class TenantAccessRepository:
         assignment = self.session.get(
             TenantAgentAccess, {"tenant_id": self.tenant.id, "agent_id": agent.id}
         )
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if assignment is None:
             assignment = TenantAgentAccess(
                 tenant_id=self.tenant.id,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey
+from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import Enum as SAEnum
 
@@ -19,9 +19,11 @@ class TenantAgentAccess(Base):
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), primary_key=True)
     agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), primary_key=True)
     role: Mapped[AgentRole] = mapped_column(SAEnum(AgentRole), nullable=False)
-    assigned_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    assigned_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     tenant: Mapped[Tenant] = relationship("Tenant")

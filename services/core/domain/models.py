@@ -18,6 +18,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -33,9 +34,9 @@ class Tenant(Base):
     slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String(160), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
     _attributes: Mapped[dict[str, Any] | None] = mapped_column(
         "attributes", JSON, nullable=True, default=None
@@ -71,7 +72,7 @@ class TenantLimit(Base):
     value: Mapped[int | None] = mapped_column(Integer, nullable=True)
     enforced: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     tenant: Mapped[Tenant] = relationship("Tenant", back_populates="limits")
@@ -82,7 +83,7 @@ class TenantMigrationState(Base):
 
     tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), primary_key=True)
     name: Mapped[str] = mapped_column(String(160), primary_key=True)
-    applied_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     tenant: Mapped[Tenant] = relationship("Tenant", back_populates="migrations")
 
@@ -103,7 +104,7 @@ class Workspace(Base):
     enable_sandbox: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     require_mfa: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     security_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True, index=True)
 
     tenant: Mapped[Tenant | None] = relationship("Tenant", back_populates="workspaces")
@@ -143,7 +144,7 @@ class Property(Base):
 
     units: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
     tenant_id: Mapped[int | None] = mapped_column(ForeignKey("tenants.id"), nullable=True, index=True)
@@ -172,7 +173,7 @@ class Agent(Base):
     email: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
     role: Mapped[AgentRole] = mapped_column(SAEnum(AgentRole), nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     housekeeping_tasks: Mapped[list["HousekeepingTask"]] = relationship("HousekeepingTask", back_populates="assigned_agent")
     credentials: Mapped["AgentCredential | None"] = relationship(
@@ -197,11 +198,11 @@ class AgentCredential(Base):
     mfa_enrolled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     _recovery_codes: Mapped[str] = mapped_column("recovery_codes", Text, nullable=False, default="[]")
     failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     agent: Mapped[Agent] = relationship("Agent", back_populates="credentials")
@@ -224,11 +225,11 @@ class AuthSession(Base):
 
     id: Mapped[str] = mapped_column(String(120), primary_key=True)
     agent_id: Mapped[int] = mapped_column(ForeignKey("agents.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    last_active_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
+    last_active_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(160), nullable=True)
 
@@ -243,9 +244,9 @@ class PermissionDefinition(Base):
     label: Mapped[str] = mapped_column(String(160), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     category: Mapped[str | None] = mapped_column(String(80), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
 
@@ -260,9 +261,9 @@ class RolePolicy(Base):
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     _permissions: Mapped[str] = mapped_column("permissions", Text, nullable=False, default="[]")
     _inherits: Mapped[str] = mapped_column("inherits", Text, nullable=False, default="[]")
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     property_ref: Mapped[Property | None] = relationship("Property")
@@ -318,12 +319,12 @@ class Reservation(Base):
     status: Mapped[ReservationStatus] = mapped_column(
         SAEnum(ReservationStatus), nullable=False, default=ReservationStatus.DRAFT
     )
-    check_in: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    check_out: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    check_in: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    check_out: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     total_amount_minor: Mapped[int | None] = mapped_column(Integer, nullable=True)
     currency_code: Mapped[str | None] = mapped_column(String(3), nullable=True)
     capture_on_check_in: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     property: Mapped[Property] = relationship("Property", back_populates="reservations")
     audit_events: Mapped[list["AuditLog"]] = relationship("AuditLog", back_populates="reservation")
@@ -402,9 +403,9 @@ class PaymentMethod(Base):
         SAEnum(PaymentMethodStatus), nullable=False, default=PaymentMethodStatus.ACTIVE
     )
     details: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     reservation: Mapped[Reservation | None] = relationship("Reservation")
@@ -424,11 +425,11 @@ class PaymentIntent(Base):
     )
     provider_reference: Mapped[str] = mapped_column(String(120), nullable=False)
     context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    captured_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    captured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     reservation: Mapped[Reservation] = relationship(
@@ -455,8 +456,8 @@ class PaymentTransaction(Base):
     )
     amount_minor: Mapped[int] = mapped_column(Integer, nullable=False)
     raw_response: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     intent: Mapped[PaymentIntent] = relationship("PaymentIntent", back_populates="transactions")
 
@@ -471,12 +472,12 @@ class Invoice(Base):
     status: Mapped[InvoiceStatus] = mapped_column(
         SAEnum(InvoiceStatus), nullable=False, default=InvoiceStatus.ISSUED
     )
-    issued_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     reservation: Mapped[Reservation] = relationship("Reservation", back_populates="invoices")
@@ -486,14 +487,14 @@ class PaymentReconciliationLog(Base):
     __tablename__ = "payment_reconciliation_logs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ran_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    ran_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     status: Mapped[PaymentReconciliationStatus] = mapped_column(
         SAEnum(PaymentReconciliationStatus), nullable=False
     )
     total_intents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     discrepancies: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
 
 class PaymentWebhookEvent(Base):
@@ -508,8 +509,8 @@ class PaymentWebhookEvent(Base):
     reservation_id: Mapped[int | None] = mapped_column(ForeignKey("reservations.id"), nullable=True)
     intent_id: Mapped[int | None] = mapped_column(ForeignKey("payment_intents.id"), nullable=True)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
-    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     reservation: Mapped[Reservation | None] = relationship("Reservation")
     intent: Mapped[PaymentIntent | None] = relationship("PaymentIntent")
@@ -532,9 +533,9 @@ class HousekeepingTask(Base):
     status: Mapped[HousekeepingStatus] = mapped_column(
         SAEnum(HousekeepingStatus), nullable=False, default=HousekeepingStatus.PENDING
     )
-    scheduled_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    scheduled_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     property: Mapped[Property] = relationship("Property", back_populates="housekeeping_tasks")
     reservation: Mapped[Reservation | None] = relationship("Reservation")
@@ -580,9 +581,9 @@ class OTASyncQueue(Base):
     status: Mapped[OTASyncStatus] = mapped_column(
         SAEnum(OTASyncStatus), nullable=False, default=OTASyncStatus.PENDING
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
 
@@ -602,12 +603,12 @@ class InventoryReconciliationQueue(Base):
     )
     payload: Mapped[str] = mapped_column(Text, nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    next_action_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    next_action_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sla_version_id: Mapped[int | None] = mapped_column(ForeignKey("partner_sla_versions.id"), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
     sla_version: Mapped["PartnerSLAVersion | None"] = relationship(
         "PartnerSLAVersion",
@@ -624,7 +625,7 @@ class AuditLog(Base):
     agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
     action: Mapped[str] = mapped_column(String(80), nullable=False)
     detail: Mapped[str] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     reservation: Mapped[Reservation | None] = relationship("Reservation", back_populates="audit_events")
     agent: Mapped[Agent | None] = relationship("Agent")
@@ -638,7 +639,7 @@ class Partner(Base):
     slug: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
     category: Mapped[str | None] = mapped_column(String(80), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     slas: Mapped[list["PartnerSLA"]] = relationship(
         "PartnerSLA",
@@ -675,9 +676,9 @@ class PartnerSLA(Base):
     status: Mapped[SLAStatus] = mapped_column(
         SAEnum(SLAStatus), nullable=False, default=SLAStatus.ON_TRACK
     )
-    last_violation_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_violation_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
     current_version_id: Mapped[int | None] = mapped_column(
         ForeignKey("partner_sla_versions.id"), nullable=True
@@ -712,13 +713,13 @@ class PartnerSLAVersion(Base):
     warning_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     breach_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     effective_from: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
-    effective_to: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
@@ -751,9 +752,9 @@ class PartnerWebhookEvent(Base):
     elapsed_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     resolved_sla_status: Mapped[SLAStatus | None] = mapped_column(SAEnum(SLAStatus), nullable=True)
     received_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
-    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     partner: Mapped[Partner] = relationship("Partner", back_populates="webhook_events")
     sla: Mapped[PartnerSLA] = relationship("PartnerSLA")
@@ -777,7 +778,7 @@ class ExperienceSurveyResponse(Base):
     )
     score: Mapped[int] = mapped_column(Integer, nullable=False)
     submitted_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
     )
     context: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
 
@@ -790,9 +791,9 @@ class AnalyticsSyncState(Base):
     __tablename__ = "analytics_sync_state"
 
     source: Mapped[str] = mapped_column(String(80), primary_key=True)
-    last_ingested_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_ingested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=func.now()
     )
 
 
@@ -816,7 +817,7 @@ class RecommendationFeedback(Base):
     score: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     context: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=func.now())
 
     agent: Mapped[Agent | None] = relationship("Agent", back_populates="recommendation_feedback")
 
@@ -835,13 +836,13 @@ class BundleUsageMetric(Base):
     workspace_slug: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
     bundle_id: Mapped[str] = mapped_column(String(160), nullable=False, index=True)
     bundle_type: Mapped[str] = mapped_column(String(80), nullable=False)
-    period_start: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     granularity: Mapped[BundleUsageGranularity] = mapped_column(
         SAEnum(BundleUsageGranularity), nullable=False
     )
     view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     launch_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_event_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         UniqueConstraint(

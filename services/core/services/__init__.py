@@ -113,6 +113,13 @@ def _is_platform_scope(session: Session) -> bool:
 logger = logging.getLogger("bmad.core.services")
 
 
+
+def _ensure_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 class PropertyService:
     def __init__(self, session: Session, tenant_manager: "TenantManager" | None = None) -> None:
         self.session = session
@@ -831,7 +838,7 @@ class OTASynchronizer:
         if not job:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job não encontrado")
         job.status = OTASyncStatus.IN_FLIGHT
-        job.updated_at = datetime.utcnow()
+        job.updated_at = datetime.now(timezone.utc)
         self.session.add(job)
         return job
 
@@ -840,7 +847,7 @@ class OTASynchronizer:
         if not job:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job não encontrado")
         job.status = OTASyncStatus.SUCCESS if success else OTASyncStatus.FAILED
-        job.updated_at = datetime.utcnow()
+        job.updated_at = datetime.now(timezone.utc)
         self.session.add(job)
         return job
 
@@ -964,7 +971,7 @@ class OperationalMetricsService:
         )
 
     def _calculate_critical_alerts(self) -> CriticalAlertSummary:
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(timezone.utc)
         alert_rows = self.session.execute(
             select(
                 HousekeepingTask.id,
@@ -991,7 +998,7 @@ class OperationalMetricsService:
         for row in alert_rows:
             task_id = row.id
             status = row.status
-            scheduled_date = row.scheduled_date
+            scheduled_date = _ensure_utc(row.scheduled_date)
             if status == HousekeepingStatus.BLOCKED:
                 blocked_ids.add(task_id)
             if status != HousekeepingStatus.COMPLETED and scheduled_date < now:
@@ -1017,13 +1024,11 @@ class OperationalMetricsService:
     def _calculate_playbook_adoption(self) -> PlaybookAdoptionSummary:
         period_end = datetime.now(timezone.utc)
         period_start = period_end - timedelta(days=7)
-        start_naive = period_start.replace(tzinfo=None)
-        end_naive = period_end.replace(tzinfo=None)
 
         base_filters = [
             HousekeepingTask.reservation_id.is_not(None),
-            HousekeepingTask.scheduled_date >= start_naive,
-            HousekeepingTask.scheduled_date < end_naive,
+            HousekeepingTask.scheduled_date >= period_start,
+            HousekeepingTask.scheduled_date < period_end,
         ]
 
         total_executions = (

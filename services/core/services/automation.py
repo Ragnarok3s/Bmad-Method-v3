@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
@@ -29,7 +29,7 @@ class AutomationService:
         context: dict[str, Any] | None = None,
     ) -> PlaybookExecutionRead:
         run_id = uuid4().hex
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         metadata = {
             "run_id": run_id,
             "playbook_id": template.id,
@@ -45,7 +45,7 @@ class AutomationService:
         self.session.add(template)
         self.session.flush()
 
-        finished_at = datetime.utcnow()
+        finished_at = datetime.now(timezone.utc)
         logger.info(
             "playbook_execution_completed",
             extra={**metadata, "duration_ms": int((finished_at - started_at).total_seconds() * 1000)},

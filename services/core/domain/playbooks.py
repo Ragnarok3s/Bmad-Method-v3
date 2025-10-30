@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .models import Base
@@ -40,10 +40,12 @@ class PlaybookTemplate(Base):
     _tags: Mapped[str] = mapped_column("tags", Text, nullable=False, default="[]")
     _steps: Mapped[str] = mapped_column("steps", Text, nullable=False, default="[]")
     execution_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_executed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    last_executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=func.now()
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now()
     )
 
     @property
