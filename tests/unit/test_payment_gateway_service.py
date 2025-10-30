@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 from datetime import date
 from decimal import Decimal
 
@@ -70,14 +71,24 @@ def test_webhook_dispatch_validates_signature(service: PaymentGatewayService) ->
 
     driver = service.require_driver("stripe")
     payload = {"type": "payment.captured", "data": {"id": "evt_123"}}
-    raw_payload = repr(payload).encode("utf-8")
-    assert driver.validate_webhook(raw_payload, {"X-Gateway-Signature": ""}) is False
+    raw_payload = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+
+    invalid_event = service.webhooks.dispatch(
+        "stripe",
+        payload,
+        {"X-Gateway-Signature": "invalid"},
+        raw_body=raw_payload,
+    )
+
+    assert invalid_event.signature_valid is False
+    assert captured_events == []
 
     signature_header = hmac.new(driver._webhook_secret, raw_payload, digestmod="sha256").hexdigest()
     event = service.webhooks.dispatch(
         "stripe",
         payload,
         {"X-Gateway-Signature": signature_header},
+        raw_body=raw_payload,
     )
 
     assert event.signature_valid is True
