@@ -17,17 +17,21 @@ import {
 } from '@/services/api/dashboard';
 
 type LoadStatus = 'loading' | 'success' | 'empty' | 'error';
+type ExperienceMode = 'initial' | 'live' | 'offline';
 
 type DashboardMetricsState = {
   status: LoadStatus;
   data: DashboardMetrics | null;
   error: string | null;
+  experience: ExperienceMode | null;
+  guidance: string | null;
 };
 
 type PartnerSlaState = {
   status: LoadStatus;
   data: PartnerSla[];
   message: string | null;
+  mode: ExperienceMode | null;
 };
 
 type KpiCard = {
@@ -39,6 +43,10 @@ type KpiCard = {
   description: string;
   variant: 'success' | 'warning' | 'critical' | 'info';
   testId: string;
+  tooltip?: string;
+  annotation?: string;
+  annotationVariant?: 'success' | 'warning' | 'critical' | 'info';
+  annotationTooltip?: string;
 };
 
 const numberFormatter = new Intl.NumberFormat('pt-PT');
@@ -137,6 +145,8 @@ function formatHousekeepingStatus(status: HousekeepingStatus): string {
 
 function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
   if (state.status === 'loading') {
+    const message = 'Carregando métricas do core...';
+    const tooltip = 'A sincronizar dados com o Core API.';
     return [
       {
         key: 'occupancy',
@@ -144,7 +154,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         state: 'loading',
         description: 'Aguarde enquanto sincronizamos as reservas.',
         variant: 'info',
-        message: 'Carregando métricas do core...',
+        message,
+        tooltip,
         testId: 'kpi-occupancy'
       },
       {
@@ -153,7 +164,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         state: 'loading',
         description: 'Monitorizando tarefas de housekeeping e SLAs.',
         variant: 'info',
-        message: 'Carregando métricas do core...',
+        message,
+        tooltip,
         testId: 'kpi-alerts'
       },
       {
@@ -162,7 +174,8 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         state: 'loading',
         description: 'Atualizando sinalizações de execução.',
         variant: 'info',
-        message: 'Carregando métricas do core...',
+        message,
+        tooltip,
         testId: 'kpi-playbooks'
       }
     ];
@@ -170,6 +183,7 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
 
   if (state.status === 'error') {
     const message = state.error ?? 'Não foi possível carregar as métricas do dashboard.';
+    const tooltip = 'Erro temporário ao contactar o Core API. Tente novamente ou verifique as integrações.';
     return [
       {
         key: 'occupancy',
@@ -178,6 +192,10 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Contacte o time de plataforma caso o erro persista.',
         variant: 'critical',
         message,
+        tooltip,
+        annotation: 'Erro temporário',
+        annotationVariant: 'critical',
+        annotationTooltip: tooltip,
         testId: 'kpi-occupancy'
       },
       {
@@ -187,6 +205,10 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Contacte o time de plataforma caso o erro persista.',
         variant: 'critical',
         message,
+        tooltip,
+        annotation: 'Erro temporário',
+        annotationVariant: 'critical',
+        annotationTooltip: tooltip,
         testId: 'kpi-alerts'
       },
       {
@@ -196,12 +218,19 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Contacte o time de plataforma caso o erro persista.',
         variant: 'critical',
         message,
+        tooltip,
+        annotation: 'Erro temporário',
+        annotationVariant: 'critical',
+        annotationTooltip: tooltip,
         testId: 'kpi-playbooks'
       }
     ];
   }
 
-  if (state.status === 'empty') {
+  if (state.status === 'empty' || !state.data) {
+    const tooltip =
+      state.guidance ??
+      'Configuração inicial: cadastre propriedades e conecte integrações para desbloquear insights.';
     return [
       {
         key: 'occupancy',
@@ -210,6 +239,10 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Cadastre propriedades e reservas para acompanhar a taxa.',
         variant: 'warning',
         message: 'Sem inventário cadastrado.',
+        tooltip,
+        annotation: 'Configuração inicial',
+        annotationVariant: 'info',
+        annotationTooltip: tooltip,
         testId: 'kpi-occupancy'
       },
       {
@@ -219,6 +252,10 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Processos operacionais dentro dos parâmetros definidos.',
         variant: 'success',
         message: 'Sem alertas críticos no período.',
+        tooltip,
+        annotation: 'Configuração inicial',
+        annotationVariant: 'info',
+        annotationTooltip: tooltip,
         testId: 'kpi-alerts'
       },
       {
@@ -228,21 +265,21 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
         description: 'Execute um playbook para medir a adoção da equipa.',
         variant: 'info',
         message: 'Nenhuma execução registrada nos últimos 7 dias.',
+        tooltip,
+        annotation: 'Configuração inicial',
+        annotationVariant: 'info',
+        annotationTooltip: tooltip,
         testId: 'kpi-playbooks'
       }
     ];
   }
 
   const data = state.data;
-  if (!data) {
-    return buildKpiCards({ status: 'empty', data: null, error: null });
-  }
-
   const occupancyVariant = getOccupancyVariant(data.occupancy.occupancyRate);
   const alertsVariant = data.operational.criticalAlerts.total > 0 ? 'critical' : 'success';
   const playbooksVariant = getPlaybookVariant(data.operational.playbookAdoption.adoptionRate);
 
-  return [
+  const readyCards: KpiCard[] = [
     {
       key: 'occupancy',
       label: 'Taxa de ocupação',
@@ -271,13 +308,29 @@ function buildKpiCards(state: DashboardMetricsState): KpiCard[] {
       testId: 'kpi-playbooks'
     }
   ];
+
+  if (state.experience === 'offline') {
+    const annotationTooltip =
+      state.guidance ??
+      'Sem ligação com o Core API. Dados de referência exibidos até a reconexão.';
+    return readyCards.map((card) => ({
+      ...card,
+      annotation: 'Modo offline',
+      annotationVariant: 'warning',
+      annotationTooltip
+    }));
+  }
+
+  return readyCards;
 }
 
 function useDashboardMetrics(): DashboardMetricsState {
   const [state, setState] = useState<DashboardMetricsState>({
     status: 'loading',
     data: null,
-    error: null
+    error: null,
+    experience: null,
+    guidance: null
   });
 
   useEffect(() => {
@@ -288,7 +341,7 @@ function useDashboardMetrics(): DashboardMetricsState {
     });
     let spanEnded = false;
 
-    const endSpan = (status: 'success' | 'error' | 'aborted') => {
+    const endSpan = (status: 'success' | 'error' | 'aborted' | 'degraded') => {
       if (spanEnded) {
         return;
       }
@@ -298,23 +351,39 @@ function useDashboardMetrics(): DashboardMetricsState {
     };
 
     getDashboardMetrics({ signal: controller.signal })
-      .then((data) => {
+      .then((result) => {
         if (!active) {
           return;
         }
 
+        const data = result.data;
         const isEmpty =
           data.occupancy.totalUnits === 0 &&
           data.operational.criticalAlerts.total === 0 &&
           data.operational.playbookAdoption.totalExecutions === 0;
 
+        const experience: ExperienceMode =
+          result.status === 'degraded' ? 'offline' : isEmpty ? 'initial' : 'live';
+        const status: LoadStatus = isEmpty ? 'empty' : 'success';
+        const guidance =
+          result.status === 'degraded'
+            ? result.message
+            : isEmpty
+              ? 'Conclua a configuração inicial para começar a acompanhar as métricas.'
+              : null;
+
         setState({
-          status: isEmpty ? 'empty' : 'success',
+          status,
           data,
-          error: null
+          error: null,
+          experience,
+          guidance
         });
 
-        fetchCounter.add(1, { endpoint: '/metrics/overview', status: 'success' });
+        fetchCounter.add(1, {
+          endpoint: '/metrics/overview',
+          status: result.status === 'degraded' ? 'degraded' : 'success'
+        });
         occupancyHistogram.record(data.occupancy.occupancyRate * 100, {
           window: 'daily'
         });
@@ -324,7 +393,7 @@ function useDashboardMetrics(): DashboardMetricsState {
         adoptionHistogram.record(data.operational.playbookAdoption.adoptionRate * 100, {
           window: '7d'
         });
-        endSpan('success');
+        endSpan(result.status === 'degraded' ? 'degraded' : 'success');
       })
       .catch((error: unknown) => {
         if (!active) {
@@ -348,7 +417,13 @@ function useDashboardMetrics(): DashboardMetricsState {
         }
 
         fetchCounter.add(1, { endpoint: '/metrics/overview', status: 'error' });
-        setState({ status: 'error', data: null, error: message });
+        setState({
+          status: 'error',
+          data: null,
+          error: message,
+          experience: null,
+          guidance: 'Verifique as credenciais do Core API nas configurações e tente novamente.'
+        });
         endSpan('error');
       });
 
@@ -366,7 +441,8 @@ function usePartnerSlas(): PartnerSlaState {
   const [state, setState] = useState<PartnerSlaState>({
     status: 'loading',
     data: [],
-    message: null
+    message: null,
+    mode: null
   });
 
   useEffect(() => {
@@ -374,15 +450,30 @@ function usePartnerSlas(): PartnerSlaState {
     const controller = new AbortController();
 
     getPartnerSlas({ signal: controller.signal })
-      .then((data) => {
+      .then((result) => {
         if (!active) {
           return;
         }
-        if (data.length === 0) {
-          setState({ status: 'empty', data: [], message: 'Sem dados de SLA disponíveis.' });
+        const items = result.data;
+        const hasData = items.length > 0;
+        if (!hasData) {
+          setState({
+            status: 'empty',
+            data: [],
+            message:
+              result.status === 'degraded'
+                ? result.message
+                : 'Sem dados de SLA disponíveis.',
+            mode: 'initial'
+          });
           return;
         }
-        setState({ status: 'success', data, message: null });
+        setState({
+          status: 'success',
+          data: items,
+          message: result.status === 'degraded' ? result.message : null,
+          mode: result.status === 'degraded' ? 'offline' : 'live'
+        });
       })
       .catch((error: unknown) => {
         if (!active) {
@@ -397,14 +488,15 @@ function usePartnerSlas(): PartnerSlaState {
             error.status >= 500
               ? 'Serviço de SLAs indisponível. Tente novamente em instantes.'
               : 'Não foi possível carregar os SLAs dos parceiros.';
-          setState({ status: 'error', data: [], message });
+          setState({ status: 'error', data: [], message, mode: null });
           return;
         }
 
         setState({
           status: 'error',
           data: [],
-          message: 'Ocorreu um erro inesperado ao carregar os SLAs.'
+          message: 'Ocorreu um erro inesperado ao carregar os SLAs.',
+          mode: null
         });
       });
 
@@ -451,46 +543,110 @@ function DashboardHero({
     : [
         {
           label: 'Estado da operação',
-          value: metricsState.status === 'loading' ? 'A sincronizar…' : '—',
+          value:
+            metricsState.status === 'loading'
+              ? 'A sincronizar…'
+              : metricsState.status === 'error'
+                ? 'Erro temporário'
+                : metricsState.experience === 'offline'
+                  ? 'Modo offline'
+                  : '—',
           hint:
-            metricsState.status === 'error'
+            metricsState.guidance ??
+            (metricsState.status === 'error'
               ? metricsState.error ?? 'Não foi possível carregar os dados.'
-              : 'Cadastre propriedades e execuções para desbloquear insights.'
+              : 'Cadastre propriedades e execuções para desbloquear insights.')
         }
       ];
 
   const renderKpiContent = (kpi: KpiCard) => {
+    let body: JSX.Element;
     if (kpi.state === 'ready') {
-      return (
+      body = (
         <strong className="dashboard-hero__kpi-value" data-testid={`${kpi.testId}-value`}>
           {kpi.value}
         </strong>
       );
-    }
-    if (kpi.state === 'loading') {
-      return (
-        <span className="dashboard-hero__kpi-message" data-testid={`${kpi.testId}-loading`}>
+    } else {
+      const suffix = kpi.state === 'loading' ? 'loading' : kpi.state === 'empty' ? 'empty' : 'error';
+      body = (
+        <span
+          className="dashboard-hero__kpi-message"
+          data-testid={`${kpi.testId}-${suffix}`}
+          title={kpi.tooltip ?? undefined}
+        >
           {kpi.message}
         </span>
       );
     }
-    if (kpi.state === 'empty') {
-      return (
-        <span className="dashboard-hero__kpi-message" data-testid={`${kpi.testId}-empty`}>
-          {kpi.message}
-        </span>
-      );
-    }
+
     return (
-      <span className="dashboard-hero__kpi-message" data-testid={`${kpi.testId}-error`}>
-        {kpi.message}
-      </span>
+      <div className="dashboard-hero__kpi-inner">
+        {body}
+        {kpi.annotation ? (
+          <span
+            className={`dashboard-hero__kpi-annotation dashboard-hero__kpi-annotation--${kpi.annotationVariant ?? 'info'}`}
+            data-testid={`${kpi.testId}-annotation`}
+            title={kpi.annotationTooltip ?? kpi.tooltip ?? undefined}
+          >
+            {kpi.annotation}
+          </span>
+        ) : null}
+      </div>
     );
   };
+
+  const showStatusBanner =
+    metricsState.status === 'loading' ||
+    metricsState.status === 'error' ||
+    metricsState.experience === 'offline' ||
+    (metricsState.experience === 'initial' && metricsState.status === 'empty');
+
+  const shouldShowRecoveryCta =
+    metricsState.status === 'error' || metricsState.experience === 'offline';
 
   return (
     <section className="dashboard-hero">
       <div className="dashboard-hero__content">
+        {showStatusBanner && (
+          <div className="dashboard-hero__status-banner" data-testid="dashboard-status-banner">
+            {metricsState.status === 'loading' && (
+              <StatusBadge variant="info" tooltip="A sincronizar dados em tempo real.">
+                A sincronizar…
+              </StatusBadge>
+            )}
+            {metricsState.status === 'error' && (
+              <StatusBadge
+                variant="critical"
+                tooltip={
+                  metricsState.error ?? 'Erro temporário ao contactar o Core API. Tente novamente em instantes.'
+                }
+              >
+                Erro temporário
+              </StatusBadge>
+            )}
+            {metricsState.experience === 'offline' && (
+              <StatusBadge
+                variant="warning"
+                tooltip={
+                  metricsState.guidance ?? 'Sem ligação com o Core API. A mostrar dados de referência.'
+                }
+              >
+                Modo offline
+              </StatusBadge>
+            )}
+            {metricsState.experience === 'initial' && metricsState.status === 'empty' && (
+              <StatusBadge
+                variant="info"
+                tooltip={
+                  metricsState.guidance ?? 'Finalize a configuração inicial para desbloquear métricas.'
+                }
+              >
+                Configuração inicial
+              </StatusBadge>
+            )}
+          </div>
+        )}
         <span className="dashboard-hero__tag">Alojamentos locais · Porto</span>
         <h1>Coordene operações e hóspedes num único painel</h1>
         <p>
@@ -513,6 +669,19 @@ function DashboardHero({
             </div>
           ))}
         </dl>
+        {shouldShowRecoveryCta && (
+          <div className="dashboard-hero__recovery" data-testid="dashboard-recovery-cta">
+            <strong>Reconectar ao Core</strong>
+            <p>{metricsState.guidance ?? 'Siga os passos abaixo para restabelecer a sincronização com o Core API.'}</p>
+            <ol>
+              <li>
+                Aceda a <a href="/settings/integrations">Configurações &gt; Integrações</a>.
+              </li>
+              <li>Valide as credenciais e tokens do Core API.</li>
+              <li>Guarde as alterações e atualize este painel.</li>
+            </ol>
+          </div>
+        )}
       </div>
       <div className="dashboard-hero__panel">
         <div className="dashboard-hero__kpis">
@@ -538,18 +707,25 @@ function DashboardHero({
           grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
           padding: var(--space-6);
           border-radius: var(--radius-md);
-          background: linear-gradient(135deg, rgba(244, 245, 247, 0.9), rgba(46, 196, 182, 0.2));
+          background: linear-gradient(135deg, rgba(244, 245, 247, 0.92), rgba(46, 196, 182, 0.18));
           border: 1px solid rgba(11, 60, 93, 0.08);
         }
         .dashboard-hero__content {
           display: grid;
           gap: var(--space-4);
         }
+        .dashboard-hero__status-banner {
+          display: inline-flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--space-3);
+        }
         .dashboard-hero__tag {
           text-transform: uppercase;
           letter-spacing: 0.12em;
           font-size: 0.75rem;
           color: var(--color-neutral-2);
+          font-weight: 600;
         }
         h1 {
           margin: 0;
@@ -617,6 +793,36 @@ function DashboardHero({
           color: var(--color-neutral-2);
           font-size: 0.85rem;
         }
+        .dashboard-hero__recovery {
+          margin-top: var(--space-5);
+          padding: var(--space-4);
+          border-radius: var(--radius-sm);
+          border: 1px dashed rgba(11, 60, 93, 0.2);
+          background: rgba(255, 255, 255, 0.75);
+          display: grid;
+          gap: var(--space-3);
+        }
+        .dashboard-hero__recovery strong {
+          font-size: 1rem;
+          color: var(--color-deep-blue);
+        }
+        .dashboard-hero__recovery p {
+          margin: 0;
+          color: var(--color-neutral-2);
+          font-size: 0.95rem;
+        }
+        .dashboard-hero__recovery ol {
+          margin: 0;
+          padding-left: var(--space-5);
+          display: grid;
+          gap: var(--space-2);
+          color: var(--color-neutral-2);
+        }
+        .dashboard-hero__recovery a {
+          font-weight: 600;
+          color: var(--color-deep-blue);
+          text-decoration: underline;
+        }
         .dashboard-hero__panel {
           display: grid;
           gap: var(--space-4);
@@ -651,13 +857,37 @@ function DashboardHero({
           letter-spacing: 0.06em;
           font-size: 0.75rem;
         }
+        .dashboard-hero__kpi-inner {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
         .dashboard-hero__kpi-value {
           font-size: 2rem;
           color: var(--color-deep-blue);
+          font-weight: 700;
         }
         .dashboard-hero__kpi-message {
           font-size: 0.95rem;
           color: var(--color-neutral-2);
+        }
+        .dashboard-hero__kpi-annotation {
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .dashboard-hero__kpi-annotation--info {
+          color: var(--color-neutral-2);
+        }
+        .dashboard-hero__kpi-annotation--warning {
+          color: var(--color-amber-600, #b45309);
+        }
+        .dashboard-hero__kpi-annotation--critical {
+          color: var(--color-coral);
+        }
+        .dashboard-hero__kpi-annotation--success {
+          color: var(--color-emerald-600, #047857);
         }
         .dashboard-hero__kpi p {
           margin: 0;
@@ -666,9 +896,6 @@ function DashboardHero({
         }
         @media (max-width: 1200px) {
           .dashboard-hero {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .dashboard-hero__panel {
             grid-template-columns: minmax(0, 1fr);
           }
         }
@@ -918,6 +1145,9 @@ export default function DashboardPage() {
   const kpis = useMemo(() => buildKpiCards(metricsState), [metricsState]);
 
   const showSlaOverview = slaState.status === 'success' && slaState.data.length > 0;
+  const showSlaOfflineBanner = slaState.mode === 'offline';
+  const slaOfflineTooltip =
+    slaState.message ?? 'Sem ligação com o Core API. A mostrar SLAs de referência.';
   const fallbackSlaMessage =
     slaState.message ??
     (slaState.status === 'loading'
@@ -928,7 +1158,9 @@ export default function DashboardPage() {
       ? 'critical'
       : slaState.status === 'loading'
         ? 'info'
-        : 'warning';
+        : slaState.mode === 'offline'
+          ? 'warning'
+          : 'warning';
 
   return (
     <div className="dashboard">
@@ -962,6 +1194,14 @@ export default function DashboardPage() {
           <SectionHeader subtitle="Monitorização contínua dos compromissos com parceiros">
             SLAs críticos dos parceiros
           </SectionHeader>
+          {showSlaOfflineBanner && (
+            <div className="dashboard__offline-banner" data-testid="sla-offline-banner">
+              <StatusBadge variant="warning" tooltip={slaOfflineTooltip}>
+                Modo offline
+              </StatusBadge>
+              <span>{slaState.message ?? 'A mostrar SLAs de referência até restabelecer a ligação.'}</span>
+            </div>
+          )}
           {showSlaOverview ? (
             <SlaOverview slas={slaState.data} context="home" />
           ) : (
@@ -1018,6 +1258,20 @@ export default function DashboardPage() {
         .dashboard__aside-grid {
           display: grid;
           gap: var(--space-4);
+        }
+        .dashboard__offline-banner {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-3);
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-sm);
+          background: rgba(180, 83, 9, 0.12);
+          color: var(--color-calm-gold);
+          font-weight: 600;
+        }
+        .dashboard__offline-banner span {
+          color: var(--color-neutral-2);
+          font-size: 0.9rem;
         }
         .dashboard__priority-list {
           list-style: none;

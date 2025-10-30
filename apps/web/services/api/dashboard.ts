@@ -1,7 +1,12 @@
 import { CoreApiError, HousekeepingStatus } from './housekeeping';
+import { dashboardMetricsFixture } from './__mocks__/dashboard';
 
+const CORE_API_BASE_URL_ENV = process.env.NEXT_PUBLIC_CORE_API_BASE_URL;
+const CORE_API_CONFIGURED = Boolean(CORE_API_BASE_URL_ENV?.trim());
 const CORE_API_BASE_URL =
-  process.env.NEXT_PUBLIC_CORE_API_BASE_URL ?? 'http://localhost:8000';
+  CORE_API_BASE_URL_ENV && CORE_API_BASE_URL_ENV.trim().length > 0
+    ? CORE_API_BASE_URL_ENV
+    : 'http://localhost:8000';
 
 export interface OccupancyMetric {
   date: string;
@@ -138,6 +143,10 @@ interface GetDashboardMetricsOptions {
   targetDate?: string;
 }
 
+export type DashboardMetricsResponse =
+  | { status: 'live'; data: DashboardMetrics }
+  | { status: 'degraded'; data: DashboardMetrics; message: string };
+
 function mapOccupancy(dto: OccupancyDto): OccupancyMetric {
   return {
     date: dto.date,
@@ -211,33 +220,58 @@ function mapOperational(dto: OperationalDto): OperationalMetrics {
 
 export async function getDashboardMetrics(
   options: GetDashboardMetricsOptions = {}
-): Promise<DashboardMetrics> {
+): Promise<DashboardMetricsResponse> {
+  if (!CORE_API_CONFIGURED) {
+    return {
+      status: 'degraded',
+      data: dashboardMetricsFixture,
+      message:
+        'Sem URL configurada para o Core API. A mostrar métricas de referência até que a ligação seja reativada.'
+    };
+  }
+
   const url = new URL('/metrics/overview', CORE_API_BASE_URL);
   if (options.targetDate) {
     url.searchParams.set('target_date', options.targetDate);
   }
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json'
-    },
-    signal: options.signal,
-    cache: 'no-store'
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json'
+      },
+      signal: options.signal,
+      cache: 'no-store'
+    });
 
-  if (!response.ok) {
-    const body = await safeReadJson(response);
-    throw new CoreApiError('Failed to load dashboard metrics', response.status, body);
+    if (!response.ok) {
+      const body = await safeReadJson(response);
+      throw new CoreApiError('Failed to load dashboard metrics', response.status, body);
+    }
+
+    const payload = (await response.json()) as DashboardMetricsDto;
+    return {
+      status: 'live',
+      data: {
+        occupancy: mapOccupancy(payload.occupancy),
+        nps: mapNps(payload.nps),
+        sla: mapSla(payload.sla),
+        operational: mapOperational(payload.operational)
+      }
+    };
+  } catch (error) {
+    if (error instanceof CoreApiError) {
+      throw error;
+    }
+
+    return {
+      status: 'degraded',
+      data: dashboardMetricsFixture,
+      message:
+        'Não foi possível contactar o Core API. A mostrar métricas de exemplo enquanto a ligação é restabelecida.'
+    };
   }
-
-  const payload = (await response.json()) as DashboardMetricsDto;
-  return {
-    occupancy: mapOccupancy(payload.occupancy),
-    nps: mapNps(payload.nps),
-    sla: mapSla(payload.sla),
-    operational: mapOperational(payload.operational)
-  };
 }
 
 async function safeReadJson(response: Response): Promise<unknown> {
