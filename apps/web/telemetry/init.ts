@@ -17,16 +17,27 @@ export type TelemetryRuntime = {
   loggerProvider: LoggerProvider;
 };
 
-const DEFAULT_ENDPOINT = 'http://localhost:4318';
-
 type EndpointKind = 'traces' | 'metrics' | 'logs';
 
-function buildUrl(kind: EndpointKind, base?: string) {
-  const normalized = (base ?? DEFAULT_ENDPOINT).replace(/\/$/, '');
+function buildUrl(kind: EndpointKind, base: string) {
+  const normalized = base.replace(/\/$/, '');
   if (normalized.endsWith(`/v1/${kind}`)) {
     return normalized;
   }
   return `${normalized}/v1/${kind}`;
+}
+
+function isTelemetryDisabled(flag?: string | null) {
+  if (!flag) {
+    return false;
+  }
+  const normalized = flag.trim().toLowerCase();
+  return ['0', 'false', 'no', 'off'].includes(normalized);
+}
+
+function sanitizeEndpoint(raw?: string | null) {
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function parseHeaders(raw?: string) {
@@ -57,33 +68,53 @@ export async function initTelemetry(): Promise<TelemetryRuntime | null> {
 
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ERROR);
 
-  const baseEndpoint = process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT;
+  if (isTelemetryDisabled(process.env.NEXT_PUBLIC_ENABLE_TELEMETRY)) {
+    console.info(
+      '[Telemetry] Telemetria desativada via NEXT_PUBLIC_ENABLE_TELEMETRY. Instrumentações não serão registradas.'
+    );
+    return null;
+  }
+
+  const baseEndpoint = sanitizeEndpoint(process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT);
   const headers = parseHeaders(process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_HEADERS);
   const resource = createResource();
 
   const tracerProvider = new WebTracerProvider({ resource });
-  tracerProvider.addSpanProcessor(
-    new BatchSpanProcessor(
-      new OTLPTraceExporter({ url: buildUrl('traces', baseEndpoint), headers })
-    )
-  );
+  if (baseEndpoint) {
+    tracerProvider.addSpanProcessor(
+      new BatchSpanProcessor(
+        new OTLPTraceExporter({ url: buildUrl('traces', baseEndpoint), headers })
+      )
+    );
+  } else {
+    console.info(
+      '[Telemetry] NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT não definido; instrumentações serão registradas sem exportadores.'
+    );
+  }
   tracerProvider.register();
 
-  const metricExporter = new OTLPMetricExporter({
-    url: buildUrl('metrics', baseEndpoint),
-    headers,
-  });
   const meterProvider = new MeterProvider({
     resource,
-    readers: [new PeriodicExportingMetricReader({ exporter: metricExporter })],
+    readers: baseEndpoint
+      ? [
+          new PeriodicExportingMetricReader({
+            exporter: new OTLPMetricExporter({
+              url: buildUrl('metrics', baseEndpoint),
+              headers,
+            }),
+          }),
+        ]
+      : [],
   });
 
   const loggerProvider = new LoggerProvider({ resource });
-  loggerProvider.addLogRecordProcessor(
-    new BatchLogRecordProcessor(
-      new OTLPLogExporter({ url: buildUrl('logs', baseEndpoint), headers })
-    )
-  );
+  if (baseEndpoint) {
+    loggerProvider.addLogRecordProcessor(
+      new BatchLogRecordProcessor(
+        new OTLPLogExporter({ url: buildUrl('logs', baseEndpoint), headers })
+      )
+    );
+  }
   logs.setGlobalLoggerProvider(loggerProvider);
 
   registerInstrumentations({

@@ -13,6 +13,9 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     void import('@/telemetry/init').then(async (module) => {
       const runtime = await module.initTelemetry();
       if (!runtime) {
+        console.info(
+          '[Telemetry] Telemetria não será inicializada (desativada ou indisponível no ambiente atual).'
+        );
         return;
       }
       const { registerAnalyticsInstrumentation } = await import('@/telemetry/analytics');

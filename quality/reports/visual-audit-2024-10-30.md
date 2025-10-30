@@ -25,9 +25,9 @@
 - Recomendação: remover `.next/static/media/*woff2` do controlo de versão e garantir `next/font` reconstrói assets válidos (ex.: executar `next dev` com rede ou incluir fallback local com `display: swap`).
 
 ### 4. Telemetria gera erros de rede em todas as sessões
-- O `TelemetryProvider` inicializa exportadores OTLP apontando para `http://localhost:4318/v1/*` sem verificar disponibilidade.【F:apps/web/telemetry/init.ts†L1-L119】
-- Em ambientes sem colector OTLP, o browser gera múltiplas requisições falhadas (e possivelmente o badge "1 error").
-- Recomendação: tornar a telemetria opcional quando as variáveis `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` não estiverem definidas, e suprimir exportadores até existir colector.
+- O `TelemetryProvider` inicialmente inicializava exportadores OTLP apontando para `http://localhost:4318/v1/*` sem verificar disponibilidade.【F:apps/web/telemetry/init.ts†L1-L119】
+- Atualização: a inicialização passou a validar `NEXT_PUBLIC_ENABLE_TELEMETRY` e `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT`, registrando apenas instrumentação local quando o collector não está configurado e evitando requisições falhadas.【F:apps/web/telemetry/init.ts†L60-L119】【F:apps/web/components/telemetry/TelemetryProvider.tsx†L12-L21】
+- Em ambientes sem colector OTLP, o browser deixa de gerar erros de rede e apenas registra logs informativos.
 
 ### 5. Fluxo de tour guiado depende de storage local e pode quebrar hooks
 - Lint aponta dependências instáveis em `usePageTour` e `TourContext`, o que pode causar re-renderizações infinitas ou estado inconsistente ao navegar.【098d19†L1-L17】【F:apps/web/components/tour/usePageTour.ts†L8-L36】【F:apps/web/components/tour/TourContext.tsx†L240-L296】

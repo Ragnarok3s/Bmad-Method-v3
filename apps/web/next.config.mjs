@@ -7,7 +7,7 @@ const nextConfig = {
   transpilePackages: ['@bmad/api-client'],
   env: {
     NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT:
-      process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://localhost:4318',
+      process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT ?? '',
     NEXT_PUBLIC_OTEL_EXPORTER_OTLP_HEADERS:
       process.env.NEXT_PUBLIC_OTEL_EXPORTER_OTLP_HEADERS ?? '',
     NEXT_PUBLIC_OTEL_SERVICE_NAME:
@@ -17,7 +17,9 @@ const nextConfig = {
     NEXT_PUBLIC_ENVIRONMENT:
       process.env.NEXT_PUBLIC_ENVIRONMENT ?? 'local',
     NEXT_PUBLIC_CORE_API_BASE_URL:
-      process.env.NEXT_PUBLIC_CORE_API_BASE_URL ?? 'http://localhost:8000'
+      process.env.NEXT_PUBLIC_CORE_API_BASE_URL ?? 'http://localhost:8000',
+    NEXT_PUBLIC_ENABLE_TELEMETRY:
+      process.env.NEXT_PUBLIC_ENABLE_TELEMETRY ?? 'true'
   }
 };
 
