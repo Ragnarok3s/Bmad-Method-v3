@@ -1135,6 +1135,9 @@ def get_bundle_usage(
     workspace: str | None = Query(default=None),
     granularity: BundleUsageGranularity | None = Query(default=None),
     limit: int = Query(default=90, ge=1, le=365),
+    start: datetime | None = Query(default=None),
+    end: datetime | None = Query(default=None),
+    window_days: int | None = Query(default=None, ge=1, le=365),
     session: Session = Depends(get_session),
 ):
     service = BundleUsageService(session)
@@ -1143,6 +1146,9 @@ def get_bundle_usage(
         workspace_slug=workspace,
         granularity=granularity,
         limit=limit,
+        window_start=start,
+        window_end=end,
+        window_days=window_days,
     )
 
 

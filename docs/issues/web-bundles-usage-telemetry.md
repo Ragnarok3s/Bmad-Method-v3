@@ -10,7 +10,7 @@ O catálogo de bundles expõe apenas metadados estáticos (slug, competências, 
 
 ## Ações recomendadas
 1. **Frontend**: emitir eventos `bundle_view` e `bundle_launch` com atributos `bundle_id`, `bundle_type`, `context` em pontos de interação (por ex., cards em `/agentes` e listagens equivalentes). 【F:apps/web/app/agents/page.tsx†L87-L138】
-2. **Backend**: persistir agregados diários/semanal de uso (tabela `bundle_usage_metrics`) expostos via API `GET /bundles/usage`. 【F:services/core/api/rest.py†L309-L370】
+2. **Backend**: persistir agregados diários/semanal de uso (tabela `analytics.bundle_usage_fact`) expostos via API `GET /bundles/usage`. 【F:services/core/api/rest.py†L309-L370】
 3. **Observabilidade**: criar métricas OTEL dedicadas (`bmad_web_bundle_view_total`, `bmad_core_bundle_activation_total`) e dashboards comparativos com filtros por workspace.
 4. **Governança**: definir SLOs de adoção mínima por bundle e alertas quando o volume cair abaixo do limiar durante X dias consecutivos.
 

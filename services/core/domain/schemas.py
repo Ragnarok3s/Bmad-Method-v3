@@ -793,6 +793,9 @@ class BundleUsageDataPoint(BaseModel):
     view_count: int
     launch_count: int
     last_event_at: datetime | None = None
+    lead_time_seconds_p50: float | None = None
+    lead_time_seconds_p90: float | None = None
+    conversion_rate: float | None = None
 
 
 class BundleUsageTotals(BaseModel):
@@ -800,9 +803,17 @@ class BundleUsageTotals(BaseModel):
     launch_count: int
 
 
+class BundleUsageStatistics(BaseModel):
+    conversion_rate: float
+    lead_time_seconds_p50: float | None
+    lead_time_seconds_p90: float | None
+    sample_size: int
+
+
 class BundleUsageCollection(BaseModel):
     items: list[BundleUsageDataPoint]
     totals: BundleUsageTotals
+    stats: BundleUsageStatistics
     generated_at: datetime
 
 

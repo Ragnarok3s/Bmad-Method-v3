@@ -91,6 +91,56 @@ class ObservabilitySettings:
 
 
 @dataclass(slots=True)
+class BundleUsageStreamSettings:
+    """Configurações do conector Kafka para eventos de bundle."""
+
+    bootstrap_servers: str = "localhost:9092"
+    topic: str = "bundle-usage-events"
+    group_id: str = "core.bundle-usage"
+    enabled: bool = True
+    batch_size: int = 500
+    poll_timeout: float = 1.0
+    partitions: int = 8
+
+    @classmethod
+    def from_environ(cls, environ: dict[str, str]) -> "BundleUsageStreamSettings":
+        return cls(
+            bootstrap_servers=environ.get(
+                "CORE_BUNDLE_USAGE_KAFKA_BOOTSTRAP", cls.bootstrap_servers
+            ),
+            topic=environ.get("CORE_BUNDLE_USAGE_KAFKA_TOPIC", cls.topic),
+            group_id=environ.get("CORE_BUNDLE_USAGE_KAFKA_GROUP", cls.group_id),
+            enabled=_to_bool(
+                environ.get("CORE_BUNDLE_USAGE_KAFKA_ENABLED"), cls.enabled
+            ),
+            batch_size=_to_int(
+                environ.get("CORE_BUNDLE_USAGE_KAFKA_BATCH_SIZE"), cls.batch_size
+            ),
+            poll_timeout=float(
+                environ.get("CORE_BUNDLE_USAGE_KAFKA_POLL_TIMEOUT", cls.poll_timeout)
+            ),
+            partitions=_to_int(
+                environ.get("CORE_BUNDLE_USAGE_KAFKA_PARTITIONS"), cls.partitions
+            ),
+        )
+
+
+@dataclass(slots=True)
+class AnalyticsSettings:
+    """Agrupa configurações da camada analítica do core."""
+
+    bundle_usage_stream: BundleUsageStreamSettings = field(
+        default_factory=BundleUsageStreamSettings
+    )
+
+    @classmethod
+    def from_environ(cls, environ: dict[str, str]) -> "AnalyticsSettings":
+        return cls(
+            bundle_usage_stream=BundleUsageStreamSettings.from_environ(environ)
+        )
+
+
+@dataclass(slots=True)
 class PaymentGatewaySettings:
     """Configura integrações de PSP como Stripe ou Adyen."""
 
@@ -139,6 +189,7 @@ class CoreSettings:
     auth_session_timeout_seconds: int = 30 * 60
     payments: PaymentGatewaySettings = field(default_factory=PaymentGatewaySettings)
     tenancy: "TenantSettings" = field(default_factory=lambda: TenantSettings())
+    analytics: AnalyticsSettings = field(default_factory=AnalyticsSettings)
 
     @classmethod
     def from_environ(cls, environ: dict[str, str]) -> "CoreSettings":
@@ -155,6 +206,7 @@ class CoreSettings:
             ),
             payments=PaymentGatewaySettings.from_environ(environ),
             tenancy=TenantSettings.from_environ(environ),
+            analytics=AnalyticsSettings.from_environ(environ),
         )
 
 

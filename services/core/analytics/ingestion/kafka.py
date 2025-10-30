@@ -34,6 +34,7 @@ class KafkaStreamConfig:
     enable_auto_commit: bool = False
     batch_size: int = 500
     poll_timeout: float = 1.0
+    partitions: int = 1
 
 
 class KafkaStream:
@@ -66,9 +67,15 @@ class KafkaStream:
         """Permite injetar mensagens (útil em testes e ambientes locais)."""
 
         for offset, raw_value, key in payloads:
+            partition = 0
+            if self._config.partitions > 1:
+                partition_seed = key or b""
+                if not isinstance(partition_seed, (bytes, bytearray)):
+                    partition_seed = str(partition_seed).encode()
+                partition = abs(hash(partition_seed)) % self._config.partitions
             message = KafkaMessage(
                 topic=self._config.topic,
-                partition=0,
+                partition=partition,
                 offset=offset,
                 key=key,
                 value=self._deserializer(raw_value),

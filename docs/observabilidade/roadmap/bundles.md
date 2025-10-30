@@ -18,7 +18,7 @@
 ## Instrumentação suportada
 
 - Front-end emite eventos `bundle_view` e `bundle_launch` via `bmad_web_bundle_view_total` e `bmad_web_bundle_launch_total` com atributo `workspace`.
-- Core agrega `BundleUsageMetric` (tabela homónima) e exporta `bmad_core_bundle_activation_total` e `bmad_core_bundle_activation_lead_time_hours`.
+- Core agrega `BundleUsageFact` (tabela `analytics.bundle_usage_fact`) e exporta `bmad_core_bundle_activation_total` e `bmad_core_bundle_activation_lead_time_hours`.
 - Dashboard de referência: `grafana/analytics/bundles-observability.json` com filtros de workspace/bundle.
 
 ## Próximos passos

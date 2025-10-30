@@ -14,3 +14,15 @@ models:
       - name: realized_revenue
         tests:
           - not_null
+  - name: silver_bundle_usage
+    description: "Camada silver com conversão e latência dos bundles."
+    columns:
+      - name: bundle_id
+        tests:
+          - not_null
+      - name: period_start
+        tests:
+          - not_null
+      - name: conversion_rate
+        tests:
+          - not_null

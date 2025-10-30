@@ -16,3 +16,15 @@ models:
       - name: updated_at
         tests:
           - not_null
+  - name: gold_bundle_usage_performance
+    description: "Visão gold com cobertura, conversão e latência dos bundles."
+    columns:
+      - name: workspace_slug
+        tests:
+          - not_null
+      - name: bundle_id
+        tests:
+          - not_null
+      - name: conversion_rate
+        tests:
+          - not_null
