@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Button,
-  FlatList,
-  StyleSheet,
-  Text,
-  TextInput,
-  View
-} from 'react-native';
+import { Button, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { IncidentReportPayload, IncidentSeverity } from '@bmad/api-client';
 
 import { useApiClient } from '../providers/ApiProvider';
 import { IncidentRepository, type IncidentQueueItem } from '../modules/incidents/repository';
+import { AccessibleModal } from '../components/AccessibleModal';
 
 const DEFAULT_OWNER_ID = 1;
 
@@ -23,6 +16,11 @@ export function IncidentsScreen(): JSX.Element {
   const [reportedBy, setReportedBy] = useState('mobile-app');
   const [queue, setQueue] = useState<IncidentQueueItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    title: string;
+    message: string;
+    confirmLabel?: string;
+  } | null>(null);
 
   const loadQueue = useCallback(async () => {
     const items = await repository.listQueue(DEFAULT_OWNER_ID);
@@ -35,7 +33,11 @@ export function IncidentsScreen(): JSX.Element {
 
   const handleSubmit = useCallback(async () => {
     if (!incident.trim()) {
-      Alert.alert('Validação', 'Descreva o incidente antes de enviar.');
+      setFeedback({
+        title: 'Validação',
+        message: 'Descreva o incidente antes de enviar.',
+        confirmLabel: 'Corrigir'
+      });
       return;
     }
     setSubmitting(true);
@@ -50,7 +52,11 @@ export function IncidentsScreen(): JSX.Element {
       setIncident('');
     } catch (error) {
       console.warn('incident_submit_failed', error);
-      Alert.alert('Erro', 'Não foi possível enviar o incidente agora. Ele permanecerá na fila.');
+      setFeedback({
+        title: 'Erro',
+        message: 'Não foi possível enviar o incidente agora. Ele permanecerá na fila.',
+        confirmLabel: 'Entendido'
+      });
     } finally {
       setSubmitting(false);
     }
@@ -60,10 +66,18 @@ export function IncidentsScreen(): JSX.Element {
     try {
       await repository.retryPending(DEFAULT_OWNER_ID);
       await loadQueue();
-      Alert.alert('Sincronização concluída', 'Incidentes sincronizados com o servidor.');
+      setFeedback({
+        title: 'Sincronização concluída',
+        message: 'Incidentes sincronizados com o servidor.',
+        confirmLabel: 'Fechar'
+      });
     } catch (error) {
       console.warn('incident_retry_failed', error);
-      Alert.alert('Erro', 'Não foi possível sincronizar as pendências.');
+      setFeedback({
+        title: 'Erro',
+        message: 'Não foi possível sincronizar as pendências.',
+        confirmLabel: 'Tentar novamente'
+      });
     }
   }, [loadQueue, repository]);
 
@@ -102,6 +116,15 @@ export function IncidentsScreen(): JSX.Element {
         renderItem={({ item }) => <IncidentItem item={item} />}
         contentContainerStyle={styles.list}
         ListEmptyComponent={<Text style={styles.empty}>Nenhum incidente registado.</Text>}
+      />
+      <AccessibleModal
+        visible={Boolean(feedback)}
+        title={feedback?.title ?? ''}
+        message={feedback?.message ?? ''}
+        confirmLabel={feedback?.confirmLabel ?? 'Fechar'}
+        onConfirm={() => setFeedback(null)}
+        onDismiss={() => setFeedback(null)}
+        testID="incidents-feedback-modal"
       />
     </View>
   );
