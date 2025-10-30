@@ -37,8 +37,7 @@ class PropertyRead(PropertyCreate):
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WorkspaceCreate(BaseModel):
@@ -60,8 +59,7 @@ class WorkspaceRead(WorkspaceCreate):
     slug: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentMethodCreate(BaseModel):
@@ -92,8 +90,7 @@ class PaymentIntentRead(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceRead(BaseModel):
@@ -104,8 +101,7 @@ class InvoiceRead(BaseModel):
     issued_at: datetime
     due_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginRequest(BaseModel):
@@ -154,8 +150,7 @@ class AgentRead(AgentCreate):
     active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AgentProfileUpdate(BaseModel):
@@ -188,8 +183,7 @@ class ReservationRead(BaseModel):
     payment_intents: list[PaymentIntentRead] | None = None
     invoices: list[InvoiceRead] | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReservationUpdateStatus(BaseModel):
@@ -286,8 +280,7 @@ class HousekeepingTaskRead(BaseModel):
     notes: str | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginationMeta(BaseModel):
@@ -311,8 +304,7 @@ class OTASyncJobRead(BaseModel):
     payload: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HousekeepingStatusUpdate(BaseModel):
@@ -325,8 +317,7 @@ class PartnerSummary(BaseModel):
     slug: str
     category: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerSLAVersionRead(BaseModel):
@@ -340,8 +331,7 @@ class PartnerSLAVersionRead(BaseModel):
     effective_to: datetime | None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerSLARead(BaseModel):
@@ -359,8 +349,7 @@ class PartnerSLARead(BaseModel):
     current_version: PartnerSLAVersionRead | None = None
     versions: list[PartnerSLAVersionRead] | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReconciliationQueueRead(BaseModel):
@@ -379,8 +368,7 @@ class ReconciliationQueueRead(BaseModel):
     sla_version_id: int | None
     payload: dict[str, Any]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PartnerWebhookPayload(BaseModel):
@@ -472,16 +460,14 @@ class PermissionRead(PermissionBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PropertySummary(BaseModel):
     id: int
     name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RolePolicyBase(BaseModel):
@@ -838,8 +824,7 @@ class PlaybookTemplateRead(PlaybookTemplateBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaybookExecutionRequest(BaseModel):
@@ -856,8 +841,7 @@ class PlaybookExecutionRead(BaseModel):
     finished_at: datetime | None
     message: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OwnerMetricsRead(BaseModel):

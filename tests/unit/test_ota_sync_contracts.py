@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from pydantic import ValidationError
 from sqlalchemy import select
 
 from services.core.config import CoreSettings
@@ -151,3 +152,23 @@ def test_expedia_return_within_sla_marks_success(tmp_path) -> None:
         assert return_sla.current_version is not None
         assert return_sla.current_version.version == 1
         assert return_sla.current_minutes == 4
+
+
+def test_ingestion_contract_rejects_received_before_emitted() -> None:
+    emitted_at = datetime(2024, 5, 1, 12, 0, tzinfo=timezone.utc)
+    received_at = emitted_at - timedelta(minutes=5)
+
+    with pytest.raises(ValidationError) as exc:
+        OTAIngestionContract(
+            channel_slug="invalid",
+            partner_name="Invalid",
+            external_id="oops",
+            property_id=1,
+            reservation_id=None,
+            status="confirmed",
+            emitted_at=emitted_at,
+            received_at=received_at,
+            payload={},
+        )
+
+    assert "received_at deve ser posterior a emitted_at" in str(exc.value)
