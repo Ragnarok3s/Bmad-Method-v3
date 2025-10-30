@@ -70,28 +70,28 @@ export default function OwnerPropertiesPage() {
                 accent={property.issuesOpen > 1 ? 'critical' : property.issuesOpen === 1 ? 'warning' : 'success'}
               >
                 <dl className="owners-property-grid">
-                <div>
-                  <dt>Receita MTD</dt>
-                  <dd>{currencyFormatter.format(property.revenueMtd)}</dd>
-                </div>
-                <div>
-                  <dt>Incidentes</dt>
-                  <dd>{property.issuesOpen}</dd>
-                </div>
-                <div>
-                  <dt>Último incidente</dt>
-                  <dd>
-                    {property.lastIncidentAt
-                      ? new Date(property.lastIncidentAt).toLocaleDateString('pt-PT')
-                      : 'Sem ocorrências recentes'}
-                  </dd>
-                </div>
-              </dl>
-            </Card>
-          ))}
+                  <div>
+                    <dt>Receita MTD</dt>
+                    <dd>{currencyFormatter.format(property.revenueMtd)}</dd>
+                  </div>
+                  <div>
+                    <dt>Incidentes</dt>
+                    <dd>{property.issuesOpen}</dd>
+                  </div>
+                  <div>
+                    <dt>Último incidente</dt>
+                    <dd>
+                      {property.lastIncidentAt
+                        ? new Date(property.lastIncidentAt).toLocaleDateString('pt-PT')
+                        : 'Sem ocorrências recentes'}
+                    </dd>
+                  </div>
+                </dl>
+              </Card>
+            ))}
           </ResponsiveGrid>
         </div>
-      )
+      )}
       <style jsx>{`
         .owners-properties {
           display: grid;
