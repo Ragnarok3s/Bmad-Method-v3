@@ -37,6 +37,8 @@ _guest_message_latency = None
 _guest_satisfaction = None
 _guest_preference_sync = None
 _dashboard_alerts = None
+_bundle_activation_total = None
+_bundle_activation_lead_time = None
 
 
 def _ensure_counters() -> None:
@@ -66,6 +68,8 @@ def _ensure_counters() -> None:
     global _guest_satisfaction
     global _guest_preference_sync
     global _dashboard_alerts
+    global _bundle_activation_total
+    global _bundle_activation_lead_time
 
     if _COUNTERS_INITIALIZED:
         return
@@ -180,6 +184,15 @@ def _ensure_counters() -> None:
             "bmad_core_dashboard_alerts_total",
             description="Alertas acompanhados no dashboard operacional",
         )
+        _bundle_activation_total = meter.create_counter(
+            "bmad_core_bundle_activation_total",
+            description="Total de ativações de bundles processadas pelo core",
+        )
+        _bundle_activation_lead_time = meter.create_histogram(
+            "bmad_core_bundle_activation_lead_time_hours",
+            description="Tempo entre a primeira visualização e a ativação de bundles",
+            unit="h",
+        )
 
         _COUNTERS_INITIALIZED = True
 
@@ -192,6 +205,31 @@ def _stringify(attributes: Mapping[str, object] | None = None) -> dict[str, str]
 
 def _track_metric(instrument: str, attributes: Mapping[str, str] | None = None) -> None:
     mark_signal_event("metrics", instrument, attributes or {})
+
+
+def record_bundle_activation(
+    bundle_id: str,
+    *,
+    workspace_slug: str | None = None,
+    lead_time_hours: float | None = None,
+    source: str | None = None,
+) -> None:
+    _ensure_counters()
+    attributes = _stringify(
+        {
+            "bundle_id": bundle_id,
+            "workspace": workspace_slug or "global",
+            "source": source or "unknown",
+        }
+    )
+    _bundle_activation_total.add(1, attributes)
+    _track_metric("bmad_core_bundle_activation_total", attributes)
+    if lead_time_hours is not None:
+        _bundle_activation_lead_time.record(lead_time_hours, attributes)
+        _track_metric(
+            "bmad_core_bundle_activation_lead_time_hours",
+            {**attributes, "lead_time_hours": f"{lead_time_hours:.2f}"},
+        )
 
 
 def record_reservation_confirmed(property_id: int) -> None:

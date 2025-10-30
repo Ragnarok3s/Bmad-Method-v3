@@ -38,7 +38,7 @@ from ..analytics.query import (
 from ..config import CoreSettings, PaymentGatewaySettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
-from ..domain.models import Agent, HousekeepingStatus
+from ..domain.models import Agent, BundleUsageGranularity, HousekeepingStatus
 from ..domain.schemas import (
     AgentCreate,
     AgentProfileUpdate,
@@ -84,6 +84,7 @@ from ..domain.schemas import (
     KnowledgeBaseArticleRead,
     KnowledgeBaseCatalogRead,
     KnowledgeBaseTelemetryEvent,
+    BundleUsageCollection,
     OwnerDocumentUploadResponse,
     OwnerIncidentReport,
     OwnerInvoiceRead,
@@ -118,6 +119,7 @@ from ..services import (
     PropertyService,
     ReservationService,
     WorkspaceService,
+    BundleUsageService,
 )
 from ..pricing import PricingService
 from ..services.partners import PartnerSLAService
@@ -1124,6 +1126,23 @@ def list_agents_catalog(
         availability=availability,
         page=page,
         page_size=page_size,
+    )
+
+
+@router.get("/bundles/usage", response_model=BundleUsageCollection)
+def get_bundle_usage(
+    bundle_id: str | None = Query(default=None),
+    workspace: str | None = Query(default=None),
+    granularity: BundleUsageGranularity | None = Query(default=None),
+    limit: int = Query(default=90, ge=1, le=365),
+    session: Session = Depends(get_session),
+):
+    service = BundleUsageService(session)
+    return service.list_usage(
+        bundle_id=bundle_id,
+        workspace_slug=workspace,
+        granularity=granularity,
+        limit=limit,
     )
 
 

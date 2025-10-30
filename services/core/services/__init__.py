@@ -90,6 +90,7 @@ from ..payments import (
 )
 
 from .knowledge_base import KnowledgeBaseService
+from .bundles import BundleUsageService
 
 if TYPE_CHECKING:
     from ..tenancy import TenantManager

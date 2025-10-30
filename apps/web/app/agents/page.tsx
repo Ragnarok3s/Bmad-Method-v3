@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { metrics } from '@opentelemetry/api';
 
 import { AgentsFilters } from '@/components/agents/AgentsFilters';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useAnalytics } from '@/components/analytics/AnalyticsContext';
+import { useTenant } from '@/lib/tenant-context';
 import {
   AgentAvailability,
   useAgentsCatalog
@@ -18,7 +21,24 @@ const AVAILABILITY_VARIANT: Record<AgentAvailability, 'success' | 'warning' | 'c
   maintenance: 'critical'
 };
 
+const bundlesMeter = metrics.getMeter('bmad.web.bundles');
+const bundleViewCounter = bundlesMeter.createCounter('bmad_web_bundle_view_total', {
+  description: 'Total de visualizações dos bundles no catálogo web'
+});
+const bundleLaunchCounter = bundlesMeter.createCounter('bmad_web_bundle_launch_total', {
+  description: 'Total de lançamentos de bundles iniciados pelo utilizador'
+});
+const bundleLaunchLatencyHistogram = bundlesMeter.createHistogram(
+  'bmad_web_bundle_launch_latency_ms',
+  {
+    description: 'Latência entre a primeira visualização e o lançamento de um bundle',
+    unit: 'ms'
+  }
+);
+
 export default function AgentsPage() {
+  const analytics = useAnalytics();
+  const { tenant } = useTenant();
   const {
     items,
     availableFilters,
@@ -35,10 +55,41 @@ export default function AgentsPage() {
   const totalPages = pagination?.totalPages ?? (items.length > 0 ? 1 : 0);
   const totalItems = pagination?.total ?? items.length;
   const currentPage = filters.page;
+  const workspaceSlug = useMemo(() => tenant?.slug ?? 'global', [tenant]);
   const errorAlertRef = useRef<HTMLDivElement | null>(null);
   const emptyAlertRef = useRef<HTMLDivElement | null>(null);
   const paginationRef = useRef<HTMLElement | null>(null);
   const previousPageRef = useRef<number>(currentPage);
+  const viewedBundlesRef = useRef<Set<string>>(new Set());
+  const viewTimestampsRef = useRef<Map<string, number>>(new Map());
+
+  const makeBundleKey = useCallback(
+    (bundleSlug: string) => `${workspaceSlug}::${bundleSlug}`,
+    [workspaceSlug]
+  );
+
+  const registerBundleLaunch = useCallback(
+    (bundleSlug: string, bundleType: string) => {
+      const bundleKey = makeBundleKey(bundleSlug);
+      const now = Date.now();
+      const attributes = {
+        bundle_id: bundleSlug,
+        bundle_type: bundleType,
+        workspace: workspaceSlug,
+        context: 'agents_catalog'
+      } as const;
+
+      analytics.track('bundle_launch', attributes);
+      bundleLaunchCounter.add(1, attributes);
+
+      const firstView = viewTimestampsRef.current.get(bundleKey);
+      if (typeof firstView === 'number') {
+        const latency = Math.max(0, now - firstView);
+        bundleLaunchLatencyHistogram.record(latency, attributes);
+      }
+    },
+    [analytics, makeBundleKey, workspaceSlug]
+  );
 
   useEffect(() => {
     if (error && errorAlertRef.current) {
@@ -51,6 +102,28 @@ export default function AgentsPage() {
       emptyAlertRef.current.focus();
     }
   }, [loading, error, items.length]);
+
+  useEffect(() => {
+    if (loading || error) {
+      return;
+    }
+    items.forEach((agent) => {
+      const bundleKey = makeBundleKey(agent.slug);
+      if (viewedBundlesRef.current.has(bundleKey)) {
+        return;
+      }
+      viewedBundlesRef.current.add(bundleKey);
+      viewTimestampsRef.current.set(bundleKey, Date.now());
+      const attributes = {
+        bundle_id: agent.slug,
+        bundle_type: agent.role,
+        workspace: workspaceSlug,
+        context: 'agents_catalog'
+      } as const;
+      analytics.track('bundle_view', attributes);
+      bundleViewCounter.add(1, attributes);
+    });
+  }, [analytics, error, items, loading, makeBundleKey, workspaceSlug]);
 
   useEffect(() => {
     if (
@@ -158,6 +231,15 @@ export default function AgentsPage() {
                 <span>Resposta média: {agent.responseTimeMinutes} min</span>
               )}
             </div>
+            <div className="agent-actions">
+              <button
+                type="button"
+                className="agent-launch-button"
+                onClick={() => registerBundleLaunch(agent.slug, agent.role)}
+              >
+                Lançar bundle
+              </button>
+            </div>
           </Card>
         ))}
       </ResponsiveGrid>
@@ -240,6 +322,25 @@ export default function AgentsPage() {
           gap: var(--space-2);
           font-size: 0.875rem;
           color: var(--color-neutral-2);
+        }
+        .agent-actions {
+          display: flex;
+          justify-content: flex-end;
+        }
+        .agent-launch-button {
+          border: none;
+          border-radius: var(--radius-sm);
+          background: var(--color-deep-blue);
+          color: #fff;
+          padding: var(--space-2) var(--space-4);
+          cursor: pointer;
+          font-weight: 600;
+          transition: background 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+        .agent-launch-button:hover,
+        .agent-launch-button:focus-visible {
+          background: var(--color-ocean-blue);
+          transform: translateY(-1px);
         }
         .agents-pagination {
           display: flex;
