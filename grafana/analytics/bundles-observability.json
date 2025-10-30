@@ -1,0 +1,131 @@
+{
+  "title": "Bundle Adoption & Activation",
+  "tags": ["bundles", "observability"],
+  "schemaVersion": 38,
+  "refresh": "5m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "workspace",
+        "type": "query",
+        "datasource": "observability-prometheus",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "query": "label_values(bmad_web_bundle_view_total, workspace)",
+        "current": {
+          "text": "All",
+          "value": ".*"
+        }
+      },
+      {
+        "name": "bundle",
+        "type": "query",
+        "datasource": "observability-prometheus",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "query": "label_values(bmad_core_bundle_activation_total, bundle_id)",
+        "current": {
+          "text": "All",
+          "value": ".*"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Bundle Views (15m rate)",
+      "id": 1,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(bmad_web_bundle_view_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[15m]))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Bundle Launches (15m rate)",
+      "id": 2,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s",
+          "decimals": 2
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(bmad_web_bundle_launch_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[15m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Weekly Activations por Bundle",
+      "id": 3,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (bundle_id) (increase(bmad_core_bundle_activation_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[$__range]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 Lead Time para Activação",
+      "id": 4,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "h",
+          "decimals": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum(rate(bmad_core_bundle_activation_lead_time_hours_bucket{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Conversão Launch / View",
+      "id": 5,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 1
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(bmad_web_bundle_launch_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[$__range])) / sum(increase(bmad_web_bundle_view_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[$__range]))"
+        }
+      ]
+    }
+  ]
+}

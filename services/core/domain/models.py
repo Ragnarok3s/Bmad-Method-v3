@@ -819,3 +819,36 @@ class RecommendationFeedback(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
     agent: Mapped[Agent | None] = relationship("Agent", back_populates="recommendation_feedback")
+
+
+class BundleUsageGranularity(str, Enum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
+
+
+class BundleUsageMetric(Base):
+    """Agregado de utilização de bundles por período."""
+
+    __tablename__ = "bundle_usage_metrics"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_slug: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    bundle_id: Mapped[str] = mapped_column(String(160), nullable=False, index=True)
+    bundle_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    period_start: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
+    granularity: Mapped[BundleUsageGranularity] = mapped_column(
+        SAEnum(BundleUsageGranularity), nullable=False
+    )
+    view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    launch_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_event_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "workspace_slug",
+            "bundle_id",
+            "granularity",
+            "period_start",
+            name="uq_bundle_usage_metrics_period",
+        ),
+    )

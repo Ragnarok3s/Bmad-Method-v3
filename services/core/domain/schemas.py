@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from .models import (
     AgentRole,
+    BundleUsageGranularity,
     ExperienceSurveyTouchpoint,
     HousekeepingStatus,
     InvoiceStatus,
@@ -795,6 +796,28 @@ class DashboardMetricsRead(BaseModel):
     sla: SLAMetricSummary
     operational: OperationalKPIs
     guest_experience: GuestExperienceAnalytics
+
+
+class BundleUsageDataPoint(BaseModel):
+    bundle_id: str
+    bundle_type: str
+    workspace_slug: str | None = None
+    period_start: datetime
+    granularity: BundleUsageGranularity
+    view_count: int
+    launch_count: int
+    last_event_at: datetime | None = None
+
+
+class BundleUsageTotals(BaseModel):
+    view_count: int
+    launch_count: int
+
+
+class BundleUsageCollection(BaseModel):
+    items: list[BundleUsageDataPoint]
+    totals: BundleUsageTotals
+    generated_at: datetime
 
 
 class PlaybookTemplateBase(BaseModel):
