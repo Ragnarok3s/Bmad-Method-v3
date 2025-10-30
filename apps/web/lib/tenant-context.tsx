@@ -64,11 +64,14 @@ export function TenantProvider({
   const resolvedTenant = tenant ?? resolveInitialTenant();
   const resolvedToken =
     platformToken ?? process.env.NEXT_PUBLIC_TENANT_PLATFORM_TOKEN ?? null;
-  const resolvedCapabilities: TenantCapabilities = {
-    canViewAggregatedReports: resolvedMode === 'platform',
-    canProvisionWorkspaces: resolvedMode === 'platform',
-    ...capabilities
-  };
+  const resolvedCapabilities = useMemo<TenantCapabilities>(
+    () => ({
+      canViewAggregatedReports: resolvedMode === 'platform',
+      canProvisionWorkspaces: resolvedMode === 'platform',
+      ...capabilities
+    }),
+    [capabilities, resolvedMode]
+  );
 
   const value = useMemo<TenantContextValue>(() => {
     function buildHeaders(options?: BuildHeadersOptions): Record<string, string> {

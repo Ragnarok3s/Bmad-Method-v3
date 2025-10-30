@@ -121,7 +121,13 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
   const completedSet = useMemo(() => new Set(completed), [completed]);
 
   const registerTour = useCallback((registration: TourRegistration) => {
-    setRegistrations((previous) => ({ ...previous, [registration.id]: registration }));
+    setRegistrations((previous) => {
+      const current = previous[registration.id];
+      if (current === registration) {
+        return previous;
+      }
+      return { ...previous, [registration.id]: registration };
+    });
     return () => {
       setRegistrations((previous) => {
         if (!(registration.id in previous)) {
@@ -256,8 +262,17 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
     }
   }, [completedSet, isOpen, pathname, registrations, startTour]);
 
-  const activeTour = activeTourId ? registrations[activeTourId] ?? null : null;
-  const steps = activeTour?.steps ?? [];
+  const activeTour = useMemo(() => {
+    if (!activeTourId) {
+      return null;
+    }
+    return registrations[activeTourId] ?? null;
+  }, [activeTourId, registrations]);
+
+  const steps = useMemo(() => {
+    return activeTour?.steps ?? [];
+  }, [activeTour]);
+
   const activeStep = steps[currentIndex] ?? null;
   const tours = useMemo(() => Object.values(registrations), [registrations]);
 

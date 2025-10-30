@@ -32,6 +32,13 @@ export function useKpiReport(filters: KpiReportFilters, options: UseKpiReportOpt
 
   const propertyKey = useMemo(() => filters.propertyIds.join(','), [filters.propertyIds]);
 
+  const propertyIds = useMemo(() => {
+    if (propertyKey.length === 0) {
+      return [] as number[];
+    }
+    return JSON.parse(`[${propertyKey}]`) as number[];
+  }, [propertyKey]);
+
   const headers = useMemo(() => {
     if (options.headers) {
       return options.headers;
@@ -45,6 +52,16 @@ export function useKpiReport(filters: KpiReportFilters, options: UseKpiReportOpt
       .map(([key, value]) => `${key}:${value}`)
       .join('|');
   }, [headers]);
+
+  const headersRef = useRef(headers);
+  const headerKeyRef = useRef(headerKey);
+
+  if (headerKeyRef.current !== headerKey) {
+    headerKeyRef.current = headerKey;
+    headersRef.current = headers;
+  }
+
+  const memoizedHeaders = headersRef.current;
 
   const load = useCallback(async () => {
     if (options.skip) {
@@ -61,9 +78,9 @@ export function useKpiReport(filters: KpiReportFilters, options: UseKpiReportOpt
       const payload = await getKpiReport({
         startDate: filters.startDate,
         endDate: filters.endDate,
-        propertyIds: filters.propertyIds,
+        propertyIds,
         signal: controller.signal,
-        headers
+        headers: memoizedHeaders
       });
 
       if (payload.items.length === 0) {
@@ -78,7 +95,7 @@ export function useKpiReport(filters: KpiReportFilters, options: UseKpiReportOpt
       }
       setState({ status: 'error', error: (error as Error).message });
     }
-  }, [filters.startDate, filters.endDate, propertyKey, headerKey, headers, options.skip]);
+  }, [filters.startDate, filters.endDate, memoizedHeaders, options.skip, propertyIds]);
 
   useEffect(() => {
     if (options.skip) {
