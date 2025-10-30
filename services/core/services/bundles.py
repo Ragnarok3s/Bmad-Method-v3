@@ -109,13 +109,15 @@ class BundleUsageService:
                 metric.view_count += 1
             else:
                 metric.launch_count += 1
-                record_bundle_activation(
-                    bundle_id,
-                    workspace_slug=workspace_slug,
-                    lead_time_hours=(lead_time_seconds / 3600) if lead_time_seconds is not None else None,
-                    source="bundle_launch",
-                )
             metric.last_event_at = timestamp
+
+        if event == "launch":
+            record_bundle_activation(
+                bundle_id,
+                workspace_slug=workspace_slug,
+                lead_time_hours=(lead_time_seconds / 3600) if lead_time_seconds is not None else None,
+                source="bundle_launch",
+            )
 
         self.session.flush()
 
