@@ -9,6 +9,8 @@ interface NavItem {
   description: string;
 }
 
+const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
 const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   {
     heading: 'Operação diária',
@@ -63,16 +65,20 @@ export function MainNav() {
             <ul>
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const tooltipId = `nav-tooltip-${slugify(item.href)}-${slugify(item.label)}`;
                 return (
-                  <li key={item.href}>
+                  <li key={item.href} className="main-nav__item">
                     <Link
                       href={item.href}
                       aria-current={isActive ? 'page' : undefined}
                       data-active={isActive ? 'true' : 'false'}
+                      aria-describedby={tooltipId}
                     >
                       <span className="main-nav__label">{item.label}</span>
-                      <span className="main-nav__description">{item.description}</span>
                     </Link>
+                    <span role="tooltip" id={tooltipId} className="main-nav__tooltip">
+                      {item.description}
+                    </span>
                   </li>
                 );
               })}
@@ -105,6 +111,9 @@ export function MainNav() {
           display: grid;
           gap: var(--space-2);
         }
+        .main-nav__item {
+          position: relative;
+        }
         a {
           display: grid;
           gap: var(--space-1);
@@ -130,12 +139,48 @@ export function MainNav() {
         .main-nav__label {
           font-weight: 600;
         }
-        .main-nav__description {
+        .main-nav__tooltip {
+          pointer-events: none;
+          position: absolute;
+          left: calc(100% + var(--space-2));
+          top: 50%;
+          transform: translateY(-50%);
+          width: min(240px, 32vw);
+          background: #0b3c5d;
+          color: #fff;
+          padding: var(--space-3);
+          border-radius: var(--radius-sm);
+          box-shadow: var(--shadow-flyout);
           font-size: 0.8125rem;
-          color: var(--color-neutral-2);
+          line-height: 1.45;
+          opacity: 0;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          transform-origin: left center;
         }
-        a[data-active='true'] .main-nav__description {
-          color: rgba(255, 255, 255, 0.85);
+        .main-nav__tooltip::before {
+          content: '';
+          position: absolute;
+          left: -6px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 0;
+          height: 0;
+          border-top: 6px solid transparent;
+          border-bottom: 6px solid transparent;
+          border-right: 6px solid #0b3c5d;
+        }
+        .main-nav__item:hover .main-nav__tooltip,
+        .main-nav__item:focus-within .main-nav__tooltip {
+          opacity: 1;
+          transform: translateY(-50%) translateX(4px);
+        }
+        a[data-active='true'] + .main-nav__tooltip {
+          background: rgba(11, 60, 93, 0.95);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .main-nav__tooltip {
+            transition: none;
+          }
         }
         @media (max-width: 960px) {
           .main-nav {
@@ -147,6 +192,21 @@ export function MainNav() {
           }
         }
         @media (max-width: 640px) {
+          .main-nav__item {
+            position: static;
+          }
+          .main-nav__tooltip {
+            position: relative;
+            left: 0;
+            top: auto;
+            transform: none;
+            opacity: 1;
+            margin-top: var(--space-2);
+            width: auto;
+          }
+          .main-nav__tooltip::before {
+            display: none;
+          }
           ul {
             grid-template-columns: minmax(0, 1fr);
           }

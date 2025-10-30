@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ReactNode } from 'react';
 import { useOffline } from '@/components/offline/OfflineContext';
 import { OfflineBanner } from '@/components/offline/OfflineBanner';
@@ -42,6 +43,13 @@ export function AppChrome({ children }: { children: ReactNode }) {
             {todayLabel} · {timeLabel}
           </p>
         </div>
+        <div className="shell__auth" role="navigation" aria-label="Acesso e autenticação">
+          <p className="shell__auth-label">Acesso seguro</p>
+          <Link href="/login" className="shell__auth-link">
+            Entrar na conta
+          </Link>
+          <p className="shell__auth-meta">Gestores, housekeeping e proprietários</p>
+        </div>
         <div className="shell__actions">
           <button type="button" className="shell__action shell__action--primary">
             Sincronizar OTAs
@@ -69,7 +77,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
         }
         .shell__header {
           display: grid;
-          grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+          grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) auto;
           align-items: center;
           gap: var(--space-5);
           background: #fff;
@@ -129,6 +137,48 @@ export function AppChrome({ children }: { children: ReactNode }) {
           margin: 0;
           color: var(--color-neutral-2);
         }
+        .shell__auth {
+          display: grid;
+          gap: var(--space-1);
+          justify-items: start;
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-sm);
+          background: rgba(11, 60, 93, 0.05);
+          border: 1px solid rgba(11, 60, 93, 0.08);
+        }
+        .shell__auth-label {
+          margin: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          font-size: 0.75rem;
+          color: var(--color-neutral-2);
+        }
+        .shell__auth-link {
+          font-weight: 600;
+          color: var(--color-deep-blue);
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-2);
+        }
+        .shell__auth-link::after {
+          content: '↗';
+          font-size: 0.85em;
+          transition: transform 0.2s ease;
+        }
+        .shell__auth-link:hover,
+        .shell__auth-link:focus-visible {
+          color: #07273b;
+        }
+        .shell__auth-link:hover::after,
+        .shell__auth-link:focus-visible::after {
+          transform: translateX(2px);
+        }
+        .shell__auth-meta {
+          margin: 0;
+          font-size: 0.8125rem;
+          color: var(--color-neutral-2);
+        }
         .shell__actions {
           display: inline-flex;
           gap: var(--space-3);
@@ -179,6 +229,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
           .shell__header {
             grid-template-columns: minmax(0, 1fr);
             justify-items: stretch;
+          }
+          .shell__auth {
+            width: 100%;
+            padding: var(--space-3) var(--space-4);
           }
           .shell__actions {
             justify-content: flex-start;
