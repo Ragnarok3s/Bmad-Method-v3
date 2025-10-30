@@ -25,15 +25,22 @@ class WebhookRegistry:
         key = gateway.lower()
         self._handlers.setdefault(key, []).append(handler)
 
-    def dispatch(self, gateway: str, payload: Mapping[str, Any], headers: Mapping[str, str]) -> WebhookEvent:
+    def dispatch(
+        self,
+        gateway: str,
+        payload: Mapping[str, Any],
+        headers: Mapping[str, str],
+        *,
+        raw_body: bytes,
+    ) -> WebhookEvent:
         driver = self._resolver(gateway)
-        raw_payload = repr(payload).encode("utf-8")
-        signature_valid = driver.validate_webhook(raw_payload, headers)
+        signature_valid = driver.validate_webhook(raw_body, headers)
         event = driver.parse_webhook(payload)
         event.gateway = gateway
         event.signature_valid = signature_valid
-        for handler in self._handlers.get(gateway.lower(), []):
-            handler(event)
+        if signature_valid:
+            for handler in self._handlers.get(gateway.lower(), []):
+                handler(event)
         return event
 
     def clear(self) -> None:
