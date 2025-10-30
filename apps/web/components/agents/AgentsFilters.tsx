@@ -34,6 +34,34 @@ export function AgentsFilters({
   onAvailabilityChange,
   disabled = false
 }: AgentsFiltersProps) {
+  const isLoading = disabled;
+  const selectedCompetencyLabels = competencies
+    .filter((option) => selectedCompetencies.includes(option.value))
+    .map((option) => option.label);
+  const selectedAvailabilityLabels = availability
+    .filter((option) => selectedAvailability.includes(option.value))
+    .map((option) => option.label);
+  const activeFiltersCount = selectedCompetencyLabels.length + selectedAvailabilityLabels.length;
+
+  const summaryParts: string[] = [];
+  if (selectedCompetencyLabels.length > 0) {
+    summaryParts.push(`Competências: ${selectedCompetencyLabels.join(', ')}`);
+  }
+  if (selectedAvailabilityLabels.length > 0) {
+    summaryParts.push(`Disponibilidade: ${selectedAvailabilityLabels.join(', ')}`);
+  }
+
+  const filtersSummary =
+    activeFiltersCount === 0
+      ? 'Nenhum filtro ativo.'
+      : `Filtros ativos (${activeFiltersCount}): ${summaryParts.join(' · ')}.`;
+
+  const handleClearAll = () => {
+    onCompetenciesChange([]);
+    onAvailabilityChange([]);
+  };
+  const isClearButtonDisabled = isLoading || activeFiltersCount === 0;
+
   const handleCompetencyToggle = (value: string) => (nextSelected: boolean) => {
     if (nextSelected) {
       const nextValues = Array.from(new Set([...selectedCompetencies, value]));
@@ -53,7 +81,24 @@ export function AgentsFilters({
   };
 
   return (
-    <section className="agents-filters" aria-label="Filtros do catálogo de agentes">
+    <section
+      className="agents-filters"
+      aria-label="Filtros do catálogo de agentes"
+      aria-busy={isLoading}
+    >
+      <div className="agents-filters__summary" role="status" aria-live="polite">
+        <p id="agents-filters-summary-text">{filtersSummary}</p>
+        <button
+          type="button"
+          className="agents-filters__clear-button"
+          onClick={handleClearAll}
+          disabled={isClearButtonDisabled}
+          aria-describedby="agents-filters-summary-text"
+          data-loading={isLoading}
+        >
+          {isLoading ? 'A actualizar filtros…' : 'Limpar tudo'}
+        </button>
+      </div>
       <div className="agents-filters__group">
         <header>
           <h3>Competências</h3>
@@ -108,6 +153,36 @@ export function AgentsFilters({
         .agents-filters {
           display: grid;
           gap: var(--space-6);
+        }
+        .agents-filters__summary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-4);
+          flex-wrap: wrap;
+        }
+        .agents-filters__summary p {
+          margin: 0;
+          color: var(--color-deep-blue);
+          font-weight: 500;
+        }
+        .agents-filters__clear-button {
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--color-neutral-3);
+          background: #fff;
+          color: var(--color-deep-blue);
+          padding: var(--space-2) var(--space-4);
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .agents-filters__clear-button:not(:disabled):hover {
+          background: var(--color-deep-blue);
+          color: #fff;
+        }
+        .agents-filters__clear-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
         }
         .agents-filters__group {
           display: grid;

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
 
 import { AgentAvailability } from '@/services/api/agents';
 import { AgentsFilters, AgentsAvailabilityFilterOption, AgentsFilterOption } from '../AgentsFilters';
@@ -14,8 +15,8 @@ describe('AgentsFilters', () => {
     { value: 'maintenance' as AgentAvailability, label: 'Em manutenção', count: 1 }
   ];
 
-  it('renderiza todas as opções de filtro com acessibilidade', () => {
-    render(
+  it('renderiza todas as opções de filtro com acessibilidade', async () => {
+    const { container } = render(
       <AgentsFilters
         competencies={competencyOptions}
         availability={availabilityOptions}
@@ -27,8 +28,12 @@ describe('AgentsFilters', () => {
     );
 
     expect(screen.getByRole('region', { name: 'Filtros do catálogo de agentes' })).toBeInTheDocument();
+    expect(screen.getByText('Nenhum filtro ativo.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Integração com CRM 3' })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByRole('button', { name: 'Disponível 2' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Limpar tudo' })).toBeDisabled();
+
+    await expect(axe(container)).resolves.toHaveNoViolations();
   });
 
   it('adiciona e remove competências ao alternar um filtro', async () => {
@@ -95,5 +100,45 @@ describe('AgentsFilters', () => {
 
     await user.click(screen.getByRole('button', { name: 'Disponível 2' }));
     expect(handleAvailabilityChange).toHaveBeenLastCalledWith([]);
+  });
+
+  it('exibe resumo dos filtros ativos e limpa todos ao solicitar', async () => {
+    const user = userEvent.setup();
+    const handleCompetenciesChange = jest.fn();
+    const handleAvailabilityChange = jest.fn();
+
+    const { rerender } = render(
+      <AgentsFilters
+        competencies={competencyOptions}
+        availability={availabilityOptions}
+        selectedCompetencies={['crm']}
+        selectedAvailability={['available']}
+        onCompetenciesChange={handleCompetenciesChange}
+        onAvailabilityChange={handleAvailabilityChange}
+      />
+    );
+
+    expect(
+      screen.getByText('Filtros ativos (2): Competências: Integração com CRM · Disponibilidade: Disponível.')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Limpar tudo' }));
+
+    expect(handleCompetenciesChange).toHaveBeenCalledWith([]);
+    expect(handleAvailabilityChange).toHaveBeenCalledWith([]);
+
+    rerender(
+      <AgentsFilters
+        competencies={competencyOptions}
+        availability={availabilityOptions}
+        selectedCompetencies={[]}
+        selectedAvailability={[]}
+        onCompetenciesChange={handleCompetenciesChange}
+        onAvailabilityChange={handleAvailabilityChange}
+        disabled
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'A actualizar filtros…' })).toBeDisabled();
   });
 });

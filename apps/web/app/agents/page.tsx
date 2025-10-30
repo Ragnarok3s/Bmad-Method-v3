@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 import { AgentsFilters } from '@/components/agents/AgentsFilters';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { SectionHeader } from '@/components/layout/SectionHeader';
@@ -33,6 +35,34 @@ export default function AgentsPage() {
   const totalPages = pagination?.totalPages ?? (items.length > 0 ? 1 : 0);
   const totalItems = pagination?.total ?? items.length;
   const currentPage = filters.page;
+  const errorAlertRef = useRef<HTMLDivElement | null>(null);
+  const emptyAlertRef = useRef<HTMLDivElement | null>(null);
+  const paginationRef = useRef<HTMLElement | null>(null);
+  const previousPageRef = useRef<number>(currentPage);
+
+  useEffect(() => {
+    if (error && errorAlertRef.current) {
+      errorAlertRef.current.focus();
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (!loading && !error && items.length === 0 && emptyAlertRef.current) {
+      emptyAlertRef.current.focus();
+    }
+  }, [loading, error, items.length]);
+
+  useEffect(() => {
+    if (
+      !loading &&
+      totalItems > 0 &&
+      paginationRef.current &&
+      previousPageRef.current !== currentPage
+    ) {
+      paginationRef.current.focus();
+    }
+    previousPageRef.current = currentPage;
+  }, [currentPage, loading, totalItems]);
 
   return (
     <div className="agents-page">
@@ -51,37 +81,53 @@ export default function AgentsPage() {
       />
 
       {error && (
-        <Card
-          accent="critical"
-          title="Não foi possível carregar o catálogo"
-          description="Verifique a ligação ao Core Service ou tente novamente em instantes."
+        <div
+          ref={errorAlertRef}
+          className="agents-page__alert"
+          role="alert"
+          aria-live="assertive"
+          tabIndex={-1}
         >
-          <button type="button" className="retry-button" onClick={refresh}>
-            Tentar novamente
-          </button>
-        </Card>
+          <Card
+            accent="critical"
+            title="Não foi possível carregar o catálogo"
+            description="Verifique a ligação ao Core Service ou tente novamente em instantes."
+          >
+            <button type="button" className="retry-button" onClick={refresh}>
+              Tentar novamente
+            </button>
+          </Card>
+        </div>
       )}
 
       {loading && !error && <p className="agents-page__loading">A sincronizar catálogo de agentes…</p>}
 
       {!loading && items.length === 0 && !error && (
-        <Card
-          accent="warning"
-          title="Nenhum agente encontrado com os filtros atuais"
-          description="Altere os filtros de competência ou disponibilidade para explorar mais opções."
+        <div
+          ref={emptyAlertRef}
+          className="agents-page__alert"
+          role="status"
+          aria-live="polite"
+          tabIndex={-1}
         >
-          <button
-            type="button"
-            className="retry-button"
-            onClick={() => {
-              setCompetencies([]);
-              setAvailability([]);
-              setPage(1);
-            }}
+          <Card
+            accent="warning"
+            title="Nenhum agente encontrado com os filtros atuais"
+            description="Altere os filtros de competência ou disponibilidade para explorar mais opções."
           >
-            Limpar filtros
-          </button>
-        </Card>
+            <button
+              type="button"
+              className="retry-button"
+              onClick={() => {
+                setCompetencies([]);
+                setAvailability([]);
+                setPage(1);
+              }}
+            >
+              Limpar filtros
+            </button>
+          </Card>
+        </div>
       )}
 
       <ResponsiveGrid columns={3}>
@@ -117,7 +163,12 @@ export default function AgentsPage() {
       </ResponsiveGrid>
 
       {totalItems > 0 && (
-        <nav className="agents-pagination" aria-label="Paginação do catálogo de agentes">
+        <nav
+          ref={paginationRef}
+          className="agents-pagination"
+          aria-label="Paginação do catálogo de agentes"
+          tabIndex={-1}
+        >
           <button
             type="button"
             onClick={() => setPage(currentPage - 1)}
@@ -125,7 +176,12 @@ export default function AgentsPage() {
           >
             Anterior
           </button>
-          <span>
+          <span
+            className="agents-pagination__summary"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             Página {Math.min(currentPage, Math.max(totalPages, 1))} de {Math.max(totalPages, 1)} · {totalItems} agentes
           </span>
           <button
@@ -145,6 +201,13 @@ export default function AgentsPage() {
         }
         .agents-page__loading {
           color: var(--color-neutral-2);
+        }
+        .agents-page__alert {
+          outline: none;
+        }
+        .agents-page__alert:focus {
+          outline: 3px solid var(--color-deep-blue);
+          outline-offset: 6px;
         }
         .retry-button {
           background: var(--color-deep-blue);
@@ -186,6 +249,10 @@ export default function AgentsPage() {
           border-top: 1px solid var(--color-neutral-4);
           padding-top: var(--space-3);
         }
+        .agents-pagination:focus {
+          outline: 3px solid var(--color-deep-blue);
+          outline-offset: 6px;
+        }
         .agents-pagination button {
           background: none;
           border: 1px solid var(--color-neutral-3);
@@ -196,6 +263,12 @@ export default function AgentsPage() {
         .agents-pagination button:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+        .agents-pagination__summary {
+          flex: 1;
+          text-align: center;
+          color: var(--color-deep-blue);
+          font-weight: 600;
         }
         @media (max-width: 960px) {
           .agents-pagination {
