@@ -5,7 +5,12 @@ sources:
     schema: analytics_raw
     tables:
       - name: reservations
-        description: "Mensagens brutas de reservas em Kafka." 
+        description: "Mensagens brutas de reservas em Kafka."
+  - name: core_analytics
+    schema: analytics
+    tables:
+      - name: bundle_usage_fact
+        description: "Agregados de utilização de bundles consolidados pelo core."
 
 models:
   - name: bronze_reservations
@@ -22,3 +27,16 @@ models:
       - name: revenue
         tests:
           - not_null
+  - name: bronze_bundle_usage_fact
+    description: "Snapshot bronze dos factos de utilização de bundles."
+    columns:
+      - name: bundle_id
+        tests:
+          - not_null
+      - name: period_start
+        tests:
+          - not_null
+      - name: granularity
+        tests:
+          - accepted_values:
+              values: ["daily", "weekly"]

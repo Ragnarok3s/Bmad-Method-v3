@@ -827,10 +827,25 @@ class BundleUsageGranularity(str, Enum):
     WEEKLY = "weekly"
 
 
-class BundleUsageMetric(Base):
+class BundleUsageEventLog(Base):
+    """Eventos consumidos do stream Kafka para garantir idempotência."""
+
+    __tablename__ = "bundle_usage_event_log"
+
+    event_id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    workspace_slug: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
+    bundle_id: Mapped[str] = mapped_column(String(160), nullable=False)
+    bundle_type: Mapped[str] = mapped_column(String(80), nullable=False)
+    partition: Mapped[int] = mapped_column(Integer, nullable=False)
+    offset: Mapped[int] = mapped_column(Integer, nullable=False)
+    event_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class BundleUsageFact(Base):
     """Agregado de utilização de bundles por período."""
 
-    __tablename__ = "bundle_usage_metrics"
+    __tablename__ = "bundle_usage_fact"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     workspace_slug: Mapped[str | None] = mapped_column(String(120), nullable=True, index=True)
@@ -842,6 +857,9 @@ class BundleUsageMetric(Base):
     )
     view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     launch_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    lead_time_samples: Mapped[list[float]] = mapped_column(JSON, nullable=False, default=list)
+    lead_time_p50_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    lead_time_p90_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
     last_event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
@@ -850,6 +868,6 @@ class BundleUsageMetric(Base):
             "bundle_id",
             "granularity",
             "period_start",
-            name="uq_bundle_usage_metrics_period",
+            name="uq_bundle_usage_fact_period",
         ),
     )

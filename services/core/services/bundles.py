@@ -1,22 +1,76 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone, time
-from typing import Literal
+from datetime import datetime, timedelta, timezone
+from math import ceil, floor
+from typing import ClassVar, Iterable, Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..domain.agents import list_agent_catalog
-from ..domain.models import BundleUsageGranularity, BundleUsageMetric
-from ..domain.schemas import BundleUsageCollection, BundleUsageDataPoint, BundleUsageTotals
+from ..analytics import KafkaStream
+from ..domain.models import (
+    BundleUsageEventLog,
+    BundleUsageFact,
+    BundleUsageGranularity,
+)
+from ..domain.schemas import (
+    BundleUsageCollection,
+    BundleUsageDataPoint,
+    BundleUsageStatistics,
+    BundleUsageTotals,
+)
 from ..metrics import record_bundle_activation
+
+
+def _quantile(samples: Iterable[float], percentile: float) -> float | None:
+    data = sorted(float(value) for value in samples if value is not None)
+    if not data:
+        return None
+    if percentile <= 0:
+        return data[0]
+    if percentile >= 1:
+        return data[-1]
+    position = (len(data) - 1) * percentile
+    lower = floor(position)
+    upper = ceil(position)
+    if lower == upper:
+        return data[int(position)]
+    weight = position - lower
+    return data[lower] * (1 - weight) + data[upper] * weight
+
+
+def _normalize_timestamp(value: datetime | str | None) -> datetime:
+    if isinstance(value, datetime):
+        timestamp = value
+    elif isinstance(value, str) and value:
+        try:
+            timestamp = datetime.fromisoformat(value)
+        except ValueError:
+            timestamp = datetime.now(timezone.utc)
+    else:
+        timestamp = datetime.now(timezone.utc)
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=timezone.utc)
+    return timestamp.astimezone(timezone.utc)
 
 
 class BundleUsageService:
     """Agregação e consulta de métricas de utilização de bundles."""
 
+    _stream: ClassVar[KafkaStream | None] = None
+
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    @classmethod
+    def attach_stream(cls, stream: KafkaStream | None) -> None:
+        """Configura o consumidor Kafka utilizado pelo serviço."""
+
+        cls._stream = stream
+
+    @classmethod
+    def get_stream(cls) -> KafkaStream | None:
+        return cls._stream
 
     def list_usage(
         self,
@@ -25,43 +79,75 @@ class BundleUsageService:
         workspace_slug: str | None = None,
         granularity: BundleUsageGranularity | None = None,
         limit: int = 90,
+        window_start: datetime | None = None,
+        window_end: datetime | None = None,
+        window_days: int | None = None,
     ) -> BundleUsageCollection:
-        self._seed_if_empty()
+        self._ingest_from_stream()
 
-        statement = select(BundleUsageMetric).order_by(BundleUsageMetric.period_start.desc())
+        statement = select(BundleUsageFact).order_by(BundleUsageFact.period_start.desc())
+
         if bundle_id:
-            statement = statement.where(BundleUsageMetric.bundle_id == bundle_id)
+            statement = statement.where(BundleUsageFact.bundle_id == bundle_id)
         if workspace_slug is not None:
-            statement = statement.where(BundleUsageMetric.workspace_slug == workspace_slug)
+            statement = statement.where(BundleUsageFact.workspace_slug == workspace_slug)
         if granularity:
-            statement = statement.where(BundleUsageMetric.granularity == granularity)
+            statement = statement.where(BundleUsageFact.granularity == granularity)
+
+        now = datetime.now(timezone.utc)
+        if window_days and window_days > 0:
+            computed_start = now - timedelta(days=window_days)
+            window_start = max(window_start, computed_start) if window_start else computed_start
+            window_end = window_end or now
+        if window_start:
+            statement = statement.where(BundleUsageFact.period_start >= window_start)
+        if window_end:
+            statement = statement.where(BundleUsageFact.period_start <= window_end)
+
         if limit:
             statement = statement.limit(max(1, limit))
 
-        metrics = list(self.session.execute(statement).scalars())
-        items = [
-            BundleUsageDataPoint(
-                bundle_id=metric.bundle_id,
-                bundle_type=metric.bundle_type,
-                workspace_slug=metric.workspace_slug,
-                period_start=metric.period_start,
-                granularity=metric.granularity,
-                view_count=metric.view_count,
-                launch_count=metric.launch_count,
-                last_event_at=metric.last_event_at,
+        records = list(self.session.execute(statement).scalars())
+
+        aggregated_samples: list[float] = []
+        items: list[BundleUsageDataPoint] = []
+        for fact in records:
+            period_samples = list(fact.lead_time_samples or [])
+            aggregated_samples.extend(period_samples)
+            conversion = (fact.launch_count / fact.view_count) if fact.view_count else 0.0
+            items.append(
+                BundleUsageDataPoint(
+                    bundle_id=fact.bundle_id,
+                    bundle_type=fact.bundle_type,
+                    workspace_slug=fact.workspace_slug,
+                    period_start=fact.period_start,
+                    granularity=fact.granularity,
+                    view_count=fact.view_count,
+                    launch_count=fact.launch_count,
+                    last_event_at=fact.last_event_at,
+                    lead_time_seconds_p50=_quantile(period_samples, 0.5),
+                    lead_time_seconds_p90=_quantile(period_samples, 0.9),
+                    conversion_rate=conversion,
+                )
             )
-            for metric in metrics
-        ]
 
         totals = BundleUsageTotals(
             view_count=sum(item.view_count for item in items),
             launch_count=sum(item.launch_count for item in items),
         )
 
+        stats = BundleUsageStatistics(
+            conversion_rate=(totals.launch_count / totals.view_count) if totals.view_count else 0.0,
+            lead_time_seconds_p50=_quantile(aggregated_samples, 0.5),
+            lead_time_seconds_p90=_quantile(aggregated_samples, 0.9),
+            sample_size=len(aggregated_samples),
+        )
+
         return BundleUsageCollection(
             items=items,
             totals=totals,
-            generated_at=datetime.now(timezone.utc),
+            stats=stats,
+            generated_at=now,
         )
 
     def register_event(
@@ -73,43 +159,123 @@ class BundleUsageService:
         workspace_slug: str | None = None,
         occurred_at: datetime | None = None,
         lead_time_seconds: float | None = None,
+        event_id: str | None = None,
     ) -> None:
-        """Atualiza os agregados quando novos eventos de bundle são registados."""
+        """Aplica um evento de bundle directamente na agregação local."""
 
-        timestamp = (occurred_at or datetime.now(timezone.utc)).astimezone(timezone.utc)
-        day_start = timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+        timestamp = _normalize_timestamp(occurred_at)
+        event_identifier = event_id or f"manual:{bundle_id}:{event}:{timestamp.timestamp()}"
+        self._apply_event(
+            bundle_id=bundle_id,
+            bundle_type=bundle_type,
+            event=event,
+            workspace_slug=workspace_slug,
+            occurred_at=timestamp,
+            lead_time_seconds=lead_time_seconds,
+            event_id=event_identifier,
+            partition=-1,
+            offset=-1,
+        )
+        self.session.flush()
+
+    def _ingest_from_stream(self) -> None:
+        stream = self.get_stream()
+        if not stream:
+            return
+
+        batch = list(stream)
+        if not batch:
+            return
+
+        offsets: dict[int, int] = {}
+        for message in batch:
+            payload = message.value or {}
+            event_type = payload.get("event")
+            if event_type not in {"bundle_view", "bundle_launch"}:
+                continue
+
+            bundle_id = payload.get("bundle_id")
+            bundle_type = payload.get("bundle_type")
+            workspace_slug = payload.get("workspace_slug") or payload.get("workspace")
+            event_id = payload.get("event_id") or f"{message.partition}:{message.offset}"
+            if not bundle_id or not bundle_type:
+                continue
+
+            if self.session.get(BundleUsageEventLog, event_id):
+                offsets[message.partition] = max(
+                    offsets.get(message.partition, message.offset), message.offset
+                )
+                continue
+
+            occurred_at = _normalize_timestamp(payload.get("occurred_at"))
+            lead_time_seconds = payload.get("lead_time_seconds")
+            if isinstance(lead_time_seconds, str) and lead_time_seconds:
+                try:
+                    lead_time_seconds = float(lead_time_seconds)
+                except ValueError:
+                    lead_time_seconds = None
+
+            self._apply_event(
+                bundle_id=bundle_id,
+                bundle_type=bundle_type,
+                event="launch" if event_type == "bundle_launch" else "view",
+                workspace_slug=workspace_slug,
+                occurred_at=occurred_at,
+                lead_time_seconds=lead_time_seconds,
+                event_id=event_id,
+                partition=message.partition,
+                offset=message.offset,
+            )
+
+            offsets[message.partition] = max(
+                offsets.get(message.partition, message.offset), message.offset
+            )
+
+        if offsets:
+            stream.commit(offsets)
+        self.session.flush()
+
+    def _apply_event(
+        self,
+        *,
+        bundle_id: str,
+        bundle_type: str,
+        event: Literal["view", "launch"],
+        workspace_slug: str | None,
+        occurred_at: datetime,
+        lead_time_seconds: float | None,
+        event_id: str,
+        partition: int,
+        offset: int,
+    ) -> None:
+        day_start = occurred_at.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = day_start - timedelta(days=day_start.weekday())
 
-        for period_start, granularity in (
-            (day_start, BundleUsageGranularity.DAILY),
-            (week_start, BundleUsageGranularity.WEEKLY),
+        for granularity, period_start in (
+            (BundleUsageGranularity.DAILY, day_start),
+            (BundleUsageGranularity.WEEKLY, week_start),
         ):
-            metric = (
-                self.session.execute(
-                    select(BundleUsageMetric)
-                    .where(BundleUsageMetric.workspace_slug == workspace_slug)
-                    .where(BundleUsageMetric.bundle_id == bundle_id)
-                    .where(BundleUsageMetric.granularity == granularity)
-                    .where(BundleUsageMetric.period_start == period_start)
-                ).scalar_one_or_none()
+            fact = self._get_or_create_fact(
+                workspace_slug=workspace_slug,
+                bundle_id=bundle_id,
+                bundle_type=bundle_type,
+                granularity=granularity,
+                period_start=period_start,
             )
-            if metric is None:
-                metric = BundleUsageMetric(
-                    workspace_slug=workspace_slug,
-                    bundle_id=bundle_id,
-                    bundle_type=bundle_type,
-                    period_start=period_start,
-                    granularity=granularity,
-                    view_count=0,
-                    launch_count=0,
-                )
-                self.session.add(metric)
-
             if event == "view":
-                metric.view_count += 1
+                fact.view_count += 1
             else:
-                metric.launch_count += 1
-            metric.last_event_at = timestamp
+                fact.launch_count += 1
+                if lead_time_seconds is not None:
+                    samples = list(fact.lead_time_samples or [])
+                    samples.append(float(lead_time_seconds))
+                    fact.lead_time_samples = samples
+                    fact.lead_time_p50_seconds = _quantile(samples, 0.5)
+                    fact.lead_time_p90_seconds = _quantile(samples, 0.9)
+            if fact.last_event_at:
+                fact.last_event_at = max(_normalize_timestamp(fact.last_event_at), occurred_at)
+            else:
+                fact.last_event_at = occurred_at
 
         if event == "launch":
             record_bundle_activation(
@@ -119,61 +285,47 @@ class BundleUsageService:
                 source="bundle_launch",
             )
 
-        self.session.flush()
+        self.session.add(
+            BundleUsageEventLog(
+                event_id=event_id,
+                workspace_slug=workspace_slug,
+                bundle_id=bundle_id,
+                bundle_type=bundle_type,
+                partition=partition,
+                offset=offset,
+                event_type="launch" if event == "launch" else "view",
+                occurred_at=occurred_at,
+            )
+        )
 
-    def _seed_if_empty(self) -> None:
-        total = self.session.execute(select(func.count(BundleUsageMetric.id))).scalar_one()
-        if total and int(total) > 0:
-            return
-
-        catalog = list_agent_catalog(page=1, page_size=60).items
-        today = datetime.now(timezone.utc).date()
-        workspace_segments: dict[str | None, float] = {
-            None: 1.0,
-            "atlantic-hospitality": 0.65,
-            "downtown-suites": 0.45,
-        }
-
-        for agent in catalog:
-            base = 30 + abs(hash(agent.slug)) % 40
-            for workspace_slug, factor in workspace_segments.items():
-                scaled_base = max(6, int(base * factor))
-                for day_offset in range(7):
-                    day = today - timedelta(days=day_offset)
-                    period_start = datetime.combine(day, time.min, timezone.utc)
-                    decay = max(1, scaled_base - day_offset * max(1, int(3 * factor)))
-                    launches = max(1, int(decay * 0.35))
-                    metric = BundleUsageMetric(
-                        workspace_slug=workspace_slug,
-                        bundle_id=agent.slug,
-                        bundle_type=agent.role,
-                        period_start=period_start,
-                        granularity=BundleUsageGranularity.DAILY,
-                        view_count=decay,
-                        launch_count=min(decay, launches),
-                        last_event_at=datetime.combine(day, time(hour=18), timezone.utc),
-                    )
-                    self.session.add(metric)
-
-                for week_offset in range(4):
-                    week_start_date = today - timedelta(days=today.weekday()) - timedelta(weeks=week_offset)
-                    period_start = datetime.combine(week_start_date, time.min, timezone.utc)
-                    weekly_views = max(12, int(scaled_base * (1.6 - 0.2 * week_offset)))
-                    weekly_launches = max(2, int(weekly_views * 0.32))
-                    metric = BundleUsageMetric(
-                        workspace_slug=workspace_slug,
-                        bundle_id=agent.slug,
-                        bundle_type=agent.role,
-                        period_start=period_start,
-                        granularity=BundleUsageGranularity.WEEKLY,
-                        view_count=weekly_views,
-                        launch_count=min(weekly_views, weekly_launches),
-                        last_event_at=datetime.combine(
-                            week_start_date + timedelta(days=4),
-                            time(hour=17, minute=30),
-                            timezone.utc,
-                        ),
-                    )
-                    self.session.add(metric)
-
-        self.session.flush()
+    def _get_or_create_fact(
+        self,
+        *,
+        workspace_slug: str | None,
+        bundle_id: str,
+        bundle_type: str,
+        granularity: BundleUsageGranularity,
+        period_start: datetime,
+    ) -> BundleUsageFact:
+        fact = (
+            self.session.execute(
+                select(BundleUsageFact)
+                .where(BundleUsageFact.workspace_slug == workspace_slug)
+                .where(BundleUsageFact.bundle_id == bundle_id)
+                .where(BundleUsageFact.granularity == granularity)
+                .where(BundleUsageFact.period_start == period_start)
+            ).scalar_one_or_none()
+        )
+        if fact is None:
+            fact = BundleUsageFact(
+                workspace_slug=workspace_slug,
+                bundle_id=bundle_id,
+                bundle_type=bundle_type,
+                period_start=period_start,
+                granularity=granularity,
+                view_count=0,
+                launch_count=0,
+                lead_time_samples=[],
+            )
+            self.session.add(fact)
+        return fact

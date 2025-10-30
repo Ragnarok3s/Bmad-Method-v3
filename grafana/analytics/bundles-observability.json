@@ -7,6 +7,18 @@
     "from": "now-7d",
     "to": "now"
   },
+  "annotations": {
+    "list": [
+      {
+        "name": "Bundles SLO Incidents",
+        "type": "grafana-oncall",
+        "datasource": "grafana-oncall",
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)",
+        "query": "{\"route\":\"bundles-slo\"}"
+      }
+    ]
+  },
   "templating": {
     "list": [
       {
@@ -37,6 +49,14 @@
       }
     ]
   },
+  "links": [
+    {
+      "title": "OnCall Route - Bundles SLO",
+      "url": "https://grafana-oncall.example.com/routes/bundles-slo",
+      "targetBlank": true,
+      "type": "link"
+    }
+  ],
   "panels": [
     {
       "type": "stat",
@@ -124,6 +144,45 @@
         {
           "refId": "A",
           "expr": "sum(increase(bmad_web_bundle_launch_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[$__range])) / sum(increase(bmad_web_bundle_view_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[$__range]))"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Workspaces activos (7d)",
+      "id": 6,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(sum_over_time(bmad_web_bundle_view_total{bundle_id=~\"$bundle\"}[7d]) > bool 0)"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Coverage por Workspace (7d views)",
+      "id": 7,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "options": {
+        "displayMode": "gradient",
+        "min": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum_over_time(bmad_web_bundle_view_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[7d]))"
         }
       ]
     }
