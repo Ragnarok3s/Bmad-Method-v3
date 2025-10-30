@@ -8,7 +8,9 @@ import { SkipToContentLink } from '@/components/a11y/SkipToContentLink';
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-inter'
+  display: 'swap',
+  variable: '--font-inter',
+  fallback: ['system-ui', 'Segoe UI', 'Helvetica Neue', 'Arial']
 });
 
 export const metadata: Metadata = {
