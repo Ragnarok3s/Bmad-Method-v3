@@ -63,6 +63,11 @@ function TourHarness({
   );
 }
 
+function TourRegistryInspector() {
+  const { tours } = useGuidedTour();
+  return <span data-testid="tour-count">{tours.length}</span>;
+}
+
 describe('GuidedTourProvider integration', () => {
   beforeEach(() => {
     currentPath = '/';
@@ -81,6 +86,10 @@ describe('GuidedTourProvider integration', () => {
     );
 
     await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('open'));
+    expect(trackMock).toHaveBeenCalledWith(
+      'tour.started',
+      expect.objectContaining({ tourId: 'kb-tour', route: '/knowledge-base', autoStart: true })
+    );
 
     await act(async () => {
       await user.click(screen.getByTestId('complete-tour'));
@@ -88,6 +97,14 @@ describe('GuidedTourProvider integration', () => {
 
     await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('closed'));
     expect(screen.getByTestId('is-completed')).toHaveTextContent('yes');
+    expect(trackMock).toHaveBeenCalledWith(
+      'tour.completed',
+      expect.objectContaining({ tourId: 'kb-tour', steps: 2, route: '/knowledge-base' })
+    );
+    expect(trackMock).toHaveBeenCalledWith(
+      'tour.closed',
+      expect.objectContaining({ tourId: 'kb-tour', markedCompleted: true })
+    );
 
     const stored = window.localStorage.getItem('bmad:guided-tour:completed');
     expect(stored).toContain('kb-tour');
@@ -171,5 +188,37 @@ describe('GuidedTourProvider integration', () => {
 
     await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('closed'));
     expect(screen.getByTestId('is-completed')).toHaveTextContent('no');
+  });
+
+  it('registers and unregisters tours via usePageTour lifecycle', async () => {
+    currentPath = '/';
+    const user = userEvent.setup();
+
+    function RegistryToggle() {
+      const [visible, setVisible] = React.useState(true);
+      return (
+        <div>
+          <TourRegistryInspector />
+          {visible ? <TourHarness route="/" /> : null}
+          <button type="button" data-testid="toggle-tour" onClick={() => setVisible((state) => !state)}>
+            Toggle
+          </button>
+        </div>
+      );
+    }
+
+    render(
+      <GuidedTourProvider>
+        <RegistryToggle />
+      </GuidedTourProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('tour-count')).toHaveTextContent('1'));
+
+    await act(async () => {
+      await user.click(screen.getByTestId('toggle-tour'));
+    });
+
+    await waitFor(() => expect(screen.getByTestId('tour-count')).toHaveTextContent('0'));
   });
 });
