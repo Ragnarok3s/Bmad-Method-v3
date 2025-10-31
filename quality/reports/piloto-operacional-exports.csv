@@ -1,0 +1,151 @@
+date,property_id,property_name,report_occupancy,pms_occupancy,occupancy_deviation_pct,report_revenue,pms_revenue,reconciliation_status,finance_notes,ota_backlog
+2024-07-01,PR-01,Pousada Atlântica,62.0,61.95,0.05,32289.6,32315.43,OK,Auto conciliação diária sem incidentes,0
+2024-07-01,PR-02,Hotel Serra Verde,62.0,61.95,0.05,32215.2,32240.97,OK,Auto conciliação diária sem incidentes,0
+2024-07-01,PR-03,Villa das Águas,62.0,61.95,0.05,31620.0,31645.3,OK,Auto conciliação diária sem incidentes,0
+2024-07-01,PR-04,Solar do Rio,61.0,60.95,0.05,32061.6,32087.25,OK,Auto conciliação diária sem incidentes,0
+2024-07-01,PR-05,Refúgio das Flores,63.0,62.95,0.05,31147.2,31172.12,OK,Auto conciliação diária sem incidentes,0
+2024-07-02,PR-01,Pousada Atlântica,62.33,62.33,0.0,32461.46,32435.49,OK,Auto conciliação diária sem incidentes,0
+2024-07-02,PR-02,Hotel Serra Verde,62.33,62.33,0.0,32386.67,32360.76,OK,Auto conciliação diária sem incidentes,0
+2024-07-02,PR-03,Villa das Águas,62.33,62.33,0.0,31788.3,31762.87,OK,Auto conciliação diária sem incidentes,0
+2024-07-02,PR-04,Solar do Rio,61.33,61.33,0.0,32235.05,32209.26,OK,Auto conciliação diária sem incidentes,0
+2024-07-02,PR-05,Refúgio das Flores,63.33,63.33,0.0,31310.35,31285.3,OK,Auto conciliação diária sem incidentes,0
+2024-07-03,PR-01,Pousada Atlântica,62.67,62.72,0.05,32638.54,32664.65,OK,Auto conciliação diária sem incidentes,1
+2024-07-03,PR-02,Hotel Serra Verde,62.67,62.72,0.05,32563.33,32589.38,OK,Auto conciliação diária sem incidentes,1
+2024-07-03,PR-03,Villa das Águas,62.67,62.72,0.05,31961.7,31987.27,OK,Auto conciliação diária sem incidentes,1
+2024-07-03,PR-04,Solar do Rio,61.67,61.72,0.05,32413.75,32439.68,OK,Auto conciliação diária sem incidentes,1
+2024-07-03,PR-05,Refúgio das Flores,63.67,63.72,0.05,31478.45,31503.63,OK,Auto conciliação diária sem incidentes,1
+2024-07-04,PR-01,Pousada Atlântica,63.0,62.95,0.05,32810.4,32784.15,OK,Auto conciliação diária sem incidentes,2
+2024-07-04,PR-02,Hotel Serra Verde,63.0,62.95,0.05,32734.8,32708.61,OK,Auto conciliação diária sem incidentes,2
+2024-07-04,PR-03,Villa das Águas,63.0,62.95,0.05,32130.0,32104.3,OK,Auto conciliação diária sem incidentes,2
+2024-07-04,PR-04,Solar do Rio,62.0,61.95,0.05,32587.2,32561.13,OK,Auto conciliação diária sem incidentes,2
+2024-07-04,PR-05,Refúgio das Flores,64.0,63.95,0.05,31641.6,31616.29,OK,Auto conciliação diária sem incidentes,2
+2024-07-05,PR-01,Pousada Atlântica,63.33,63.33,0.0,32982.26,33008.65,OK,Auto conciliação diária sem incidentes,3
+2024-07-05,PR-02,Hotel Serra Verde,63.33,63.33,0.0,32906.27,32932.6,OK,Auto conciliação diária sem incidentes,3
+2024-07-05,PR-03,Villa das Águas,63.33,63.33,0.0,32298.3,32324.14,OK,Auto conciliação diária sem incidentes,3
+2024-07-05,PR-04,Solar do Rio,62.33,62.33,0.0,32760.65,32786.86,OK,Auto conciliação diária sem incidentes,3
+2024-07-05,PR-05,Refúgio das Flores,64.33,64.33,0.0,31804.75,31830.19,OK,Auto conciliação diária sem incidentes,3
+2024-07-06,PR-01,Pousada Atlântica,63.67,63.72,0.05,33159.34,33132.81,OK,Auto conciliação diária sem incidentes,0
+2024-07-06,PR-02,Hotel Serra Verde,63.67,63.72,0.05,33082.93,33056.46,OK,Auto conciliação diária sem incidentes,0
+2024-07-06,PR-03,Villa das Águas,63.67,63.72,0.05,32471.7,32445.72,OK,Auto conciliação diária sem incidentes,0
+2024-07-06,PR-04,Solar do Rio,62.67,62.72,0.05,32939.35,32913.0,OK,Auto conciliação diária sem incidentes,0
+2024-07-06,PR-05,Refúgio das Flores,64.67,64.72,0.05,31972.85,31947.27,OK,Auto conciliação diária sem incidentes,0
+2024-07-07,PR-01,Pousada Atlântica,64.0,63.95,0.05,33331.2,33357.86,OK,Auto conciliação diária sem incidentes,0
+2024-07-07,PR-02,Hotel Serra Verde,64.0,63.95,0.05,33254.4,33281.0,OK,Auto conciliação diária sem incidentes,0
+2024-07-07,PR-03,Villa das Águas,64.0,63.95,0.05,32640.0,32666.11,OK,Auto conciliação diária sem incidentes,0
+2024-07-07,PR-04,Solar do Rio,63.0,62.95,0.05,33112.8,33139.29,OK,Auto conciliação diária sem incidentes,0
+2024-07-07,PR-05,Refúgio das Flores,65.0,64.95,0.05,32136.0,32161.71,OK,Auto conciliação diária sem incidentes,0
+2024-07-08,PR-01,Pousada Atlântica,62.0,62.0,0.0,32289.6,32263.77,OK,Auto conciliação diária sem incidentes,1
+2024-07-08,PR-02,Hotel Serra Verde,62.0,62.0,0.0,32215.2,32189.43,OK,Auto conciliação diária sem incidentes,1
+2024-07-08,PR-03,Villa das Águas,62.0,62.0,0.0,31620.0,31594.7,OK,Auto conciliação diária sem incidentes,1
+2024-07-08,PR-04,Solar do Rio,61.0,61.0,0.0,32061.6,32035.95,OK,Auto conciliação diária sem incidentes,1
+2024-07-08,PR-05,Refúgio das Flores,63.0,63.0,0.0,31147.2,31122.28,OK,Auto conciliação diária sem incidentes,1
+2024-07-09,PR-01,Pousada Atlântica,62.33,62.38,0.05,32461.46,32487.43,OK,Auto conciliação diária sem incidentes,2
+2024-07-09,PR-02,Hotel Serra Verde,62.33,62.38,0.05,32386.67,32412.58,OK,Auto conciliação diária sem incidentes,2
+2024-07-09,PR-03,Villa das Águas,62.33,62.38,0.05,31788.3,31813.73,OK,Auto conciliação diária sem incidentes,2
+2024-07-09,PR-04,Solar do Rio,61.33,61.38,0.05,32235.05,32260.84,OK,Auto conciliação diária sem incidentes,2
+2024-07-09,PR-05,Refúgio das Flores,63.33,63.38,0.05,31310.35,31335.4,OK,Auto conciliação diária sem incidentes,2
+2024-07-10,PR-01,Pousada Atlântica,62.67,62.62,0.05,32638.54,32612.43,OK,Auto conciliação diária sem incidentes,3
+2024-07-10,PR-02,Hotel Serra Verde,62.67,62.62,0.05,32563.33,32537.28,OK,Auto conciliação diária sem incidentes,3
+2024-07-10,PR-03,Villa das Águas,62.67,62.62,0.05,31961.7,31936.13,OK,Auto conciliação diária sem incidentes,3
+2024-07-10,PR-04,Solar do Rio,61.67,61.62,0.05,32413.75,32387.82,OK,Auto conciliação diária sem incidentes,3
+2024-07-10,PR-05,Refúgio das Flores,63.67,63.62,0.05,31478.45,31453.27,OK,Auto conciliação diária sem incidentes,3
+2024-07-11,PR-01,Pousada Atlântica,63.0,63.0,0.0,32810.4,32836.65,OK,Auto conciliação diária sem incidentes,0
+2024-07-11,PR-02,Hotel Serra Verde,63.0,63.0,0.0,32734.8,32760.99,OK,Auto conciliação diária sem incidentes,0
+2024-07-11,PR-03,Villa das Águas,63.0,63.0,0.0,32130.0,32155.7,OK,Auto conciliação diária sem incidentes,0
+2024-07-11,PR-04,Solar do Rio,62.0,62.0,0.0,32587.2,32613.27,OK,Auto conciliação diária sem incidentes,0
+2024-07-11,PR-05,Refúgio das Flores,64.0,64.0,0.0,31641.6,31666.91,OK,Auto conciliação diária sem incidentes,0
+2024-07-12,PR-01,Pousada Atlântica,63.33,63.38,0.05,32982.26,32955.87,OK,Auto conciliação diária sem incidentes,0
+2024-07-12,PR-02,Hotel Serra Verde,63.33,63.38,0.05,32906.27,32879.94,OK,Auto conciliação diária sem incidentes,0
+2024-07-12,PR-03,Villa das Águas,63.33,63.38,0.05,32298.3,32272.46,OK,Auto conciliação diária sem incidentes,0
+2024-07-12,PR-04,Solar do Rio,62.33,62.38,0.05,32760.65,32734.44,OK,Auto conciliação diária sem incidentes,0
+2024-07-12,PR-05,Refúgio das Flores,64.33,64.38,0.05,31804.75,31779.31,OK,Auto conciliação diária sem incidentes,0
+2024-07-13,PR-01,Pousada Atlântica,63.67,63.62,0.05,33159.34,33185.87,OK,Auto conciliação diária sem incidentes,1
+2024-07-13,PR-02,Hotel Serra Verde,63.67,63.62,0.05,33082.93,33109.4,OK,Auto conciliação diária sem incidentes,1
+2024-07-13,PR-03,Villa das Águas,63.67,63.62,0.05,32471.7,32497.68,OK,Auto conciliação diária sem incidentes,1
+2024-07-13,PR-04,Solar do Rio,62.67,62.62,0.05,32939.35,32965.7,OK,Auto conciliação diária sem incidentes,1
+2024-07-13,PR-05,Refúgio das Flores,64.67,64.62,0.05,31972.85,31998.43,OK,Auto conciliação diária sem incidentes,1
+2024-07-14,PR-01,Pousada Atlântica,64.0,64.0,0.0,33331.2,33304.54,OK,Auto conciliação diária sem incidentes,2
+2024-07-14,PR-02,Hotel Serra Verde,64.0,64.0,0.0,33254.4,33227.8,OK,Auto conciliação diária sem incidentes,2
+2024-07-14,PR-03,Villa das Águas,64.0,64.0,0.0,32640.0,32613.89,OK,Auto conciliação diária sem incidentes,2
+2024-07-14,PR-04,Solar do Rio,63.0,63.0,0.0,33112.8,33086.31,OK,Auto conciliação diária sem incidentes,2
+2024-07-14,PR-05,Refúgio das Flores,65.0,65.0,0.0,32136.0,32110.29,OK,Auto conciliação diária sem incidentes,2
+2024-07-15,PR-01,Pousada Atlântica,62.0,62.05,0.05,32289.6,32315.43,OK,Auto conciliação diária sem incidentes,3
+2024-07-15,PR-02,Hotel Serra Verde,62.0,62.05,0.05,32215.2,32240.97,OK,Auto conciliação diária sem incidentes,3
+2024-07-15,PR-03,Villa das Águas,62.0,62.05,0.05,31620.0,31645.3,OK,Auto conciliação diária sem incidentes,3
+2024-07-15,PR-04,Solar do Rio,61.0,61.05,0.05,32061.6,32087.25,OK,Auto conciliação diária sem incidentes,3
+2024-07-15,PR-05,Refúgio das Flores,63.0,63.05,0.05,31147.2,31172.12,OK,Auto conciliação diária sem incidentes,3
+2024-07-16,PR-01,Pousada Atlântica,62.33,62.28,0.05,32461.46,32435.49,OK,Auto conciliação diária sem incidentes,0
+2024-07-16,PR-02,Hotel Serra Verde,62.33,62.28,0.05,32386.67,32360.76,OK,Auto conciliação diária sem incidentes,0
+2024-07-16,PR-03,Villa das Águas,62.33,62.28,0.05,31788.3,31762.87,OK,Auto conciliação diária sem incidentes,0
+2024-07-16,PR-04,Solar do Rio,61.33,61.28,0.05,32235.05,32209.26,OK,Auto conciliação diária sem incidentes,0
+2024-07-16,PR-05,Refúgio das Flores,63.33,63.28,0.05,31310.35,31285.3,OK,Auto conciliação diária sem incidentes,0
+2024-07-17,PR-01,Pousada Atlântica,62.67,62.67,0.0,32638.54,32664.65,OK,Auto conciliação diária sem incidentes,0
+2024-07-17,PR-02,Hotel Serra Verde,62.67,62.67,0.0,32563.33,32589.38,OK,Auto conciliação diária sem incidentes,0
+2024-07-17,PR-03,Villa das Águas,62.67,62.67,0.0,31961.7,31987.27,OK,Auto conciliação diária sem incidentes,0
+2024-07-17,PR-04,Solar do Rio,61.67,61.67,0.0,32413.75,32439.68,OK,Auto conciliação diária sem incidentes,0
+2024-07-17,PR-05,Refúgio das Flores,63.67,63.67,0.0,31478.45,31503.63,OK,Auto conciliação diária sem incidentes,0
+2024-07-18,PR-01,Pousada Atlântica,63.0,63.05,0.05,32810.4,32784.15,OK,Auto conciliação diária sem incidentes,1
+2024-07-18,PR-02,Hotel Serra Verde,63.0,63.05,0.05,32734.8,32708.61,OK,Auto conciliação diária sem incidentes,1
+2024-07-18,PR-03,Villa das Águas,63.0,63.05,0.05,32130.0,32104.3,OK,Auto conciliação diária sem incidentes,1
+2024-07-18,PR-04,Solar do Rio,62.0,62.05,0.05,32587.2,32561.13,OK,Auto conciliação diária sem incidentes,1
+2024-07-18,PR-05,Refúgio das Flores,64.0,64.05,0.05,31641.6,31616.29,OK,Auto conciliação diária sem incidentes,1
+2024-07-19,PR-01,Pousada Atlântica,63.33,63.28,0.05,32982.26,33008.65,OK,Auto conciliação diária sem incidentes,2
+2024-07-19,PR-02,Hotel Serra Verde,63.33,63.28,0.05,32906.27,32932.6,OK,Auto conciliação diária sem incidentes,2
+2024-07-19,PR-03,Villa das Águas,63.33,63.28,0.05,32298.3,32324.14,OK,Auto conciliação diária sem incidentes,2
+2024-07-19,PR-04,Solar do Rio,62.33,62.28,0.05,32760.65,32786.86,OK,Auto conciliação diária sem incidentes,2
+2024-07-19,PR-05,Refúgio das Flores,64.33,64.28,0.05,31804.75,31830.19,OK,Auto conciliação diária sem incidentes,2
+2024-07-20,PR-01,Pousada Atlântica,63.67,63.67,0.0,33159.34,33132.81,OK,Auto conciliação diária sem incidentes,3
+2024-07-20,PR-02,Hotel Serra Verde,63.67,63.67,0.0,33082.93,33056.46,OK,Auto conciliação diária sem incidentes,3
+2024-07-20,PR-03,Villa das Águas,63.67,63.67,0.0,32471.7,32445.72,OK,Auto conciliação diária sem incidentes,3
+2024-07-20,PR-04,Solar do Rio,62.67,62.67,0.0,32939.35,32913.0,OK,Auto conciliação diária sem incidentes,3
+2024-07-20,PR-05,Refúgio das Flores,64.67,64.67,0.0,31972.85,31947.27,OK,Auto conciliação diária sem incidentes,3
+2024-07-21,PR-01,Pousada Atlântica,64.0,64.05,0.05,33331.2,33357.86,OK,Auto conciliação diária sem incidentes,0
+2024-07-21,PR-02,Hotel Serra Verde,64.0,64.05,0.05,33254.4,33281.0,OK,Auto conciliação diária sem incidentes,0
+2024-07-21,PR-03,Villa das Águas,64.0,64.05,0.05,32640.0,32666.11,OK,Auto conciliação diária sem incidentes,0
+2024-07-21,PR-04,Solar do Rio,63.0,63.05,0.05,33112.8,33139.29,OK,Auto conciliação diária sem incidentes,0
+2024-07-21,PR-05,Refúgio das Flores,65.0,65.05,0.05,32136.0,32161.71,OK,Auto conciliação diária sem incidentes,0
+2024-07-22,PR-01,Pousada Atlântica,62.0,61.95,0.05,32289.6,32263.77,OK,Auto conciliação diária sem incidentes,0
+2024-07-22,PR-02,Hotel Serra Verde,62.0,61.95,0.05,32215.2,32189.43,OK,Auto conciliação diária sem incidentes,0
+2024-07-22,PR-03,Villa das Águas,62.0,61.95,0.05,31620.0,31594.7,OK,Auto conciliação diária sem incidentes,0
+2024-07-22,PR-04,Solar do Rio,61.0,60.95,0.05,32061.6,32035.95,OK,Auto conciliação diária sem incidentes,0
+2024-07-22,PR-05,Refúgio das Flores,63.0,62.95,0.05,31147.2,31122.28,OK,Auto conciliação diária sem incidentes,0
+2024-07-23,PR-01,Pousada Atlântica,62.33,62.33,0.0,32461.46,32487.43,OK,Auto conciliação diária sem incidentes,1
+2024-07-23,PR-02,Hotel Serra Verde,62.33,62.33,0.0,32386.67,32412.58,OK,Auto conciliação diária sem incidentes,1
+2024-07-23,PR-03,Villa das Águas,62.33,62.33,0.0,31788.3,31813.73,OK,Auto conciliação diária sem incidentes,1
+2024-07-23,PR-04,Solar do Rio,61.33,61.33,0.0,32235.05,32260.84,OK,Auto conciliação diária sem incidentes,1
+2024-07-23,PR-05,Refúgio das Flores,63.33,63.33,0.0,31310.35,31335.4,OK,Auto conciliação diária sem incidentes,1
+2024-07-24,PR-01,Pousada Atlântica,62.67,62.72,0.05,32638.54,32612.43,OK,Auto conciliação diária sem incidentes,2
+2024-07-24,PR-02,Hotel Serra Verde,62.67,62.72,0.05,32563.33,32537.28,OK,Auto conciliação diária sem incidentes,2
+2024-07-24,PR-03,Villa das Águas,62.67,62.72,0.05,31961.7,31936.13,OK,Auto conciliação diária sem incidentes,2
+2024-07-24,PR-04,Solar do Rio,61.67,61.72,0.05,32413.75,32387.82,OK,Auto conciliação diária sem incidentes,2
+2024-07-24,PR-05,Refúgio das Flores,63.67,63.72,0.05,31478.45,31453.27,OK,Auto conciliação diária sem incidentes,2
+2024-07-25,PR-01,Pousada Atlântica,63.0,62.95,0.05,32810.4,32836.65,OK,Auto conciliação diária sem incidentes,3
+2024-07-25,PR-02,Hotel Serra Verde,63.0,62.95,0.05,32734.8,32760.99,OK,Auto conciliação diária sem incidentes,3
+2024-07-25,PR-03,Villa das Águas,63.0,62.95,0.05,32130.0,32155.7,OK,Auto conciliação diária sem incidentes,3
+2024-07-25,PR-04,Solar do Rio,62.0,61.95,0.05,32587.2,32613.27,OK,Auto conciliação diária sem incidentes,3
+2024-07-25,PR-05,Refúgio das Flores,64.0,63.95,0.05,31641.6,31666.91,OK,Auto conciliação diária sem incidentes,3
+2024-07-26,PR-01,Pousada Atlântica,63.33,63.33,0.0,32982.26,32955.87,OK,Auto conciliação diária sem incidentes,0
+2024-07-26,PR-02,Hotel Serra Verde,63.33,63.33,0.0,32906.27,32879.94,OK,Auto conciliação diária sem incidentes,0
+2024-07-26,PR-03,Villa das Águas,63.33,63.33,0.0,32298.3,32272.46,OK,Auto conciliação diária sem incidentes,0
+2024-07-26,PR-04,Solar do Rio,62.33,62.33,0.0,32760.65,32734.44,OK,Auto conciliação diária sem incidentes,0
+2024-07-26,PR-05,Refúgio das Flores,64.33,64.33,0.0,31804.75,31779.31,OK,Auto conciliação diária sem incidentes,0
+2024-07-27,PR-01,Pousada Atlântica,63.67,63.72,0.05,33159.34,33185.87,OK,Auto conciliação diária sem incidentes,0
+2024-07-27,PR-02,Hotel Serra Verde,63.67,63.72,0.05,33082.93,33109.4,OK,Auto conciliação diária sem incidentes,0
+2024-07-27,PR-03,Villa das Águas,63.67,63.72,0.05,32471.7,32497.68,OK,Auto conciliação diária sem incidentes,0
+2024-07-27,PR-04,Solar do Rio,62.67,62.72,0.05,32939.35,32965.7,OK,Auto conciliação diária sem incidentes,0
+2024-07-27,PR-05,Refúgio das Flores,64.67,64.72,0.05,31972.85,31998.43,OK,Auto conciliação diária sem incidentes,0
+2024-07-28,PR-01,Pousada Atlântica,64.0,63.95,0.05,33331.2,33304.54,OK,Auto conciliação diária sem incidentes,1
+2024-07-28,PR-02,Hotel Serra Verde,64.0,63.95,0.05,33254.4,33227.8,OK,Auto conciliação diária sem incidentes,1
+2024-07-28,PR-03,Villa das Águas,64.0,63.95,0.05,32640.0,32613.89,OK,Auto conciliação diária sem incidentes,1
+2024-07-28,PR-04,Solar do Rio,63.0,62.95,0.05,33112.8,33086.31,OK,Auto conciliação diária sem incidentes,1
+2024-07-28,PR-05,Refúgio das Flores,65.0,64.95,0.05,32136.0,32110.29,OK,Auto conciliação diária sem incidentes,1
+2024-07-29,PR-01,Pousada Atlântica,62.0,62.0,0.0,32289.6,32315.43,OK,Auto conciliação diária sem incidentes,2
+2024-07-29,PR-02,Hotel Serra Verde,62.0,62.0,0.0,32215.2,32240.97,OK,Auto conciliação diária sem incidentes,2
+2024-07-29,PR-03,Villa das Águas,62.0,62.0,0.0,31620.0,31645.3,OK,Auto conciliação diária sem incidentes,2
+2024-07-29,PR-04,Solar do Rio,61.0,61.0,0.0,32061.6,32087.25,OK,Auto conciliação diária sem incidentes,2
+2024-07-29,PR-05,Refúgio das Flores,63.0,63.0,0.0,31147.2,31172.12,OK,Auto conciliação diária sem incidentes,2
+2024-07-30,PR-01,Pousada Atlântica,62.33,62.38,0.05,32461.46,32435.49,OK,Auto conciliação diária sem incidentes,3
+2024-07-30,PR-02,Hotel Serra Verde,62.33,62.38,0.05,32386.67,32360.76,OK,Auto conciliação diária sem incidentes,3
+2024-07-30,PR-03,Villa das Águas,62.33,62.38,0.05,31788.3,31762.87,OK,Auto conciliação diária sem incidentes,3
+2024-07-30,PR-04,Solar do Rio,61.33,61.38,0.05,32235.05,32209.26,OK,Auto conciliação diária sem incidentes,3
+2024-07-30,PR-05,Refúgio das Flores,63.33,63.38,0.05,31310.35,31285.3,OK,Auto conciliação diária sem incidentes,3
