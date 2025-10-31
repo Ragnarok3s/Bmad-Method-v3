@@ -44,7 +44,7 @@ Estabelecer procedimento padronizado para responder a incidentes monitorados pel
   1. Conferir logs de frontend (`bmad-web`) e status de integrações externas.
   2. Notificar Product Ops para investigar campanhas em paralelo.
 - **Seed Jobs:**
-  1. Executar manualmente `scripts/seed/run.sh --env staging`.
+  1. Executar manualmente `scripts/infra/seed-staging-data.sh` (garante seeds atualizados para staging).
   2. Validar data de atualização em `analytics.gold_seeds_monitoring`.
 - **Incidentes QA:**
   1. Rodar novamente o suite falho e coletar logs `qa-runner`.
