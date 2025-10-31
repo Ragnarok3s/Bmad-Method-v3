@@ -3,7 +3,7 @@
 Este documento descreve o fluxo validado para preparar o ambiente local de desenvolvimento utilizando `python -m venv` e as dependências registradas em `requirements.txt`.
 
 ## Pré-requisitos
-- Python 3.12 instalado e acessível no `PATH`.
+- Python 3.14 instalado e acessível no `PATH`.
 - Ferramentas básicas de shell (bash, coreutils) disponíveis.
 
 ## Passo a passo
@@ -21,7 +21,7 @@ Este documento descreve o fluxo validado para preparar o ambiente local de desen
    pip install -r requirements.txt
    ```
    - O comando instala `pytest`, `pytest-cov`, `bandit`, `PyYAML` e dependências auxiliares.
-   - Os artefatos são instalados dentro de `.venv/lib/python3.12/site-packages`.
+   - Os artefatos são instalados dentro de `.venv/lib/python3.14/site-packages`.
 4. (Opcional) Atualize o `pip` para evitar avisos de versão:
    ```bash
    pip install --upgrade pip

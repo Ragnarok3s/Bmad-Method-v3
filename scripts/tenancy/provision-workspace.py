@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Provisiona workspaces multi-tenant com integrações essenciais."""
 
 from __future__ import annotations

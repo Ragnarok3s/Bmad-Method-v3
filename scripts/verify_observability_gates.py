@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Valida ativos de observabilidade e gera artefactos para o pipeline."""
 
 from __future__ import annotations

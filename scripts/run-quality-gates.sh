@@ -31,8 +31,8 @@ else
   echo "[quality-gates] pip-audit não disponível" >&2
 fi
 
-python3 "$ROOT_DIR/scripts/verify_quality_gates.py"
-python3 "$ROOT_DIR/scripts/verify_observability_gates.py" --artifact-dir "$OBSERVABILITY_DIR"
+python3.14 "$ROOT_DIR/scripts/verify_quality_gates.py"
+python3.14 "$ROOT_DIR/scripts/verify_observability_gates.py" --artifact-dir "$OBSERVABILITY_DIR"
 
 echo "[quality-gates] Executando Great Expectations"
-python3 "$ROOT_DIR/scripts/validate_data_quality.py"
+python3.14 "$ROOT_DIR/scripts/validate_data_quality.py"

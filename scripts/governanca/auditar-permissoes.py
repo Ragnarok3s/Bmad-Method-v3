@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Rotina mensal de auditoria de permissões cruzando API /agents e planilha de RH."""
 from __future__ import annotations
 
