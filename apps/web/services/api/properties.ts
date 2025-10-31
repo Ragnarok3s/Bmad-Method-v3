@@ -133,6 +133,24 @@ export async function fetchInventoryReconciliation(
   }
 }
 
+export async function resolveInventoryReconciliationItem(
+  propertyId: number,
+  itemId: number
+): Promise<void> {
+  try {
+    await getApiClient().request<void>({
+      path: `/properties/${propertyId}/inventory/reconciliation/${itemId}/resolve`,
+      method: 'POST'
+    });
+  } catch (error) {
+    if (error instanceof CoreApiError) {
+      throw error;
+    }
+
+    throw new CoreApiError('Failed to resolve inventory reconciliation item', 500, null);
+  }
+}
+
 function normalizeStartOfDay(value: string): string {
   return value.includes('T') ? value : `${value}T00:00:00Z`;
 }
