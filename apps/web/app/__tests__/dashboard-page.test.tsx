@@ -4,7 +4,7 @@ import DashboardPage from '../page';
 import { CoreApiError } from '@/services/api/housekeeping';
 import { dashboardMetricsFixture } from '@/services/api/__mocks__/dashboard';
 import { partnerSlasFixture } from '@/services/api/__mocks__/partners';
-import { getDashboardMetrics } from '@/services/api/dashboard';
+import { DashboardMetrics, getDashboardMetrics } from '@/services/api/dashboard';
 import { getPartnerSlas } from '@/services/api/partners';
 
 jest.mock('@/services/api/dashboard', () => {
@@ -27,10 +27,57 @@ jest.mock('@/components/tour/TourLauncher', () => ({
   TourLauncher: () => <div data-testid="tour-launcher" />
 }));
 
-const mockGetDashboardMetrics = getDashboardMetrics as jest.MockedFunction<
-  typeof getDashboardMetrics
->;
+const mockGetDashboardMetrics = getDashboardMetrics as jest.MockedFunction<typeof getDashboardMetrics>;
 const mockGetPartnerSlas = getPartnerSlas as jest.MockedFunction<typeof getPartnerSlas>;
+
+const emptyMetrics: DashboardMetrics = {
+  occupancy: {
+    date: '2024-01-01',
+    occupiedUnits: 0,
+    totalUnits: 0,
+    occupancyRate: 0
+  },
+  nps: {
+    score: 0,
+    totalResponses: 0,
+    trend7d: null
+  },
+  sla: {
+    total: 0,
+    onTrack: 0,
+    atRisk: 0,
+    breached: 0,
+    worstOffenders: []
+  },
+  operational: {
+    criticalAlerts: {
+      total: 0,
+      blocked: 0,
+      overdue: 0,
+      examples: []
+    },
+    playbookAdoption: {
+      periodStart: '2024-01-01T00:00:00.000Z',
+      periodEnd: '2024-01-07T00:00:00.000Z',
+      totalExecutions: 0,
+      completed: 0,
+      adoptionRate: 0,
+      activeProperties: 0
+    },
+    housekeepingCompletionRate: {
+      name: 'Execução de Housekeeping',
+      value: 0,
+      unit: '%',
+      status: null
+    },
+    otaSyncBacklog: {
+      name: 'Pendências OTA',
+      value: 0,
+      unit: 'reservas',
+      status: null
+    }
+  }
+};
 
 describe('DashboardPage', () => {
   beforeEach(() => {
@@ -56,12 +103,13 @@ describe('DashboardPage', () => {
     mockGetDashboardMetrics.mockResolvedValue({
       status: 'degraded',
       data: dashboardMetricsFixture,
-      message: 'Fallback offline metrics.'
+      message:
+        'Não foi possível contactar o Core API. A mostrar métricas de exemplo enquanto a ligação é restabelecida.'
     });
     mockGetPartnerSlas.mockResolvedValue({
       status: 'degraded',
       data: partnerSlasFixture,
-      message: 'Fallback offline SLAs.'
+      message: 'Não foi possível contactar o Core API. A mostrar SLAs de exemplo até à reconexão.'
     });
 
     render(<DashboardPage />);
@@ -74,7 +122,7 @@ describe('DashboardPage', () => {
     expect(screen.getByTestId('kpi-occupancy-annotation')).toHaveTextContent('Modo offline');
     expect(screen.getByTestId('kpi-occupancy-annotation')).toHaveAttribute(
       'title',
-      expect.stringContaining('Fallback offline metrics')
+      expect.stringContaining('Não foi possível contactar o Core API')
     );
     expect(screen.getByTestId('sla-offline-banner')).toBeInTheDocument();
     expect(
@@ -103,5 +151,23 @@ describe('DashboardPage', () => {
     );
     expect(screen.getByTestId('dashboard-recovery-cta')).toBeInTheDocument();
     expect(screen.getByText('Valide as credenciais e tokens do Core API.')).toBeInTheDocument();
+  });
+
+  it('renders initial empty state when metrics and SLAs contain no data', async () => {
+    mockGetDashboardMetrics.mockResolvedValue({ status: 'live', data: emptyMetrics });
+    mockGetPartnerSlas.mockResolvedValue({ status: 'live', data: [] });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kpi-occupancy-empty')).toHaveTextContent('Sem inventário cadastrado.');
+    });
+
+    expect(screen.getByTestId('dashboard-status-banner')).toHaveTextContent('Configuração inicial');
+    expect(screen.getByTestId('kpi-occupancy-annotation')).toHaveTextContent('Configuração inicial');
+    expect(screen.getByTestId('kpi-occupancy-annotation')).toHaveAttribute(
+      'title',
+      expect.stringContaining('Conclua a configuração inicial para começar a acompanhar as métricas.')
+    );
   });
 });

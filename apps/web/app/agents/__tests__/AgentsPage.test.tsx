@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
 import { axe } from 'jest-axe';
 import AgentsPage from '../page';
 import {
@@ -6,6 +7,20 @@ import {
   type AgentCatalogItem,
   type UseAgentsCatalogResult
 } from '@/services/api/agents';
+
+jest.mock('@/components/analytics/AnalyticsContext', () => ({
+  __esModule: true,
+  AnalyticsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAnalytics: () => ({
+    track: jest.fn(),
+    flushQueue: jest.fn()
+  })
+}));
+
+jest.mock('@/lib/tenant-context', () => ({
+  __esModule: true,
+  useTenant: () => ({ tenant: { slug: 'porto' } })
+}));
 
 jest.mock('@/services/api/agents', () => {
   const actual = jest.requireActual('@/services/api/agents');
