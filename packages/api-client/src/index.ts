@@ -17,3 +17,17 @@ export type {
   PushDeviceRegistrationPayload,
   PushDeviceRead
 } from './notifications.js';
+export { ReservationApi } from './reservations.js';
+export type {
+  ReservationStatus,
+  ReservationRead,
+  ReservationUpdateStatusPayload,
+  ReservationListQuery,
+  ReservationListResponse,
+  PaymentIntentStatus,
+  PaymentIntentRead,
+  PaymentProvider,
+  PaymentMethodStatus,
+  InvoiceStatus,
+  InvoiceRead
+} from './reservations.js';
