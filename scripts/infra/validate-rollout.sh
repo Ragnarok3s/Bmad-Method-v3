@@ -27,6 +27,6 @@ for deployment in "${DEPLOYMENTS[@]}"; do
     exit 1
   fi
   echo "[validate-rollout] Deployment ${deployment} saudável."
-fi
+done
 
 echo "[validate-rollout] Todos os rollouts foram concluídos com sucesso."
