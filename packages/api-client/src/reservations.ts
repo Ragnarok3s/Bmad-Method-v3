@@ -140,7 +140,7 @@ export class ReservationApi {
     const normalized = normalizeReservationList(payload, query);
 
     return {
-      items: normalized.items.map(mapReservation),
+      items: normalized.items.map(mapReservationDto),
       pagination: normalized.pagination
     };
   }
@@ -154,7 +154,7 @@ export class ReservationApi {
       method: 'PATCH',
       body: payload as unknown as Record<string, unknown>
     });
-    return mapReservation(dto);
+    return mapReservationDto(dto);
   }
 }
 
@@ -211,7 +211,7 @@ function mapPagination(dto: PaginationMetaDto): PaginationMeta {
   };
 }
 
-function mapReservation(dto: ReservationDto): ReservationRead {
+export function mapReservationDto(dto: ReservationDto): ReservationRead {
   return {
     id: dto.id,
     propertyId: dto.property_id,

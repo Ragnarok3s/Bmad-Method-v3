@@ -3,12 +3,14 @@ import { HousekeepingApi } from './housekeeping.js';
 import { IncidentApi } from './incidents.js';
 import { NotificationApi } from './notifications.js';
 import { ReservationApi } from './reservations.js';
+import { PropertyApi } from './properties.js';
 
 export class BmadApiClient extends CoreApiClient {
   readonly housekeeping: HousekeepingApi;
   readonly incidents: IncidentApi;
   readonly notifications: NotificationApi;
   readonly reservations: ReservationApi;
+  readonly properties: PropertyApi;
 
   constructor(options: CoreApiClientOptions) {
     super(options);
@@ -16,6 +18,7 @@ export class BmadApiClient extends CoreApiClient {
     this.incidents = new IncidentApi(this);
     this.notifications = new NotificationApi(this);
     this.reservations = new ReservationApi(this);
+    this.properties = new PropertyApi(this);
   }
 }
 

@@ -31,3 +31,13 @@ export type {
   InvoiceStatus,
   InvoiceRead
 } from './reservations.js';
+export { PropertyApi } from './properties.js';
+export type {
+  PropertyCalendarFilters,
+  PropertyCalendarResponse,
+  PropertyInventoryReconciliationParams,
+  PropertyInventoryReconciliationResponse,
+  ReconciliationQueueItem,
+  ReconciliationSource,
+  ReconciliationStatus
+} from './properties.js';
