@@ -3,6 +3,8 @@
 ## Objetivo
 Garantir que os dashboards e alertas críticos estejam operacionais, alinhados às métricas de negócio e atualizados após cada execução de scripts de infraestrutura.
 
+> Consulte o inventário completo de painéis, logs e alertas em `docs/observabilidade/dashboards-e-logs.md` antes de iniciar a revisão.
+
 ## Frequência
 - Revisão completa: após cada janela de execução listada em `docs/infra/runbook.md`.
 - Monitoramento contínuo: verificação rápida diária às 10h.
