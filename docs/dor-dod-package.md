@@ -27,6 +27,12 @@ Centralizar os critérios oficiais de pronto utilizados pelo time de produto/eng
 
 > **Assinatura 2024-07-08**: Ana Ribeiro (PO) e Carlos Mendes (QA Lead) confirmaram alinhamento deste pacote com o quadro de critérios publicado em `docs/property-mvp-plan.md`, mantendo-o como fonte oficial para auditorias DoR/DoD.
 
+## Checklist de DoD — Sprint 1
+- [x] Métricas consolidadas da Sprint 1 registradas em `docs/evidencias/sprint-1-metricas.md` para revisão na Sprint Review.
+- [x] Relatório de auditoria de acessibilidade de housekeeping anexado em `docs/evidencias/a11y-housekeeping.pdf` e comunicado ao time de produto.
+- [x] Resultados dos testes de carga do módulo de reservas documentados em `docs/evidencias/loadtests-reservas.md`.
+- [x] Planos de mitigação para desvios (latência OTA e incidentes críticos) registrados e aprovados pelos leads responsáveis.
+
 ## Histórico de Atualizações
 | Data | Responsáveis | Mudanças |
 |------|--------------|----------|
@@ -34,6 +40,5 @@ Centralizar os critérios oficiais de pronto utilizados pelo time de produto/eng
 | 2024-06-03 | Ana Ribeiro, Carlos Mendes | Consolidação no pacote dedicado, inclusão dos SLAs OTA e atualização de critérios de segurança. |
 
 ## Próximas Ações
-- Revisar métricas de aceitação após Sprint 1 e registrar ajustes neste documento.
-- Anexar resultados de auditoria de acessibilidade às histórias de Housekeeping Móvel.
-- Confirmar cobertura de testes de carga para o módulo de Reservas antes do gate Q4.
+- Atualizar os limiares de performance de OTA após dois ciclos consecutivos sem alertas.
+- Planejar a revisão trimestral do pacote DoR/DoD (checkpoint Q3 2024) com base nas novas métricas e testes de performance.
