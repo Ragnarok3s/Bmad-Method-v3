@@ -18,7 +18,7 @@ import {
   fetchInventoryReconciliation,
   fetchPropertyCalendar,
   resolveInventoryReconciliationItem
-} from '@/services/api';
+} from '@/services/api/index';
 
 const DEFAULT_PROPERTY_ID = 1;
 

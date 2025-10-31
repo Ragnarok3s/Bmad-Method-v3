@@ -111,6 +111,9 @@ describe('ReportsPage tenant banners', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Reservas totais')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
       expect(mockListProperties).toHaveBeenCalledTimes(1);
     });
 
@@ -120,6 +123,9 @@ describe('ReportsPage tenant banners', () => {
 
     await waitFor(() => {
       expect(mockGetMultiTenantKpiReport).toHaveBeenCalledTimes(1);
+    });
+
+    await waitFor(() => {
       expect(mockListProperties).toHaveBeenCalledTimes(1);
     });
 

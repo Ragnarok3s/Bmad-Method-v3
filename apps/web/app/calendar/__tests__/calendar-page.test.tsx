@@ -5,19 +5,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import CalendarPage from '../page';
 
-jest.mock('@/services/api', () => ({
+jest.mock('@/services/api/index', () => ({
   fetchPropertyCalendar: jest.fn(),
   fetchInventoryReconciliation: jest.fn(),
   resolveInventoryReconciliationItem: jest.fn()
 }));
 
-type ApiModule = typeof import('@/services/api');
+type ApiModule = typeof import('@/services/api/index');
 
 const {
   fetchPropertyCalendar: mockFetchPropertyCalendar,
   fetchInventoryReconciliation: mockFetchInventoryReconciliation,
   resolveInventoryReconciliationItem: mockResolveInventoryReconciliationItem
-} = jest.requireMock('@/services/api') as {
+} = jest.requireMock('@/services/api/index') as {
   fetchPropertyCalendar: jest.MockedFunction<ApiModule['fetchPropertyCalendar']>;
   fetchInventoryReconciliation: jest.MockedFunction<
     ApiModule['fetchInventoryReconciliation']
@@ -205,6 +205,9 @@ describe('CalendarPage', () => {
 
     await waitFor(() => {
       expect(reconcileButton).toBeDisabled();
+    });
+
+    await waitFor(() => {
       expect(reconcileButton).toHaveTextContent('A conciliar…');
     });
 
