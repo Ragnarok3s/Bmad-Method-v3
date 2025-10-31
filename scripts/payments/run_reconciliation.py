@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.14
 """Simulate PCI-aligned tokenization, authorization and reconciliation locally."""
 
 from __future__ import annotations

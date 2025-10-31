@@ -17,7 +17,7 @@
 | `scripts/infra/seed-dev-data.sh` / `seed-staging-data.sh` | Wrappers convenientes para `seed-data.sh`. | Herda dependências; sofrem com `REPO_ROOT` incorreto. | Usados em pipelines e operações manuais. |
 
 ## Workflows CI/CD
-- **`.github/workflows/ci.yml`** – Executa lint, testes (unitário, integração, E2E) e quality gates em pushes/PRs para `main` e `develop`. Publica artefatos de QA e observabilidade. Principais dependências: Node 20, Python 3.11, `bandit`, Playwright, pytest.【F:.github/workflows/ci.yml†L1-L53】【F:.github/workflows/ci.yml†L55-L79】
+- **`.github/workflows/ci.yml`** – Executa lint, testes (unitário, integração, E2E) e quality gates em pushes/PRs para `main` e `develop`. Publica artefatos de QA e observabilidade. Principais dependências: Node 20, Python 3.14, `bandit`, Playwright, pytest.【F:.github/workflows/ci.yml†L1-L53】【F:.github/workflows/ci.yml†L55-L79】
 - **`.github/workflows/deploy-staging.yml`** – Em push para `main` ou manual, roda prechecks equivalentes à CI, valida Docker/K8s via `provision-dev.sh docker/k8s`, prepara manifests, valida datasets e publica pacotes para aprovação manual.【F:.github/workflows/deploy-staging.yml†L1-L63】【F:.github/workflows/deploy-staging.yml†L64-L96】
 - **`.github/workflows/reset-staging.yml`** – Agendado diariamente 05:00 UTC ou via dispatch. Executa `reset-staging.sh` com `SEED_MODE=validate` usando secrets de banco e publica evidências.【F:.github/workflows/reset-staging.yml†L1-L21】
 

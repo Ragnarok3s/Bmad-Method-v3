@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Executa validações de qualidade de dados para os seeds de reservas."""
 
 from __future__ import annotations

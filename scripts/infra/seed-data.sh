@@ -81,7 +81,7 @@ fi
 
 mkdir -p "$EXPORT_DIR"
 
-PYTHONPATH="$REPO_ROOT" python3 - <<PY
+PYTHONPATH="$REPO_ROOT" python3.14 - <<PY
 from __future__ import annotations
 
 import csv

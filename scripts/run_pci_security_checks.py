@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.14
 """Gera relatório simplificado de testes PCI para a pipeline de QA."""
 from __future__ import annotations
 
