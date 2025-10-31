@@ -120,12 +120,22 @@ describe('ReservasPage', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Registar check-in' }));
 
-    const guestCard = screen.getByText('Hóspede 1').closest('article');
-    expect(guestCard).not.toBeNull();
+    const guestArticle = screen
+      .getAllByRole('article')
+      .find((article) =>
+        within(article).queryByRole('heading', { name: 'Hóspede 1' })
+      );
+
+    expect(guestArticle).toBeDefined();
+
+    const guestCard = within(guestArticle as HTMLElement);
 
     await waitFor(() => {
       expect(mockUpdateReservationStatus).toHaveBeenCalledWith(1, { status: 'checked_in' });
-      expect(within(guestCard as HTMLElement).getByText('Hóspede em casa')).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(guestCard.getByText('Hóspede em casa')).toBeInTheDocument();
     });
   });
 

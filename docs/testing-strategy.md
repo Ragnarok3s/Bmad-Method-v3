@@ -30,6 +30,10 @@ Este plano cobre testes automatizados (unitários, integração, ponta a ponta) 
 
 - **Serviço de Identidade multi-tenant**: executar `pytest tests/services/identity -q` para validar login, MFA e gestão de papéis isolados por tenant. A suíte cria uma instância FastAPI a partir de `services.identity` e reaproveita os contratos de segurança do core, garantindo compatibilidade com os controles descritos no [product roadmap](product-roadmap.md#atualização-2025-02-15-identidade-multi-tenant).
 
+### Suites Dedicadas (Atualização 2025-02-20)
+
+- **Calendário operacional e reservas web**: a suíte de regressão front-end roda via `npm run test --workspace @bmad/web` e cobre conciliações manuais, filtros do calendário e fluxo de reservas. A configuração de Jest passou a incluir `TextEncoder`/`TextDecoder` via polyfill em `apps/web/jest.setup.ts` e um mapeamento explícito para `@tanstack/react-query`, garantindo compatibilidade com Node 18 em ambientes CI. Para evitar flakiness, aplicar as regras de lint (`testing-library/no-wait-for-multiple-assertions`, `testing-library/no-node-access`) antes de abrir PRs (`npm run lint --workspace @bmad/web`).
+
 ### Testes End-to-End (E2E)
 
 | Cenário | Objetivo | Ferramentas | Frequência |
