@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 
 export type TenantMode = 'tenant' | 'platform';
 
@@ -64,17 +64,10 @@ export function TenantProvider({
   const resolvedTenant = tenant ?? resolveInitialTenant();
   const resolvedToken =
     platformToken ?? process.env.NEXT_PUBLIC_TENANT_PLATFORM_TOKEN ?? null;
-  const resolvedCapabilities = useMemo<TenantCapabilities>(
-    () => ({
-      canViewAggregatedReports: resolvedMode === 'platform',
-      canProvisionWorkspaces: resolvedMode === 'platform',
-      ...capabilities
-    }),
-    [capabilities, resolvedMode]
-  );
+  const resolvedTenantSlug = resolvedTenant?.slug;
 
-  const value = useMemo<TenantContextValue>(() => {
-    function buildHeaders(options?: BuildHeadersOptions): Record<string, string> {
+  const buildHeaders = useCallback(
+    (options?: BuildHeadersOptions): Record<string, string> => {
       const headers: Record<string, string> = {};
       const targetScope = options?.scope ?? resolvedMode;
       const overrideSlug = options?.tenantSlug;
@@ -88,13 +81,22 @@ export function TenantProvider({
           headers['x-tenant-slug'] = overrideSlug;
         }
       } else {
-        const activeSlug = overrideSlug ?? resolvedTenant?.slug;
+        const activeSlug = overrideSlug ?? resolvedTenantSlug;
         if (activeSlug) {
           headers['x-tenant-slug'] = activeSlug;
         }
       }
       return headers;
-    }
+    },
+    [resolvedMode, resolvedTenantSlug, resolvedToken]
+  );
+
+  const value = useMemo<TenantContextValue>(() => {
+    const resolvedCapabilities: TenantCapabilities = {
+      canViewAggregatedReports: resolvedMode === 'platform',
+      canProvisionWorkspaces: resolvedMode === 'platform',
+      ...capabilities
+    };
 
     return {
       mode: resolvedMode,
@@ -103,7 +105,7 @@ export function TenantProvider({
       capabilities: resolvedCapabilities,
       buildHeaders
     };
-  }, [resolvedMode, resolvedTenant, resolvedToken, resolvedCapabilities]);
+  }, [buildHeaders, capabilities, resolvedMode, resolvedTenant, resolvedToken]);
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 }
