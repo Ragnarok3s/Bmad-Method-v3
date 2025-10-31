@@ -6,6 +6,18 @@ import { CoreApiError, getReservations, updateReservationStatus } from '@/servic
 import { reservationsFixture, reservationsSecondPageFixture } from '@/services/api/__mocks__/reservations';
 import { useOffline } from '@/components/offline/OfflineContext';
 
+const analyticsMock = { track: jest.fn(), flushQueue: jest.fn() };
+
+jest.mock('@/components/analytics/AnalyticsContext', () => ({
+  __esModule: true,
+  useAnalytics: () => analyticsMock
+}));
+
+jest.mock('@/lib/tenant-context', () => ({
+  __esModule: true,
+  useTenant: () => ({ tenant: { slug: 'porto' } })
+}));
+
 jest.mock('@/services/api/reservations', () => {
   const actual = jest.requireActual('@/services/api/reservations');
   return {

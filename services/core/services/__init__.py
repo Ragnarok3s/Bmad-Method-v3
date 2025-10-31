@@ -487,6 +487,14 @@ class ReservationService:
             )
             reservation.guest_email = sanitized["email"]
             masked.append(reservation)
+        logger.info(
+            "reservations_listed",
+            extra={
+                "property_id": property_id,
+                "reservations": len(reservations),
+                "tenant_id": property_obj.tenant_id,
+            },
+        )
         return masked
 
     def enforce_retention(self, retention_days: int) -> int:
