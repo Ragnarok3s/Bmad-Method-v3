@@ -1,12 +1,15 @@
 'use client';
 
-import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { metrics } from '@opentelemetry/api';
 
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { useOffline } from '@/components/offline/OfflineContext';
 import { Card } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { useAnalytics } from '@/components/analytics/AnalyticsContext';
+import { useTenant } from '@/lib/tenant-context';
 import {
   CoreApiError,
   getReservations,
@@ -42,6 +45,40 @@ const STATUS_ACTION: Partial<Record<ReservationStatus, { next: ReservationStatus
   checked_in: { next: 'checked_out', label: 'Concluir check-out' }
 };
 
+const reservationsMeter = metrics.getMeter('bmad.web.reservations');
+const reservationViewCounter = reservationsMeter.createCounter('bmad_web_reservation_view_total', {
+  description: 'Total de reservas visualizadas na jornada web'
+});
+const reservationStatusOutcomeCounter = reservationsMeter.createCounter(
+  'bmad_web_reservation_status_outcome_total',
+  {
+    description: 'Total de ações de atualização de status iniciadas pelos utilizadores'
+  }
+);
+const reservationStatusLatencyHistogram = reservationsMeter.createHistogram(
+  'bmad_web_reservation_status_latency_ms',
+  {
+    description: 'Latência entre a visualização da reserva e a atualização de status',
+    unit: 'ms'
+  }
+);
+const reservationFetchCounter = reservationsMeter.createCounter('bmad_web_reservations_fetch_total', {
+  description: 'Total de sincronizações do catálogo de reservas'
+});
+const reservationFetchOutcomeCounter = reservationsMeter.createCounter(
+  'bmad_web_reservations_fetch_outcome_total',
+  {
+    description: 'Resultados das sincronizações do catálogo de reservas'
+  }
+);
+const reservationFetchDurationHistogram = reservationsMeter.createHistogram(
+  'bmad_web_reservations_fetch_duration_ms',
+  {
+    description: 'Latência para carregar reservas do Core API',
+    unit: 'ms'
+  }
+);
+
 function formatCurrency(amountMinor: number | null, currencyCode: string | null): string {
   if (amountMinor === null || currencyCode === null) {
     return 'A definir com o hóspede';
@@ -71,6 +108,8 @@ function formatDate(value: string, locale: string): string {
 
 export default function ReservasPage() {
   const { isOffline } = useOffline();
+  const analytics = useAnalytics();
+  const { tenant } = useTenant();
   const [reservations, setReservations] = useState<ReservationRead[]>([]);
   const [filters, setFilters] = useState<ReservationFilters>({});
   const [page, setPage] = useState<number>(1);
@@ -84,6 +123,14 @@ export default function ReservasPage() {
   const [refreshToken, setRefreshToken] = useState<number>(0);
 
   const locale = 'pt-BR';
+  const workspaceSlug = useMemo(() => tenant?.slug ?? 'global', [tenant]);
+  const viewedReservationsRef = useRef<Set<string>>(new Set());
+  const viewTimestampsRef = useRef<Map<string, number>>(new Map());
+
+  const makeReservationKey = useCallback(
+    (reservationId: number) => `${workspaceSlug}::${reservationId}`,
+    [workspaceSlug]
+  );
 
   const handleFiltersChange = useCallback(
     (nextFilters: ReservationFilters) => {
@@ -139,6 +186,15 @@ export default function ReservasPage() {
     }
 
     const controller = new AbortController();
+    const fetchAttributes = {
+      workspace: workspaceSlug,
+      property_id: DEFAULT_PROPERTY_ID,
+      status: filters.status ?? 'all',
+      has_date_filters: Boolean(filters.startDate || filters.endDate),
+      page
+    } as const;
+    const fetchStart = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
     const params: ReservationListParams = {
       propertyId: DEFAULT_PROPERTY_ID,
       page,
@@ -150,6 +206,8 @@ export default function ReservasPage() {
     setLoading(true);
     setError(null);
     setMutationError(null);
+    analytics.track('reservations_fetch', fetchAttributes);
+    reservationFetchCounter.add(1, fetchAttributes);
 
     getReservations(params)
       .then((response) => {
@@ -159,24 +217,42 @@ export default function ReservasPage() {
         setReservations(response.items);
         setTotalPages(response.pagination.totalPages);
         setTotalReservations(response.pagination.total);
+        const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+        const latency = Math.max(0, now - fetchStart);
+        reservationFetchDurationHistogram.record(latency, fetchAttributes);
+        reservationFetchOutcomeCounter.add(1, { ...fetchAttributes, result: 'success' });
+        analytics.track('reservations_fetch_success', {
+          ...fetchAttributes,
+          total: response.items.length
+        });
       })
       .catch((apiError: unknown) => {
         if (controller.signal.aborted) {
           return;
         }
+        let errorType = 'unexpected';
         if (apiError instanceof CoreApiError) {
           if (apiError.status >= 500) {
             setError('Serviço de reservas indisponível. Tente novamente em instantes.');
+            errorType = 'server_error';
           } else if (apiError.status === 404) {
             setError('A propriedade selecionada não possui reservas visíveis.');
+            errorType = 'not_found';
           } else if (apiError.status === 403) {
             setError('Permissões insuficientes para consultar reservas deste imóvel.');
+            errorType = 'forbidden';
           } else {
             setError('Não foi possível carregar as reservas para os filtros selecionados.');
+            errorType = 'client_error';
           }
         } else {
           setError('Erro inesperado ao carregar reservas.');
         }
+        reservationFetchOutcomeCounter.add(1, { ...fetchAttributes, result: 'error', error_type: errorType });
+        analytics.track('reservations_fetch_error', {
+          ...fetchAttributes,
+          error_type: errorType
+        });
       })
       .finally(() => {
         if (!controller.signal.aborted) {
@@ -185,7 +261,29 @@ export default function ReservasPage() {
       });
 
     return () => controller.abort();
-  }, [filters, isOffline, page, pageSize, refreshToken]);
+  }, [analytics, filters, isOffline, page, pageSize, refreshToken, workspaceSlug]);
+
+  useEffect(() => {
+    if (loading || error) {
+      return;
+    }
+    reservations.forEach((reservation) => {
+      const reservationKey = makeReservationKey(reservation.id);
+      if (viewedReservationsRef.current.has(reservationKey)) {
+        return;
+      }
+      viewedReservationsRef.current.add(reservationKey);
+      viewTimestampsRef.current.set(reservationKey, Date.now());
+      const attributes = {
+        workspace: workspaceSlug,
+        property_id: reservation.propertyId,
+        reservation_id: reservation.id,
+        status: reservation.status
+      } as const;
+      analytics.track('reservation_view', attributes);
+      reservationViewCounter.add(1, attributes);
+    });
+  }, [analytics, error, loading, makeReservationKey, reservations, workspaceSlug]);
 
   const handleUpdateStatus = useCallback(
     async (reservation: ReservationRead) => {
@@ -206,23 +304,66 @@ export default function ReservasPage() {
         setReservations((prev) =>
           prev.map((item) => (item.id === updated.id ? updated : item))
         );
+        const attributes = {
+          workspace: workspaceSlug,
+          property_id: updated.propertyId,
+          reservation_id: updated.id,
+          previous_status: reservation.status,
+          next_status: updated.status
+        } as const;
+        reservationStatusOutcomeCounter.add(1, { ...attributes, result: 'success' });
+        analytics.track('reservation_status_update', attributes);
+        const reservationKey = makeReservationKey(reservation.id);
+        const firstView = viewTimestampsRef.current.get(reservationKey);
+        if (typeof firstView === 'number') {
+          const latency = Math.max(0, Date.now() - firstView);
+          reservationStatusLatencyHistogram.record(latency, attributes);
+        }
       } catch (apiError: unknown) {
+        const attributes = {
+          workspace: workspaceSlug,
+          property_id: reservation.propertyId,
+          reservation_id: reservation.id,
+          previous_status: reservation.status,
+          next_status: action.next
+        } as const;
         if (apiError instanceof CoreApiError) {
           if (apiError.status >= 500) {
             setMutationError('Não foi possível atualizar a reserva. Tente novamente em instantes.');
+            reservationStatusOutcomeCounter.add(1, {
+              ...attributes,
+              result: 'error',
+              error_type: 'server_error'
+            });
           } else if (apiError.status === 409) {
             setMutationError('A reserva foi alterada recentemente. Atualize a listagem e tente novamente.');
+            reservationStatusOutcomeCounter.add(1, {
+              ...attributes,
+              result: 'error',
+              error_type: 'conflict'
+            });
           } else {
             setMutationError('Valide os dados da reserva e tente novamente.');
+            reservationStatusOutcomeCounter.add(1, {
+              ...attributes,
+              result: 'error',
+              error_type: 'validation_error'
+            });
           }
         } else {
           setMutationError('Erro inesperado ao atualizar a reserva.');
+          reservationStatusOutcomeCounter.add(1, {
+            ...attributes,
+            result: 'error',
+            error_type: 'unexpected'
+          });
         }
+        analytics.track('reservation_status_error', attributes);
       } finally {
         setUpdatingReservationId(null);
       }
     },
-    [isOffline]
+    [analytics, isOffline, makeReservationKey, workspaceSlug]
   );
 
   const canGoBack = page > 1;

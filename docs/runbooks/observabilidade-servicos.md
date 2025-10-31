@@ -14,7 +14,11 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
    - Logs: Grafana Explore (Loki) filtrando labels `service.name`, `deployment.environment`, `route`.
    - Traces: Tempo filtrado por `service.name = bmad-core-service` e `bmad-web-app`.
    - Smoke tests: executar `poetry run pytest -k observability_smoke` para confirmar ingestão automática.
-3. **Quality Gates**
+3. **Reservas e Reconciliação (Novos sinais)**
+   - API Core: validar `GET /properties/1/reservations?page=1` e `PATCH /reservations/{id}` usando `curl -sS -H 'x-tenant-id: <tenant>' -H 'x-actor-id: <agent>' http://localhost:8000/...` (substituir host pelo ambiente alvo).
+   - Observabilidade: no Grafana Explore consultar `sum(increase(bmad_web_reservations_fetch_outcome_total[5m])) by (result)` e `sum(increase(bmad_web_reservation_view_total[5m])) by (workspace)` para confirmar tráfego.
+   - Logs estruturados: em Loki filtrar `logfmt` com `message="reservations_listed"` e labels `service.name="bmad.core.services"` para validar contagem por `property_id`.
+4. **Quality Gates**
    - Executar `scripts/run-quality-gates.sh` e anexar `artifacts/observability/manifest.json` ao pipeline.
    - Verificar se dashboards/alertas obrigatórios constam do artefacto.
 
@@ -28,6 +32,7 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
    - Backend: revisar contador `bmad_core_reservations_confirmed_total` em Prometheus (`increase(...[5m])`).
    - Confirmar se `signals.metrics.last_event` foi atualizado após chamar `record_dashboard_request`.
    - Frontend: inspecionar contador `bmad_web_page_view_total` (confirmar que o app foi acedido após deploy).
+   - Reservas: validar `bmad_web_reservations_fetch_outcome_total` (sem picos de `result="error"`) e `bmad_web_reservation_status_outcome_total` (erros de mutação devem ser transitórios).
 3. **Logs/Traces**
    - Confirmar que `services/core/observability.py` adicionou handler de logging (verificar `service.instance.id` nos logs Loki).
    - Validar `signals.logs.last_event` e `signals.traces.last_event` via `/health/otel`.
