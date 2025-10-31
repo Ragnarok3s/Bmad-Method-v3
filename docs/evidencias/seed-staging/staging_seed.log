@@ -1,0 +1,3 @@
+[seed-data][staging] Variável STAGING_RELATIONAL_URL não definida; seed relacional não será executado.
+[seed-data][staging] Variável STAGING_NOSQL_URL não definida; seed NoSQL não será executado.
+[seed-data][staging] Falhas detectadas na aplicação do seed. Consulte docs/evidencias/seed-staging/staging_seed.json.

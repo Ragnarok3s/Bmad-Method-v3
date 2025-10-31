@@ -1,0 +1,15 @@
+{
+  "environment": "staging",
+  "mode": "apply",
+  "timestamp": 1761941438,
+  "relational": {
+    "dataset": "/workspace/Bmad-Method-v3/tests/data/seed/guests_relational.csv",
+    "status": "failed",
+    "url_var": "STAGING_RELATIONAL_URL"
+  },
+  "nosql": {
+    "dataset": "/workspace/Bmad-Method-v3/tests/data/seed/guest_preferences.json",
+    "status": "failed",
+    "url_var": "STAGING_NOSQL_URL"
+  }
+}

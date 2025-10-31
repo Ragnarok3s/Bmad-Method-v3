@@ -70,7 +70,7 @@ if [[ "$MODE" != "apply" && "$MODE" != "validate" ]]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 RELATIONAL_DATASET="${REPO_ROOT}/tests/data/seed/guests_relational.csv"
 NOSQL_DATASET="${REPO_ROOT}/tests/data/seed/guest_preferences.json"
