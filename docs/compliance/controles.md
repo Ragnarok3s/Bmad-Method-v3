@@ -51,6 +51,15 @@ materializam o requisito, bem como às evidências geradas automaticamente.
    - `scripts/compliance/collect_evidence.py` gera hashes e metadados dos arquivos críticos.
    - Exportação mensal `docs/compliance/reports/compliance-<AAAA-MM>.md` descreve status dos controles e links para dashboards.
 
+4. **Privacidade e Minimização de Dados:**
+   - `quality/privacy.py` provê `mask_personal_identifiers` para mascarar PII e `enforce_retention_policy` para expurgar reservas expiradas; `ReservationService.list_for_property` aplica a máscara antes de responder APIs públicas.
+   - `quality/onboarding.py` e `tests/integration/test_privacy_controls.py` validam uso de dados sintéticos e cobertura automatizada dos controles.
+
+5. **Trilha de Auditoria e Checkpoints:**
+   - `services/core/security/auth.py` registra eventos críticos via `record_audit_event`, garantindo rastreabilidade por agente.
+   - `services/core/security/__init__.py` publica checkpoints (`register_control_checkpoint`) quando permissões/roles são gerenciados; esses eventos alimentam a consulta `/governance/audit` documentada em `docs/api/core.md`.
+   - As respostas dos endpoints expõem `X-Trace-Id`/`X-Request-Id` (quando fornecidos) para correlação com Loki e dashboards de auditoria.
+
 ## Próximos Passos
 
 - Expandir coleta de evidências para integrações externas (ex.: provedores de identidade SSO).
