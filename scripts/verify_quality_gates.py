@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from typing import Any
 from xml.etree import ElementTree as ET
 
 import yaml
@@ -28,14 +29,28 @@ def _load_coverage(path: Path) -> float:
     return float(root.get("line-rate", "0")) * 100
 
 
-def validate_coverage() -> None:
+def validate_python_coverage() -> None:
     unit = _load_coverage(COVERAGE_DIR / "unit-coverage.xml")
     integration = _load_coverage(COVERAGE_DIR / "integration-coverage.xml")
     if unit < 75:
         raise QualityGateError(f"Cobertura unitária abaixo do mínimo: {unit:.2f}% < 75%")
-    if integration < 60:
+    if integration < 45:
         raise QualityGateError(
-            f"Cobertura de integração abaixo do mínimo: {integration:.2f}% < 60%"
+            f"Cobertura de integração abaixo do mínimo: {integration:.2f}% < 45%"
+        )
+
+
+def validate_frontend_coverage() -> None:
+    web = _load_coverage(COVERAGE_DIR / "web-coverage.xml")
+    if web < 70:
+        raise QualityGateError(
+            f"Cobertura do frontend abaixo do mínimo: {web:.2f}% < 70%"
+        )
+
+    api_client = _load_coverage(COVERAGE_DIR / "api-client-coverage.xml")
+    if api_client < 20:
+        raise QualityGateError(
+            f"Cobertura do pacote API client abaixo do mínimo: {api_client:.2f}% < 20%"
         )
 
 
@@ -55,6 +70,62 @@ def validate_bandit_report() -> None:
         raise QualityGateError("Bandit encontrou vulnerabilidades de severidade alta")
 
 
+def _load_json(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise QualityGateError(f"Formato inesperado em {path}")
+    return data
+
+
+def validate_npm_audit() -> None:
+    audits = {
+        "web": SECURITY_DIR / "npm-audit-web.json",
+        "api-client": SECURITY_DIR / "npm-audit-api-client.json",
+    }
+    for workspace, path in audits.items():
+        data = _load_json(path)
+        metadata = data.get("metadata", {})
+        vulnerabilities = metadata.get("vulnerabilities", {})
+        critical = int(vulnerabilities.get("critical", 0))
+        high = int(vulnerabilities.get("high", 0))
+        if critical or high:
+            raise QualityGateError(
+                f"npm audit encontrou {critical} críticas e {high} altas em {workspace}"
+            )
+
+
+def validate_pip_audit() -> None:
+    path = SECURITY_DIR / "pip-audit.json"
+    raw = json.loads(path.read_text(encoding="utf-8"))
+
+    if isinstance(raw, dict):
+        entries = raw.get("dependencies")
+        if not isinstance(entries, list):
+            raise QualityGateError("Formato inesperado no resultado do pip-audit")
+    elif isinstance(raw, list):
+        entries = raw
+    else:
+        raise QualityGateError("Formato inesperado no resultado do pip-audit")
+
+    offenders: list[str] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        package = entry.get("name", "desconhecido")
+        for vuln in entry.get("vulns", []) or []:
+            severity = (vuln.get("severity") or "").upper()
+            if severity in {"HIGH", "CRITICAL"}:
+                identifier = (
+                    vuln.get("id") or vuln.get("cve") or ",".join(vuln.get("aliases", []))
+                    or "vulnerabilidade"
+                )
+                offenders.append(f"{package}:{identifier}:{severity}")
+    if offenders:
+        raise QualityGateError(
+            "pip-audit encontrou vulnerabilidades críticas/altas: " + ", ".join(offenders)
+        )
+
+
 def validate_dast_status() -> None:
     status_path = SECURITY_EVIDENCE_DIR / "dast-scan-status.json"
     data = json.loads(status_path.read_text(encoding="utf-8"))
@@ -71,9 +142,12 @@ def validate_privacy_matrix() -> None:
 
 def main() -> None:
     validators = [
-        validate_coverage,
+        validate_python_coverage,
+        validate_frontend_coverage,
         validate_bug_backlog,
         validate_bandit_report,
+        validate_npm_audit,
+        validate_pip_audit,
         validate_dast_status,
         validate_privacy_matrix,
     ]

@@ -5,6 +5,8 @@ commonLabels:
 resources:
   - backend-deployment.yaml
   - backend-service.yaml
+  - identity-deployment.yaml
+  - identity-service.yaml
   - frontend-deployment.yaml
   - frontend-service.yaml
   - postgres-deployment.yaml
@@ -13,14 +15,23 @@ resources:
   - redis-service.yaml
   - frontend-ingress.yaml
   - backend-ingress.yaml
+  - identity-ingress.yaml
 secretGenerator:
   - name: core-app
     literals:
       - CORE_DATABASE_URL=postgresql+psycopg://core:core@core-db:5432/core
       - CORE_ALLOWED_ORIGINS=http://localhost:3000
+      - CORE_TENANCY_PLATFORM_TOKEN=platform-secret
+      - CORE_AUTH_SESSION_TIMEOUT_SECONDS=900
+  - name: identity-app
+    literals:
+      - CORE_DATABASE_URL=postgresql+psycopg://core:core@core-db:5432/core
+      - CORE_ALLOWED_ORIGINS=http://localhost:3000
+      - CORE_TENANCY_PLATFORM_TOKEN=platform-secret
+      - CORE_AUTH_SESSION_TIMEOUT_SECONDS=900
   - name: frontend-env
     literals:
-      - NEXT_PUBLIC_CORE_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_CORE_API_BASE_URL=http://localhost:8000
   - name: core-database
     literals:
       - POSTGRES_DB=core
@@ -30,6 +41,8 @@ generatorOptions:
   disableNameSuffixHash: true
 images:
   - name: ghcr.io/bmad-method/backend
+    newTag: dev
+  - name: ghcr.io/bmad-method/identity
     newTag: dev
   - name: ghcr.io/bmad-method/frontend
     newTag: dev

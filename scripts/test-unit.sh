@@ -16,6 +16,10 @@ run_pytest_unit() {
       cd "$ROOT_DIR" && \
       pytest \
         -m "not integration and not e2e" \
+        --cov=services.core \
+        --cov=services.identity \
+        --cov=services.payments \
+        --cov=services.property \
         --cov=quality.metrics \
         --cov-report=xml:"$COVERAGE_DIR/unit-coverage.xml" \
         --cov-report=term-missing \
@@ -26,13 +30,44 @@ run_pytest_unit() {
   return 1
 }
 
+run_api_client_unit() {
+  if [ -f "$ROOT_DIR/packages/api-client/package.json" ]; then
+    echo "[test-unit] Executando testes do pacote API client"
+    local coverage_output="$COVERAGE_DIR/api-client"
+    mkdir -p "$coverage_output"
+    (
+      cd "$ROOT_DIR" && \
+      npm run test --workspace @bmad/api-client -- \
+        --coverage \
+        --coverage.reporter=cobertura \
+        --coverage.reporter=text \
+        --coverage.reports-directory=../../artifacts/coverage/api-client
+    )
+    if [ -f "$coverage_output/cobertura-coverage.xml" ]; then
+      cp "$coverage_output/cobertura-coverage.xml" "$COVERAGE_DIR/api-client-coverage.xml"
+    fi
+    return 0
+  fi
+  return 1
+}
+
 run_web_unit() {
   if [ -f "$ROOT_DIR/apps/web/package.json" ]; then
     echo "[test-unit] Executando testes unitários do frontend"
     (
       cd "$ROOT_DIR" && \
-      npm run test:web:unit --if-present
+      CI=1 npm run test --workspace @bmad/web -- \
+        --coverage \
+        --coverageReporters=cobertura \
+        --coverageReporters=text \
+        --coverageDirectory=../../artifacts/coverage/web \
+        --runInBand
     )
+    local coverage_output="$COVERAGE_DIR/web"
+    mkdir -p "$coverage_output"
+    if [ -f "$coverage_output/cobertura-coverage.xml" ]; then
+      cp "$coverage_output/cobertura-coverage.xml" "$COVERAGE_DIR/web-coverage.xml"
+    fi
     return 0
   fi
   return 1
@@ -44,6 +79,10 @@ main() {
   local executed_any=0
 
   if run_pytest_unit; then
+    executed_any=1
+  fi
+
+  if run_api_client_unit; then
     executed_any=1
   fi
 

@@ -4,7 +4,7 @@ metadata:
   name: backend
 spec:
   rules:
-    - host: api.staging.bmad-method.internal
+    - host: core-api.staging.bmad-method.internal
       http:
         paths:
           - path: /

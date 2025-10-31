@@ -245,6 +245,11 @@ def create_app(
     app.state.tenant_manager = tenant_manager
     app.state.auth_session_timeout = settings.auth_session_timeout_seconds
     app.include_router(router)
+
+    @app.get("/healthz", include_in_schema=False)
+    async def healthcheck() -> dict[str, str]:
+        return {"status": "ok"}
+
     observability = settings.observability
     if (
         observability.enable_traces

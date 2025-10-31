@@ -16,6 +16,8 @@ run_pytest_integration() {
       cd "$ROOT_DIR" && \
       pytest \
         -m integration \
+        --cov=services.core \
+        --cov=services.identity \
         --cov=quality.privacy \
         --cov-report=xml:"$COVERAGE_DIR/integration-coverage.xml" \
         --cov-report=term \

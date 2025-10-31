@@ -95,3 +95,21 @@ jobs:
       - name: Placeholder de sincronização GitOps
         run: |
           echo "Repositório de manifests deve receber commit via pipeline externa após aprovação manual."
+
+  validate-rollout:
+    name: Monitorar rollout e rollback automático
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validar rollout automatizado
+        id: rollout
+        continue-on-error: true
+        run: ./scripts/infra/validate-rollout.sh bmad-method-staging backend identity frontend
+      - name: Executar rollback automático
+        if: steps.rollout.outcome == 'failure'
+        run: ./scripts/infra/rollback-staging.sh bmad-method-staging backend identity frontend
+      - name: Garantir falha se rollout não estabilizar
+        if: steps.rollout.outcome == 'failure'
+        run: exit 1
