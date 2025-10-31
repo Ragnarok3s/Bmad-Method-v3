@@ -38,7 +38,7 @@ from ..analytics.query import (
 from ..config import CoreSettings, PaymentGatewaySettings
 from ..database import Database, get_database
 from ..domain.agents import AgentAvailability, AgentCatalogPage, list_agent_catalog
-from ..domain.models import Agent, BundleUsageGranularity, HousekeepingStatus
+from ..domain.models import Agent, BundleUsageGranularity, HousekeepingStatus, Property
 from ..domain.schemas import (
     AgentCreate,
     AgentProfileUpdate,
@@ -121,6 +121,8 @@ from ..services import (
     WorkspaceService,
     BundleUsageService,
 )
+from ..services import _is_platform_scope, _require_tenant_id
+from ..inventory import InventoryReconciliationService
 from ..pricing import PricingService
 from ..services.partners import PartnerSLAService
 from ..metrics import record_dashboard_request
@@ -136,6 +138,10 @@ from ..tenancy import (
     create_tenant_manager,
 )
 from ..storage import SecureDocumentStorage, StorageError
+from services.property import (
+    PropertyCalendarResponse,
+    PropertyInventoryReconciliationResponse,
+)
 from .partners import router as marketplace_router
 from .webhooks import verify_webhook_signature
 
@@ -579,6 +585,40 @@ def _require_owner_access(request: Request, owner_id: int) -> None:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Acesso negado ao portal do proprietário",
         )
+
+
+def _ensure_property_access(
+    session: Session,
+    request: Request,
+    property_id: int,
+) -> Property:
+    """Valida se a propriedade existe e se o contexto atual possui acesso a ela."""
+
+    property_obj = session.get(Property, property_id)
+    if not property_obj:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Propriedade não encontrada",
+        )
+
+    tenant_manager: TenantManager | None = getattr(request.app.state, "tenant_manager", None)
+    if tenant_manager:
+        try:
+            tenant_manager.assert_property_access(session, property_obj)
+        except TenantIsolationError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=str(exc),
+            ) from exc
+    elif not _is_platform_scope(session):
+        tenant_id = _require_tenant_id(session)
+        if property_obj.tenant_id != tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Propriedade pertence a outro tenant",
+            )
+
+    return property_obj
 
 
 @router.post("/auth/login", response_model=LoginResponse)
@@ -1108,6 +1148,60 @@ async def create_workspace(
 @router.get("/properties", response_model=list[PropertyRead])
 def list_properties(session: Session = Depends(get_session)):
     return PropertyService(session).list()
+
+
+@router.get(
+    "/properties/{property_id}/calendar",
+    response_model=PropertyCalendarResponse,
+    responses={404: {"description": "Propriedade não encontrada"}},
+)
+def get_property_calendar(
+    property_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> PropertyCalendarResponse:
+    """Retorna o calendário operacional combinando reservas e reconciliações de inventário."""
+
+    reservation_service = _get_reservation_service(request, session)
+    reservations = reservation_service.list_for_property(property_id)
+
+    inventory_service = InventoryReconciliationService(session)
+    reconciliation_items = [
+        inventory_service.to_read_model(item)
+        for item in inventory_service.list_conflicts(property_id=property_id)
+    ]
+
+    return PropertyCalendarResponse(
+        property_id=property_id,
+        reservations=reservations,
+        reconciliation_items=reconciliation_items,
+    )
+
+
+@router.get(
+    "/properties/{property_id}/inventory/reconciliation",
+    response_model=PropertyInventoryReconciliationResponse,
+    responses={404: {"description": "Propriedade não encontrada"}},
+)
+def get_property_inventory_reconciliation(
+    property_id: int,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> PropertyInventoryReconciliationResponse:
+    """Lista os itens de reconciliação de inventário associados à propriedade."""
+
+    _ensure_property_access(session, request, property_id)
+
+    inventory_service = InventoryReconciliationService(session)
+    items = [
+        inventory_service.to_read_model(item)
+        for item in inventory_service.list_conflicts(property_id=property_id)
+    ]
+
+    return PropertyInventoryReconciliationResponse(
+        property_id=property_id,
+        items=items,
+    )
 
 
 @router.get("/agents", response_model=Union[AgentCatalogPage, list[AgentRead]])
