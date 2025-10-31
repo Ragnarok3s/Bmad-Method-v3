@@ -1,16 +1,16 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: backend
+  name: identity
 spec:
   rules:
-    - host: core-api.dev.bmad-method.local
+    - host: identity.staging.bmad-method.internal
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: backend
+                name: identity
                 port:
-                  number: 8000
+                  number: 8100

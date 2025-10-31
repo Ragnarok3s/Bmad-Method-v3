@@ -9,10 +9,19 @@ secretGenerator:
     literals:
       - CORE_DATABASE_URL=postgresql+psycopg://core:core@core-db:5432/core
       - CORE_ALLOWED_ORIGINS=http://localhost:3000,https://dev.bmad-method.local
+      - CORE_TENANCY_PLATFORM_TOKEN=platform-secret
+      - CORE_AUTH_SESSION_TIMEOUT_SECONDS=900
+  - name: identity-app
+    behavior: replace
+    literals:
+      - CORE_DATABASE_URL=postgresql+psycopg://core:core@core-db:5432/core
+      - CORE_ALLOWED_ORIGINS=http://localhost:3000,https://identity.dev.bmad-method.local
+      - CORE_TENANCY_PLATFORM_TOKEN=platform-secret
+      - CORE_AUTH_SESSION_TIMEOUT_SECONDS=900
   - name: frontend-env
     behavior: replace
     literals:
-      - NEXT_PUBLIC_CORE_API_URL=https://api.dev.bmad-method.local
+      - NEXT_PUBLIC_CORE_API_BASE_URL=https://core-api.dev.bmad-method.local
   - name: core-database
     behavior: replace
     literals:
@@ -22,8 +31,11 @@ secretGenerator:
 images:
   - name: ghcr.io/bmad-method/backend
     newTag: dev
+  - name: ghcr.io/bmad-method/identity
+    newTag: dev
   - name: ghcr.io/bmad-method/frontend
     newTag: dev
 patchesStrategicMerge:
   - ingress-frontend.yaml
   - ingress-backend.yaml
+  - ingress-identity.yaml

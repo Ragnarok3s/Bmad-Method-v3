@@ -24,6 +24,13 @@ def build_client(tmp_path) -> Tuple[TestClient, CoreSettings]:
     return TestClient(app), settings
 
 
+def test_healthcheck_returns_ok(tmp_path) -> None:
+    client, _ = build_client(tmp_path)
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def provision_agent(database, tenant_manager, tenant_slug: str, *, email: str, role: AgentRole, secret: str) -> int:
     with database.session_scope() as session:
         tenant_manager.require_tenant(session, tenant_slug)
