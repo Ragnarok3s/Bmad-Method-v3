@@ -22,6 +22,8 @@ secretGenerator:
     behavior: replace
     literals:
       - NEXT_PUBLIC_CORE_API_BASE_URL=https://core-api.staging.bmad-method.internal
+      - NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT=https://otel-collector.staging.bmad-method.internal
+      - NEXT_PUBLIC_ENVIRONMENT=staging
   - name: core-database
     behavior: replace
     literals:
