@@ -73,6 +73,18 @@ O backend implementa uma hierarquia de papéis alinhada ao módulo `services/cor
 4. Use o chat para escalonar incidentes críticos com o time de operações.
 5. Após resolução, registre post-mortem resumido e associe artigos na base.
 
+### Sincronização com Fluxos de Experiência do Usuário
+
+Para garantir consistência com os fluxos documentados em [`design/hospitality-ux/user-flows.md`](../design/hospitality-ux/user-flows.md), percorra a tabela abaixo a cada revisão do manual. Ela conecta os passos descritos aqui com os cenários validados em protótipos e garante que não haja divergências entre o que é demonstrado ao usuário final e o comportamento previsto na plataforma.
+
+| Fluxo operacional | Referência UX | Pontos verificados |
+|-------------------|---------------|--------------------|
+| Execução de Playbook → acompanhamento em tempo real | `user-flows.md` → *Fluxo de Housekeeping* (quadro de tarefas mobile) | Checklist mobile confirma possibilidade de registar incidentes e sincronizar status conforme passo 4 deste manual. |
+| Gestão de Agentes → ajuste de parâmetros e metas | `prototipo-interativo.md` → *Módulo Housekeeping* + *App Mobile Gestor* | Hotspots de configuração demonstram campos e notificações alinhados ao passo 3 deste manual. |
+| Tratamento de Incidentes → escalonamento e pós-incidente | `user-flows.md` → *Fluxo de Calendário Operacional* (resolução de conflitos) | Alertas e sugestões de resolução espelham a etapa 4 deste manual, garantindo mesma nomenclatura e sequência. |
+| Métricas em Analytics → revisão de KPIs | `prototipo-interativo.md` → *Dashboard Web* | Cartões de KPIs exibem exatamente os indicadores citados em “Dashboard Inicial”, assegurando terminologia consistente. |
+| Checklists de lançamento → validação de acesso | `wireframes.md` → *Onboarding & Access Management* | Estados de confirmação nos wireframes reforçam a necessidade de validar MFA e papéis, conforme a checklist abaixo. |
+
 ## Boas Práticas
 
 - Mantenha playbooks atualizados com aprendizados recentes.
@@ -88,6 +100,14 @@ O backend implementa uma hierarquia de papéis alinhada ao módulo `services/cor
 - **Status Page**: monitoramento público dos serviços críticos e incidentes em andamento.
 - **Protótipo Interativo do MVP**: walkthrough dos fluxos críticos disponível em [`design/hospitality-ux/prototipo-interativo.md`](../design/hospitality-ux/prototipo-interativo.md#hand-off-2024-07-15) com links para o Figma e checklist de acessibilidade.
 - **Wireframes e Guia Visual**: documentação de referência para estados de tela e tokens em [`design/hospitality-ux/wireframes.md`](../design/hospitality-ux/wireframes.md) e [`design/hospitality-ux/guia-visual.md`](../design/hospitality-ux/guia-visual.md).
+
+### Checklist de Acesso e Alinhamento
+
+- [ ] Confirmar que o time possui acesso ao Figma com permissão de visualização nos arquivos listados acima (`HospOps DS`).
+- [ ] Validar que o hand-off mais recente está sincronizado com a biblioteca de componentes (consultar seção *Hand-off 2024-07-15* do protótipo).
+- [ ] Revisar se artigos "Primeiros Passos" e "Resolução de Incidentes" estão publicados na base de conhecimento com os mesmos termos utilizados neste manual.
+- [ ] Garantir que o `runbook` "Gestão de Acessos" está atualizado em [`docs/runbooks/gestao-acessos.md`](../runbooks/gestao-acessos.md) para orientar desbloqueios urgentes.
+- [ ] Atualizar o roadmap de conteúdo caso surjam novos fluxos documentados em `design/hospitality-ux/user-flows.md`.
 
 ## FAQ Rápido
 
