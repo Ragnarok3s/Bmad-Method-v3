@@ -1,0 +1,7 @@
+# HELP seed_job_success Indica sucesso (1) ou falha (0) na última execução do job de seed.
+# TYPE seed_job_success gauge
+seed_job_success{environment="staging", datastore="relational"} 0
+seed_job_success{environment="staging", datastore="nosql"} 0
+# HELP seed_job_last_run_timestamp Epoch da última execução conhecida do job de seed.
+# TYPE seed_job_last_run_timestamp gauge
+seed_job_last_run_timestamp{environment="staging"} 1761941438
