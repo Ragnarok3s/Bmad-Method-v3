@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <style>
+    .title { font: 700 28px 'Inter', sans-serif; fill: #1f2937; }
+    .subtitle { font: 500 20px 'Inter', sans-serif; fill: #4b5563; }
+    .panel { fill: #f5f3ff; stroke: #ddd6fe; stroke-width: 2; rx: 14; }
+    .panel-title { font: 600 18px 'Inter', sans-serif; fill: #4338ca; }
+    .panel-value { font: 700 34px 'Inter', sans-serif; fill: #3730a3; }
+    .panel-meta { font: 500 16px 'Inter', sans-serif; fill: #4c1d95; }
+    .footnote { font: 400 14px 'Inter', sans-serif; fill: #6366f1; }
+  </style>
+  <rect width="960" height="540" fill="#ffffff"/>
+  <text x="40" y="60" class="title">qa-quality-dashboard · Staging</text>
+  <text x="40" y="98" class="subtitle">QA guardrails — coverage, bugs, security alerts</text>
+  <rect x="40" y="120" width="280" height="180" class="panel"/>
+  <text x="60" y="165" class="panel-title">Test Coverage</text>
+  <text x="60" y="215" class="panel-value">78%</text>
+  <text x="60" y="245" class="panel-meta">Goal ≥ 75% (backend) · ≥ 65% (frontend)</text>
+  <rect x="350" y="120" width="280" height="180" class="panel"/>
+  <text x="370" y="165" class="panel-title">Critical Bugs</text>
+  <text x="370" y="215" class="panel-value">3</text>
+  <text x="370" y="245" class="panel-meta">Open Sev1 in last 7 days</text>
+  <rect x="660" y="120" width="260" height="180" class="panel"/>
+  <text x="680" y="165" class="panel-title">Security Alerts</text>
+  <text x="680" y="215" class="panel-value">1</text>
+  <text x="680" y="245" class="panel-meta">Dependency audit pending fix</text>
+  <rect x="40" y="330" width="440" height="160" class="panel"/>
+  <text x="60" y="375" class="panel-title">Pipeline Duration (p95)</text>
+  <text x="60" y="425" class="panel-value">14m 32s</text>
+  <text x="60" y="455" class="panel-meta">Alert if &gt; 18m for 3 runs</text>
+  <rect x="520" y="330" width="420" height="160" class="panel"/>
+  <text x="540" y="375" class="panel-title">Alert Routing</text>
+  <text x="540" y="415" class="panel-meta">Policy: grafana/alerts/qa-observability.yaml</text>
+  <text x="540" y="445" class="panel-meta">Slack #qa-reviews · escalation: QA Manager</text>
+  <text x="40" y="505" class="footnote">Snapshot derived from grafana/staging/qa-quality-dashboard.json (UID qa-quality)</text>
+</svg>

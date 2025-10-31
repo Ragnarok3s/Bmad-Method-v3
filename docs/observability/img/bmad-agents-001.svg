@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <style>
+    .title { font: 700 28px 'Inter', sans-serif; fill: #1f2933; }
+    .subtitle { font: 500 20px 'Inter', sans-serif; fill: #52606d; }
+    .panel-title { font: 600 18px 'Inter', sans-serif; fill: #102a43; }
+    .panel-value { font: 700 32px 'Inter', sans-serif; fill: #0b7285; }
+    .panel-change { font: 500 16px 'Inter', sans-serif; fill: #486581; }
+    .footnote { font: 400 14px 'Inter', sans-serif; fill: #829ab1; }
+    .panel { fill: #f0f4f8; stroke: #d9e2ec; stroke-width: 2; rx: 12; }
+    .badge { font: 600 16px 'Inter', sans-serif; fill: #0c4a6e; }
+  </style>
+  <rect width="960" height="540" fill="#ffffff"/>
+  <text x="40" y="60" class="title">bmad-agents-001 · Staging</text>
+  <text x="40" y="98" class="subtitle">Health overview for platform agents — refreshed 2 minutes ago</text>
+  <rect x="40" y="120" width="280" height="170" class="panel"/>
+  <text x="60" y="160" class="panel-title">HTTP Latency P95</text>
+  <text x="60" y="205" class="panel-value">412 ms</text>
+  <text x="60" y="235" class="panel-change">▼ 8% vs. last hour</text>
+  <rect x="350" y="120" width="280" height="170" class="panel"/>
+  <text x="370" y="160" class="panel-title">HTTP Throughput</text>
+  <text x="370" y="205" class="panel-value">1.2k rps</text>
+  <text x="370" y="235" class="panel-change">Stable · target 1.0k</text>
+  <rect x="660" y="120" width="260" height="170" class="panel"/>
+  <text x="680" y="160" class="panel-title">5xx Error Rate</text>
+  <text x="680" y="205" class="panel-value">0.4%</text>
+  <text x="680" y="235" class="panel-change">Alert threshold 2%</text>
+  <rect x="40" y="320" width="440" height="170" class="panel"/>
+  <text x="60" y="360" class="panel-title">Jobs in Queue</text>
+  <text x="60" y="405" class="panel-value">37 pending</text>
+  <text x="60" y="435" class="panel-change">Processing rate 180 jobs/min</text>
+  <rect x="520" y="320" width="400" height="170" class="panel"/>
+  <text x="540" y="360" class="panel-title">Reservations Confirmed (5m)</text>
+  <text x="540" y="405" class="panel-value">284</text>
+  <text x="540" y="435" class="panel-change">Seasonality adjusted baseline: 250</text>
+  <text x="40" y="500" class="footnote">Critical alerts: PlaybookErrorRate · PipelineFailureBurst · EngagementDrop · routed to #incident & PagerDuty (BmadPlatformStaging)</text>
+</svg>

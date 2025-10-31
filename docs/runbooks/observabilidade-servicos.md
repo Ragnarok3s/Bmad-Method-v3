@@ -7,7 +7,7 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
 
 1. **Validar Exporters**
    - Backend: confirmar variáveis `CORE_OTEL_*` no ambiente (collector gRPC `4317`).
-   - Frontend: confirmar `NEXT_PUBLIC_ENABLE_TELEMETRY` habilitada e `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` configurada quando a exportação OTLP for necessária; se ausente, apenas instrumentação local (sem exportadores) será registrada.
+   - Frontend: confirmar `NEXT_PUBLIC_ENABLE_TELEMETRY` habilitada e `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` configurada quando a exportação OTLP for necessária; se ausente, apenas instrumentação local (sem exportadores) será registrada. Em staging utilizar `https://otel-collector.staging.bmad-method.internal` (injetado via `design/k8s/staging/kustomization.yaml`).
    - API Core: verificar `GET /health/otel` com `status=ok` e `signals.metrics.last_event` preenchido.
 2. **Confirmar Receção de Dados**
    - Métricas: painel Grafana `bmad-agents-001` (latência P95, throughput, erro 5xx) e `bmad-ops-002` (reservas, housekeeping, engajamento web). Utilize `scripts/run-quality-gates.sh` para exportar evidências automaticamente.【F:scripts/run-quality-gates.sh†L1-L20】

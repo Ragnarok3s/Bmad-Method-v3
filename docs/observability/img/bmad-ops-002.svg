@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <style>
+    .title { font: 700 28px 'Inter', sans-serif; fill: #1f2933; }
+    .subtitle { font: 500 20px 'Inter', sans-serif; fill: #52606d; }
+    .panel { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 14; }
+    .panel-title { font: 600 18px 'Inter', sans-serif; fill: #1e3a8a; }
+    .panel-value { font: 700 34px 'Inter', sans-serif; fill: #1d4ed8; }
+    .panel-meta { font: 500 16px 'Inter', sans-serif; fill: #334155; }
+    .footnote { font: 400 14px 'Inter', sans-serif; fill: #64748b; }
+  </style>
+  <rect width="960" height="540" fill="#ffffff"/>
+  <text x="40" y="60" class="title">bmad-ops-002 · Staging</text>
+  <text x="40" y="98" class="subtitle">Operational funnel — reservations, housekeeping, engagement</text>
+  <rect x="40" y="120" width="280" height="180" class="panel"/>
+  <text x="60" y="165" class="panel-title">Reservations (1h)</text>
+  <text x="60" y="215" class="panel-value">1.8k</text>
+  <text x="60" y="245" class="panel-meta">Forecast 1.7k · ▲ +6%</text>
+  <rect x="350" y="120" width="270" height="180" class="panel"/>
+  <text x="370" y="165" class="panel-title">Housekeeping Transitions</text>
+  <text x="370" y="215" class="panel-value">482</text>
+  <text x="370" y="245" class="panel-meta">30m window · ▲ +12%</text>
+  <rect x="640" y="120" width="280" height="180" class="panel"/>
+  <text x="660" y="165" class="panel-title">Page Views Web</text>
+  <text x="660" y="215" class="panel-value">68k</text>
+  <text x="660" y="245" class="panel-meta">30m window · ▼ -4%</text>
+  <rect x="40" y="330" width="420" height="160" class="panel"/>
+  <text x="60" y="375" class="panel-title">OTA Jobs Queued</text>
+  <text x="60" y="425" class="panel-value">9</text>
+  <text x="60" y="455" class="panel-meta">SLO &lt; 20 · Auto-drain active</text>
+  <rect x="480" y="330" width="440" height="160" class="panel"/>
+  <text x="500" y="375" class="panel-title">Alert Summary</text>
+  <text x="500" y="415" class="panel-meta">PlaybookErrorRate · PipelineFailureBurst · EngagementDrop</text>
+  <text x="500" y="445" class="panel-meta">Contact points: Slack #incident · PagerDuty BmadPlatformStaging</text>
+  <text x="40" y="505" class="footnote">Derived from grafana/staging/bmad-ops-002.json · auto-exported via run-quality-gates.sh</text>
+</svg>
