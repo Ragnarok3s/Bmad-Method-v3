@@ -4,7 +4,7 @@
 Os testes de carga foram executados em 17 e 18 de julho de 2024 com o objetivo de validar a capacidade do módulo de reservas processar picos equivalentes a um evento sazonal (2x volume médio) sem degradação perceptível para os utilizadores piloto. As execuções utilizaram o ambiente de staging com dados sintéticos mascarados e integrações OTA reais conectadas ao sandbox dos parceiros.
 
 ## Metodologia
-- **Ferramenta:** k6 (script `tests/perf/reservas-load.js`) integrado ao pipeline de CI noturno.
+- **Ferramenta:** k6 (script `tests/load/tenant-isolation.k6.js`) integrado ao pipeline de CI noturno.
 - **Cenários simulados:**
   1. Consulta de disponibilidade + criação de reserva (fluxo web) com concorrência de 120 VUs.
   2. Modificação em massa de reservas OTA (sync background) com 40 workers concorrentes.
