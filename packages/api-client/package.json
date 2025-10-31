@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run"
   },
   "dependencies": {
     "lodash.snakecase": "4.1.1"
@@ -26,6 +27,7 @@
   "devDependencies": {
     "rimraf": "5.0.5",
     "typescript": "5.4.5",
-    "@types/lodash.snakecase": "4.1.9"
+    "@types/lodash.snakecase": "4.1.9",
+    "vitest": "1.6.0"
   }
 }
