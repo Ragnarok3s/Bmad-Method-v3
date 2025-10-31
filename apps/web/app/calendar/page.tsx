@@ -188,10 +188,16 @@ export default function CalendarPage() {
   );
 
   const calendarRangeLabel = useMemo(() => {
-    const startLabel = dateFormatter.format(new Date(dateFilters.start));
-    const endLabel = dateFormatter.format(new Date(dateFilters.end));
+    const { start, end } = dateFilters;
+
+    if (!start || !end) {
+      return '-- → --';
+    }
+
+    const startLabel = dateFormatter.format(new Date(start));
+    const endLabel = dateFormatter.format(new Date(end));
     return `${startLabel} → ${endLabel}`;
-  }, [dateFormatter, dateFilters.end, dateFilters.start]);
+  }, [dateFilters.end, dateFilters.start, dateFormatter]);
 
   const statusesForRequest = useMemo<ReconciliationStatus[] | undefined>(() => {
     if (statusFilter === 'all') {
