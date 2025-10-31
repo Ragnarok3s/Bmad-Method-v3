@@ -7,7 +7,8 @@ import type {
 
 import {
   fetchInventoryReconciliation,
-  fetchPropertyCalendar
+  fetchPropertyCalendar,
+  resolveInventoryReconciliationItem
 } from '../properties';
 import { getApiClient } from '../client';
 
@@ -23,6 +24,7 @@ describe('properties api service', () => {
     getPropertyCalendar: jest.Mock;
     getInventoryReconciliation: jest.Mock;
   };
+  let requestMock: jest.Mock;
 
   const calendarResponse: PropertyCalendarResponse = {
     propertyId,
@@ -96,8 +98,11 @@ describe('properties api service', () => {
       getInventoryReconciliation: jest.fn().mockResolvedValue(reconciliationResponse)
     };
 
+    requestMock = jest.fn().mockResolvedValue(undefined);
+
     mockGetApiClient.mockReturnValue({
-      properties: propertyApiMock
+      properties: propertyApiMock,
+      request: requestMock
     } as unknown as ReturnType<typeof getApiClient>);
   });
 
@@ -154,6 +159,32 @@ describe('properties api service', () => {
       expect(error).toMatchObject({
         message: 'Failed to load property inventory reconciliation'
       });
+    });
+  });
+
+  it('resolves reconciliation items via the API client', async () => {
+    const itemId = 72;
+
+    await resolveInventoryReconciliationItem(propertyId, itemId);
+
+    expect(requestMock).toHaveBeenCalledWith({
+      path: `/properties/${propertyId}/inventory/reconciliation/${itemId}/resolve`,
+      method: 'POST'
+    });
+  });
+
+  it('rethrows core errors when resolving reconciliation items', async () => {
+    const coreError = new CoreApiError('bad request', 400, { code: 'invalid' });
+    requestMock.mockRejectedValue(coreError);
+
+    await expect(resolveInventoryReconciliationItem(propertyId, 99)).rejects.toBe(coreError);
+  });
+
+  it('wraps unexpected errors when resolving reconciliation items', async () => {
+    requestMock.mockRejectedValue(new Error('kaboom'));
+
+    await expect(resolveInventoryReconciliationItem(propertyId, 77)).rejects.toMatchObject({
+      message: 'Failed to resolve inventory reconciliation item'
     });
   });
 });

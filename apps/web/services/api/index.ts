@@ -1,7 +1,8 @@
 export {
   listProperties,
   fetchPropertyCalendar,
-  fetchInventoryReconciliation
+  fetchInventoryReconciliation,
+  resolveInventoryReconciliationItem
 } from './properties';
 
 export type {

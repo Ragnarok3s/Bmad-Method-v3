@@ -1,311 +1,639 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { ChangeEvent, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  CoreApiError,
+  ReconciliationSource,
+  ReconciliationStatus,
+  ReservationStatus
+} from '@bmad/api-client';
 
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import { Card } from '@/components/ui/Card';
 import { FilterPill } from '@/components/ui/FilterPill';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import {
+  fetchInventoryReconciliation,
+  fetchPropertyCalendar,
+  resolveInventoryReconciliationItem
+} from '@/services/api';
+
+const DEFAULT_PROPERTY_ID = 1;
 
 const statusFilters = [
-  { id: 'all', label: 'Todas', description: 'Eventos confirmados, bloqueios e reconciliações' },
-  { id: 'confirmed', label: 'Confirmadas', description: 'Reservas publicadas sem pendências' },
-  { id: 'conflict', label: 'Conflitos', description: 'Necessitam revisão manual' },
-  { id: 'manual', label: 'Em reconciliação', description: 'Fila manual atribuída a operadores' }
+  { id: 'all', label: 'Todos' },
+  { id: 'pending', label: 'Pendentes' },
+  { id: 'in_review', label: 'Em análise' },
+  { id: 'conflict', label: 'Conflitos' },
+  { id: 'resolved', label: 'Resolvidos' }
 ] as const;
 
 type StatusFilterId = (typeof statusFilters)[number]['id'];
 
-type CalendarEntry = {
-  id: string;
-  property: string;
-  unit: string;
-  channel: string;
-  status: StatusFilterId | 'blocked';
-  start: string;
-  end: string;
-  guests: string;
-  notes?: string;
-  conflictReason?: string;
+const sourceFilters = [
+  { id: 'all', label: 'Todos os tipos' },
+  { id: 'ota', label: 'OTA' },
+  { id: 'manual', label: 'Manual' },
+  { id: 'direct', label: 'Direto' }
+] as const;
+
+type SourceFilterId = (typeof sourceFilters)[number]['id'];
+
+const viewFilters = [
+  { id: 'all', label: 'Eventos completos' },
+  { id: 'reservations', label: 'Reservas' },
+  { id: 'conflicts', label: 'Conflitos de inventário' }
+] as const;
+
+type ViewFilterId = (typeof viewFilters)[number]['id'];
+
+const reservationStatusLabels: Record<ReservationStatus, string> = {
+  draft: 'Pré-reserva',
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
+  checked_in: 'Check-in realizado',
+  checked_out: 'Check-out concluído'
 };
 
-type QueueItem = {
-  id: string;
-  partner: string;
-  version: string;
-  detectedAt: string;
-  slaTarget: string;
-  status: 'pending' | 'in_review' | 'resolved';
-  summary: string;
-  bookingCode: string;
+const reservationBadgeVariant: Record<ReservationStatus, 'success' | 'warning' | 'critical' | 'info' | 'neutral'> = {
+  draft: 'warning',
+  confirmed: 'success',
+  cancelled: 'critical',
+  checked_in: 'info',
+  checked_out: 'neutral'
 };
 
-const inventoryEntries: CalendarEntry[] = [
-  {
-    id: 'bk-001',
-    property: 'Hotel Solaris',
-    unit: 'Piso 3 · Suite 305',
-    channel: 'Booking.com',
-    status: 'confirmed',
-    start: '2024-09-18 14:00',
-    end: '2024-09-21 11:00',
-    guests: 'Ana & Pedro',
-    notes: 'Upgrade automático · early check-in garantido'
-  },
-  {
-    id: 'ab-441',
-    property: 'Casa Horizonte',
-    unit: 'Casa inteira',
-    channel: 'Airbnb',
-    status: 'conflict',
-    start: '2024-09-19 15:00',
-    end: '2024-09-23 10:00',
-    guests: 'Bruno',
-    conflictReason: 'OTA sinalizou alteração fora da janela de SLA (8 min)'
-  },
-  {
-    id: 'ex-990',
-    property: 'Expedia Palace',
-    unit: 'Torre Leste · 2107',
-    channel: 'Expedia',
-    status: 'manual',
-    start: '2024-09-20 13:00',
-    end: '2024-09-22 11:00',
-    guests: 'Clara & Igor',
-    notes: 'Revisão de tarifa · aguardando confirmação financeira'
-  },
-  {
-    id: 'direct-32',
-    property: 'Residencial Atlântico',
-    unit: 'Cobertura 801',
-    channel: 'Canal direto',
-    status: 'blocked',
-    start: '2024-09-20 08:00',
-    end: '2024-09-20 18:00',
-    guests: 'Manutenção preventiva',
-    notes: 'Bloqueio operacional · vistoria engenharia'
-  }
-];
+const reservationAccentMap: Partial<Record<ReservationStatus, 'success' | 'warning' | 'critical' | 'info'>> = {
+  draft: 'warning',
+  confirmed: 'success',
+  cancelled: 'critical',
+  checked_in: 'info'
+};
 
-const reconciliationQueue: QueueItem[] = [
-  {
-    id: 'queue-1',
-    partner: 'Booking.com',
-    version: 'v3 · vigente desde 2024-08-01',
-    detectedAt: '2024-09-19 11:04',
-    slaTarget: '≤ 5 min',
-    status: 'pending',
-    summary: 'Reserva BK-123 excedeu SLA em 2 minutos após atualização de hóspedes.',
-    bookingCode: 'BK-123'
-  },
-  {
-    id: 'queue-2',
-    partner: 'Airbnb',
-    version: 'v2 · vigente desde 2024-08-18',
-    detectedAt: '2024-09-18 17:42',
-    slaTarget: '≤ 5 min',
-    status: 'in_review',
-    summary: 'Alteração de datas sem disponibilidade equivalente. Necessário ajustar bloqueio.',
-    bookingCode: 'AB-777'
-  }
-];
+const reconciliationStatusLabels: Record<ReconciliationStatus, string> = {
+  pending: 'Pendente',
+  in_review: 'Em revisão',
+  conflict: 'Conflito',
+  resolved: 'Resolvido'
+};
 
-const slaTimeline = [
-  {
-    partner: 'Booking.com',
-    metric: 'Ingestão de reservas',
-    version: 'v3',
-    target: '≤ 5 min',
-    warning: '≥ 6 min gera alerta',
-    breach: '≥ 10 min envia conflito manual'
-  },
-  {
-    partner: 'Expedia',
-    metric: 'Retorno OTA',
-    version: 'v1',
-    target: '≤ 5 min',
-    warning: '≥ 7 min notifica suporte',
-    breach: '≥ 10 min coloca fila manual'
-  },
-  {
-    partner: 'Airbnb',
-    metric: 'Atualização de tarifas',
-    version: 'v2',
-    target: '≤ 4 min',
-    warning: '≥ 5 min gera playbook',
-    breach: '≥ 8 min bloqueia publicação'
+const reconciliationBadgeVariant: Record<ReconciliationStatus, 'success' | 'warning' | 'critical' | 'info' | 'neutral'> = {
+  pending: 'critical',
+  in_review: 'warning',
+  conflict: 'critical',
+  resolved: 'success'
+};
+
+const reconciliationAccentMap: Record<ReconciliationStatus, 'success' | 'warning' | 'critical' | 'info'> = {
+  pending: 'critical',
+  in_review: 'warning',
+  conflict: 'critical',
+  resolved: 'success'
+};
+
+const reconciliationSourceLabels: Record<ReconciliationSource, string> = {
+  ota: 'OTA',
+  manual: 'Manual',
+  direct: 'Direto'
+};
+
+function formatDateInput(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date: Date, amount: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function summarizePayloadValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return '—';
   }
-];
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => summarizePayloadValue(entry)).join(', ');
+  }
+  return JSON.stringify(value);
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof CoreApiError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Ocorreu um erro inesperado.';
+}
+
+function PayloadDetails({ payload }: { payload: Record<string, unknown> }) {
+  const entries = Object.entries(payload ?? {});
+  if (entries.length === 0) {
+    return <p className="queue-meta">Sem detalhes adicionais.</p>;
+  }
+
+  return (
+    <ul className="payload-list">
+      {entries.map(([key, value]) => (
+        <li key={key}>
+          <strong>{key}</strong>: {summarizePayloadValue(value)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const initialDate = new Date();
+const DEFAULT_RANGE = {
+  start: formatDateInput(initialDate),
+  end: formatDateInput(addDays(initialDate, 14))
+};
 
 export default function CalendarPage() {
+  const queryClient = useQueryClient();
+  const [dateFilters, setDateFilters] = useState(DEFAULT_RANGE);
+  const [viewFilter, setViewFilter] = useState<ViewFilterId>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilterId>('all');
-  const [queueState, setQueueState] = useState(reconciliationQueue);
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterId>('all');
+  const [resolvingItemId, setResolvingItemId] = useState<number | null>(null);
+  const [resolutionMessage, setResolutionMessage] = useState<string | null>(null);
+  const [resolutionError, setResolutionError] = useState<string | null>(null);
 
-  const filteredEntries = useMemo(() => {
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat('pt-PT', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }),
+    []
+  );
+
+  const dateTimeFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat('pt-PT', {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }),
+    []
+  );
+
+  const calendarRangeLabel = useMemo(() => {
+    const startLabel = dateFormatter.format(new Date(dateFilters.start));
+    const endLabel = dateFormatter.format(new Date(dateFilters.end));
+    return `${startLabel} → ${endLabel}`;
+  }, [dateFormatter, dateFilters.end, dateFilters.start]);
+
+  const statusesForRequest = useMemo<ReconciliationStatus[] | undefined>(() => {
     if (statusFilter === 'all') {
-      return inventoryEntries;
+      return undefined;
     }
-    return inventoryEntries.filter((entry) => entry.status === statusFilter);
+    return [statusFilter];
   }, [statusFilter]);
 
-  const handleToggleFilter = (nextFilter: StatusFilterId) => {
-    setStatusFilter((current) => (current === nextFilter ? 'all' : nextFilter));
+  const calendarQuery = useQuery({
+    queryKey: ['property-calendar', DEFAULT_PROPERTY_ID, dateFilters.start, dateFilters.end],
+    queryFn: ({ signal }) =>
+      fetchPropertyCalendar(DEFAULT_PROPERTY_ID, {
+        signal,
+        startDate: dateFilters.start,
+        endDate: dateFilters.end
+      }),
+    staleTime: 30_000,
+    gcTime: 5 * 60_000
+  });
+
+  const reconciliationQuery = useQuery({
+    queryKey: [
+      'inventory-reconciliation',
+      DEFAULT_PROPERTY_ID,
+      statusesForRequest?.join(',') ?? 'all'
+    ],
+    queryFn: ({ signal }) =>
+      fetchInventoryReconciliation(DEFAULT_PROPERTY_ID, {
+        signal,
+        statuses: statusesForRequest
+      }),
+    staleTime: 15_000,
+    gcTime: 5 * 60_000
+  });
+
+  const reservations = calendarQuery.data?.reservations ?? [];
+  const calendarConflicts = calendarQuery.data?.reconciliationItems ?? [];
+  const generatedAt = calendarQuery.data?.generatedAt ?? null;
+
+  const reconciliationItems = reconciliationQuery.data?.items ?? [];
+  const pendingCount = reconciliationQuery.data?.pendingCount;
+
+  const statusBreakdown = useMemo(
+    () =>
+      reconciliationItems.reduce(
+        (acc, item) => ({
+          ...acc,
+          [item.status]: acc[item.status] + 1
+        }),
+        {
+          pending: 0,
+          conflict: 0,
+          in_review: 0,
+          resolved: 0
+        } as Record<ReconciliationStatus, number>
+      ),
+    [reconciliationItems]
+  );
+
+  const sourceBreakdown = useMemo(
+    () =>
+      reconciliationItems.reduce(
+        (acc, item) => ({
+          ...acc,
+          [item.source]: acc[item.source] + 1
+        }),
+        {
+          ota: 0,
+          manual: 0,
+          direct: 0
+        } as Record<ReconciliationSource, number>
+      ),
+    [reconciliationItems]
+  );
+
+  const filteredReconciliationItems = useMemo(
+    () =>
+      reconciliationItems.filter((item) => {
+        const matchesStatus = statusFilter === 'all' ? true : item.status === statusFilter;
+        const matchesSource = sourceFilter === 'all' ? true : item.source === sourceFilter;
+        return matchesStatus && matchesSource;
+      }),
+    [reconciliationItems, sourceFilter, statusFilter]
+  );
+
+  const showReservations = viewFilter === 'all' || viewFilter === 'reservations';
+  const showConflicts = viewFilter === 'all' || viewFilter === 'conflicts';
+
+  const calendarItemsCount =
+    (showReservations ? reservations.length : 0) + (showConflicts ? calendarConflicts.length : 0);
+
+  const lastUpdatedLabel = useMemo(() => {
+    if (!generatedAt) {
+      return null;
+    }
+    return dateTimeFormatter.format(new Date(generatedAt));
+  }, [dateTimeFormatter, generatedAt]);
+
+  const manualReconcileMutation = useMutation({
+    mutationFn: (itemId: number) =>
+      resolveInventoryReconciliationItem(DEFAULT_PROPERTY_ID, itemId),
+    onMutate: (itemId: number) => {
+      setResolvingItemId(itemId);
+      setResolutionMessage(null);
+      setResolutionError(null);
+    },
+    onSuccess: () => {
+      setResolutionMessage(`Item reconciliado manualmente às ${dateTimeFormatter.format(new Date())}`);
+      void queryClient.invalidateQueries({
+        queryKey: ['inventory-reconciliation', DEFAULT_PROPERTY_ID]
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['property-calendar', DEFAULT_PROPERTY_ID]
+      });
+    },
+    onError: (error: unknown) => {
+      setResolutionError(getErrorMessage(error));
+    },
+    onSettled: () => {
+      setResolvingItemId(null);
+    }
+  });
+
+  const handleDateChange = (key: 'start' | 'end') => (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setDateFilters((previous) => {
+      if (key === 'start') {
+        if (value && previous.end && value > previous.end) {
+          return { start: value, end: value };
+        }
+        return { ...previous, start: value };
+      }
+
+      if (value && previous.start && value < previous.start) {
+        return { start: value, end: value };
+      }
+      return { ...previous, end: value };
+    });
   };
 
-  const handleManualReconcile = (id: string) => {
-    setQueueState((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: 'resolved',
-              summary: `${item.summary} · Conciliado manualmente às ${new Date().toLocaleTimeString('pt-BR').slice(0, 5)}`
-            }
-          : item
-      )
-    );
+  const handleViewFilter = (filterId: ViewFilterId) => {
+    if (filterId === 'all') {
+      setViewFilter('all');
+      return;
+    }
+    setViewFilter((current) => (current === filterId ? 'all' : filterId));
   };
 
-  const pendingCount = queueState.filter((item) => item.status !== 'resolved').length;
+  const handleStatusFilter = (filterId: StatusFilterId) => {
+    if (filterId === 'all') {
+      setStatusFilter('all');
+      return;
+    }
+    setStatusFilter((current) => (current === filterId ? 'all' : filterId));
+  };
+
+  const handleSourceFilter = (filterId: SourceFilterId) => {
+    if (filterId === 'all') {
+      setSourceFilter('all');
+      return;
+    }
+    setSourceFilter((current) => (current === filterId ? 'all' : filterId));
+  };
+
+  const calendarSubtitle = [
+    `Janela selecionada ${calendarRangeLabel}`,
+    lastUpdatedLabel ? `Atualizado em ${lastUpdatedLabel}` : null
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const calendarErrorMessage =
+    calendarQuery.status === 'error' ? getErrorMessage(calendarQuery.error) : null;
+
+  const reconciliationErrorMessage =
+    reconciliationQuery.status === 'error' ? getErrorMessage(reconciliationQuery.error) : null;
+
+  const effectivePendingCount = typeof pendingCount === 'number'
+    ? pendingCount
+    : statusBreakdown.pending + statusBreakdown.conflict;
 
   return (
     <div className="calendar-page">
-      <SectionHeader subtitle="Visão consolidada de inventário, canais OTA e reconciliação" actions={<button type="button">Exportar ICS</button>}>
+      <SectionHeader
+        subtitle={calendarSubtitle}
+        actions={
+          <button
+            type="button"
+            className="primary-button"
+            disabled={calendarQuery.status !== 'success'}
+          >
+            Exportar ICS
+          </button>
+        }
+      >
         Calendário operacional unificado
       </SectionHeader>
 
-      <div className="filter-bar" role="toolbar" aria-label="Filtros do calendário">
+      <div className="calendar-filters" role="toolbar" aria-label="Filtros do calendário">
+        <div className="date-filters">
+          <label className="date-field" htmlFor="calendar-start">
+            <span>Data inicial</span>
+            <input
+              id="calendar-start"
+              type="date"
+              value={dateFilters.start}
+              max={dateFilters.end}
+              onChange={handleDateChange('start')}
+            />
+          </label>
+          <label className="date-field" htmlFor="calendar-end">
+            <span>Data final</span>
+            <input
+              id="calendar-end"
+              type="date"
+              value={dateFilters.end}
+              min={dateFilters.start}
+              onChange={handleDateChange('end')}
+            />
+          </label>
+        </div>
+        <div className="filter-group" aria-label="Filtro de visualização">
+          <span className="filter-group__label">Visualização</span>
+          {viewFilters.map((filter) => (
+            <FilterPill
+              key={filter.id}
+              label={filter.label}
+              selected={viewFilter === filter.id}
+              onToggle={() => handleViewFilter(filter.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {calendarQuery.status === 'pending' && (
+        <Card>
+          <div className="state">
+            <StatusBadge variant="info">A carregar calendário…</StatusBadge>
+            <p>Estamos a sincronizar a disponibilidade com os canais conectados.</p>
+          </div>
+        </Card>
+      )}
+
+      {calendarErrorMessage && (
+        <Card accent="critical">
+          <div className="state">
+            <StatusBadge variant="critical">Não foi possível carregar o calendário</StatusBadge>
+            <p>{calendarErrorMessage}</p>
+          </div>
+        </Card>
+      )}
+
+      {calendarQuery.status === 'success' && calendarItemsCount === 0 && (
+        <Card>
+          <div className="state">
+            <StatusBadge variant="neutral">Sem eventos no período</StatusBadge>
+            <p>Ajuste as datas ou os filtros para visualizar reservas e reconciliações.</p>
+          </div>
+        </Card>
+      )}
+
+      {calendarItemsCount > 0 && (
+        <ResponsiveGrid columns={2}>
+          {showReservations &&
+            reservations.map((reservation) => {
+              const checkIn = dateTimeFormatter.format(new Date(reservation.checkIn));
+              const checkOut = dateTimeFormatter.format(new Date(reservation.checkOut));
+              const createdAt = dateTimeFormatter.format(new Date(reservation.createdAt));
+              const accent = reservationAccentMap[reservation.status];
+
+              return (
+                <Card
+                  key={`reservation-${reservation.id}`}
+                  title={`Reserva #${reservation.id}`}
+                  description={`${checkIn} → ${checkOut}`}
+                  accent={accent}
+                >
+                  <div className="card-section">
+                    <StatusBadge variant={reservationBadgeVariant[reservation.status]}>
+                      {reservationStatusLabels[reservation.status]}
+                    </StatusBadge>
+                    <span className="card-meta">
+                      Hóspede: {reservation.guestName}
+                      {reservation.guestEmail ? ` · ${reservation.guestEmail}` : ''}
+                    </span>
+                    <span className="card-meta">Criada em {createdAt}</span>
+                    {typeof reservation.totalAmountMinor === 'number' && (
+                      <span className="card-meta">
+                        Valor: {formatCurrency(reservation.totalAmountMinor, reservation.currencyCode)}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+
+          {showConflicts &&
+            calendarConflicts.map((item) => (
+              <Card
+                key={`calendar-conflict-${item.id}`}
+                title={`Conflito #${item.id}`}
+                description={`Atualizado em ${dateTimeFormatter.format(new Date(item.updatedAt))}`}
+                accent={reconciliationAccentMap[item.status]}
+              >
+                <div className="card-section">
+                  <StatusBadge variant={reconciliationBadgeVariant[item.status]}>
+                    {reconciliationStatusLabels[item.status]}
+                  </StatusBadge>
+                  <span className="card-meta">Origem: {reconciliationSourceLabels[item.source]}</span>
+                  {item.externalBookingId && (
+                    <span className="card-meta">Reserva externa: {item.externalBookingId}</span>
+                  )}
+                  <span className="card-meta">Tentativas: {item.attempts}</span>
+                  <PayloadDetails payload={item.payload} />
+                </div>
+              </Card>
+            ))}
+        </ResponsiveGrid>
+      )}
+
+      <SectionHeader
+        subtitle="Filas de reconciliação com SLA versionado"
+        actions={
+          <StatusBadge variant={effectivePendingCount > 0 ? 'warning' : 'success'}>
+            {effectivePendingCount} pendentes
+          </StatusBadge>
+        }
+      >
+        Reconciliação manual
+      </SectionHeader>
+
+      <div className="filter-group" aria-label="Filtro por status de reconciliação">
+        <span className="filter-group__label">Status</span>
         {statusFilters.map((filter) => (
           <FilterPill
             key={filter.id}
             label={filter.label}
             selected={statusFilter === filter.id}
-            count={filter.id === 'conflict' ? pendingCount : undefined}
-            onToggle={() => handleToggleFilter(filter.id)}
-          >
-            <span className="filter-description">{filter.description}</span>
-          </FilterPill>
+            count={
+              filter.id === 'all'
+                ? reconciliationItems.length
+                : statusBreakdown[filter.id]
+            }
+            onToggle={() => handleStatusFilter(filter.id)}
+          />
         ))}
       </div>
 
-      <ResponsiveGrid columns={2}>
-        {filteredEntries.map((entry) => (
-          <Card
-            key={entry.id}
-            title={`${entry.property} · ${entry.unit}`}
-            description={`${entry.channel} · ${entry.start} → ${entry.end}`}
-            accent={entry.status === 'conflict' ? 'critical' : entry.status === 'manual' ? 'warning' : undefined}
-          >
-            <div className="card-content">
-              <div>
-                <strong>Hóspedes:</strong> {entry.guests}
-              </div>
-              {entry.notes && <div className="card-note">{entry.notes}</div>}
-              {entry.conflictReason && (
-                <div className="card-conflict">
-                  <StatusBadge variant="critical">Conflito OTA</StatusBadge>
-                  <span>{entry.conflictReason}</span>
+      <div className="filter-group" aria-label="Filtro por tipo de reconciliação">
+        <span className="filter-group__label">Tipo</span>
+        {sourceFilters.map((filter) => (
+          <FilterPill
+            key={filter.id}
+            label={filter.label}
+            selected={sourceFilter === filter.id}
+            count={
+              filter.id === 'all' ? reconciliationItems.length : sourceBreakdown[filter.id]
+            }
+            onToggle={() => handleSourceFilter(filter.id)}
+          />
+        ))}
+      </div>
+
+      {(resolutionMessage || resolutionError) && (
+        <div className="section-feedback" role="status" aria-live="polite">
+          {resolutionMessage && <StatusBadge variant="success">{resolutionMessage}</StatusBadge>}
+          {resolutionError && <StatusBadge variant="critical">{resolutionError}</StatusBadge>}
+        </div>
+      )}
+
+      {reconciliationQuery.status === 'pending' && (
+        <Card>
+          <div className="state">
+            <StatusBadge variant="info">A carregar fila de reconciliação…</StatusBadge>
+            <p>Estamos a recuperar os itens que precisam de ação manual.</p>
+          </div>
+        </Card>
+      )}
+
+      {reconciliationErrorMessage && (
+        <Card accent="critical">
+          <div className="state">
+            <StatusBadge variant="critical">Não foi possível carregar a reconciliação</StatusBadge>
+            <p>{reconciliationErrorMessage}</p>
+          </div>
+        </Card>
+      )}
+
+      {reconciliationQuery.status === 'success' && filteredReconciliationItems.length === 0 && (
+        <Card>
+          <div className="state">
+            <StatusBadge variant="neutral">Nenhum item encontrado</StatusBadge>
+            <p>Não há reconciliações correspondentes aos filtros selecionados.</p>
+          </div>
+        </Card>
+      )}
+
+      {filteredReconciliationItems.length > 0 && (
+        <ResponsiveGrid columns={2}>
+          {filteredReconciliationItems.map((item) => (
+            <Card
+              key={item.id}
+              title={`Item #${item.id}`}
+              description={`Atualizado em ${dateTimeFormatter.format(new Date(item.updatedAt))}`}
+              accent={reconciliationAccentMap[item.status]}
+            >
+              <div className="card-section">
+                <div className="queue-row">
+                  <StatusBadge variant={reconciliationBadgeVariant[item.status]}>
+                    {reconciliationStatusLabels[item.status]}
+                  </StatusBadge>
+                  <span className="queue-meta">Origem: {reconciliationSourceLabels[item.source]}</span>
                 </div>
-              )}
-            </div>
-          </Card>
-        ))}
-      </ResponsiveGrid>
-
-      <SectionHeader subtitle="Filas de reconciliação com SLA versionado" actions={<StatusBadge variant="warning">{pendingCount} pendentes</StatusBadge>}>
-        Reconciliação manual
-      </SectionHeader>
-
-      <ResponsiveGrid columns={2}>
-        {queueState.map((item) => (
-          <Card
-            key={item.id}
-            title={`${item.partner} · ${item.bookingCode}`}
-            description={`${item.version} · Detectado às ${item.detectedAt}`}
-            accent={item.status === 'resolved' ? 'success' : item.status === 'in_review' ? 'warning' : 'critical'}
-          >
-            <div className="queue-row">
-              <StatusBadge variant={item.status === 'resolved' ? 'success' : item.status === 'in_review' ? 'warning' : 'critical'}>
-                {item.status === 'resolved' ? 'Resolvido' : item.status === 'in_review' ? 'Em análise' : 'Pendente'}
-              </StatusBadge>
-              <span className="queue-target">SLA: {item.slaTarget}</span>
-            </div>
-            <p>{item.summary}</p>
-            {item.status !== 'resolved' && (
-              <button type="button" className="manual-button" onClick={() => handleManualReconcile(item.id)}>
-                Conciliar manualmente
-              </button>
-            )}
-          </Card>
-        ))}
-      </ResponsiveGrid>
-
-      <SectionHeader subtitle="Histórico de versões de SLA por parceiro">
-        Linha do tempo de SLAs
-      </SectionHeader>
-
-      <ResponsiveGrid columns={3}>
-        {slaTimeline.map((sla) => (
-          <Card key={`${sla.partner}-${sla.metric}`} title={`${sla.partner} · ${sla.metric}`}>
-            <ul className="sla-list">
-              <li>
-                <strong>Versão ativa:</strong> {sla.version}
-              </li>
-              <li>
-                <strong>Meta:</strong> {sla.target}
-              </li>
-              <li>
-                <strong>Alerta:</strong> {sla.warning}
-              </li>
-              <li>
-                <strong>Quebra:</strong> {sla.breach}
-              </li>
-            </ul>
-          </Card>
-        ))}
-      </ResponsiveGrid>
+                <span className="queue-meta">Tentativas: {item.attempts}</span>
+                {item.externalBookingId && (
+                  <span className="queue-meta">Reserva externa: {item.externalBookingId}</span>
+                )}
+                <PayloadDetails payload={item.payload} />
+                {item.status !== 'resolved' && (
+                  <button
+                    type="button"
+                    className="manual-button"
+                    onClick={() => manualReconcileMutation.mutate(item.id)}
+                    disabled={manualReconcileMutation.isPending && resolvingItemId === item.id}
+                  >
+                    {manualReconcileMutation.isPending && resolvingItemId === item.id
+                      ? 'A conciliar…'
+                      : 'Conciliar manualmente'}
+                  </button>
+                )}
+              </div>
+            </Card>
+          ))}
+        </ResponsiveGrid>
+      )}
 
       <style jsx>{`
         .calendar-page {
-          display: flex;
-          flex-direction: column;
+          display: grid;
           gap: var(--space-6);
         }
-        .filter-bar {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--space-3);
-        }
-        .filter-description {
-          font-size: 0.75rem;
-          color: var(--color-neutral-2);
-        }
-        .card-content {
-          display: grid;
-          gap: var(--space-2);
-        }
-        .card-note {
-          color: var(--color-neutral-2);
-        }
-        .card-conflict {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          color: var(--color-neutral-2);
-        }
-        .queue-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: var(--space-2);
-        }
-        .queue-target {
-          font-weight: 600;
-          color: var(--color-deep-blue);
-        }
-        .manual-button,
-        .calendar-page button {
+        .primary-button {
           border: none;
           border-radius: var(--radius-sm);
           background: var(--color-deep-blue);
@@ -315,17 +643,127 @@ export default function CalendarPage() {
           font-weight: 600;
           transition: background 0.2s ease-in-out;
         }
-        .manual-button:hover,
-        .calendar-page button:hover {
+        .primary-button[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .primary-button:hover:not([disabled]) {
           background: var(--color-midnight);
         }
-        .sla-list {
-          margin: 0;
-          padding-left: var(--space-5);
+        .calendar-filters {
+          display: grid;
+          gap: var(--space-4);
+          padding: var(--space-4);
+          background: #fff;
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-card);
+        }
+        .date-filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-4);
+          align-items: center;
+        }
+        .date-field {
           display: grid;
           gap: var(--space-1);
+          font-size: 0.8125rem;
+          color: var(--color-neutral-2);
+        }
+        .date-field input {
+          min-width: 200px;
+          border: 1px solid var(--color-neutral-3);
+          border-radius: var(--radius-sm);
+          padding: var(--space-2) var(--space-3);
+          font-size: 0.875rem;
+        }
+        .filter-group {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-2);
+          align-items: center;
+        }
+        .filter-group__label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--color-neutral-2);
+        }
+        .state {
+          display: grid;
+          gap: var(--space-2);
+        }
+        .card-section {
+          display: grid;
+          gap: var(--space-2);
+        }
+        .card-meta,
+        .queue-meta {
+          font-size: 0.875rem;
+          color: var(--color-neutral-2);
+        }
+        .queue-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          gap: var(--space-2);
+          align-items: center;
+        }
+        .payload-list {
+          list-style: none;
+          margin: var(--space-2) 0 0;
+          padding: 0;
+          display: grid;
+          gap: var(--space-1);
+          font-size: 0.8125rem;
+          color: var(--color-neutral-2);
+        }
+        .payload-list strong {
+          color: var(--color-deep-blue);
+        }
+        .manual-button {
+          border: none;
+          border-radius: var(--radius-sm);
+          background: var(--color-deep-blue);
+          color: #fff;
+          padding: var(--space-2) var(--space-4);
+          cursor: pointer;
+          font-weight: 600;
+          transition: background 0.2s ease-in-out;
+          justify-self: start;
+        }
+        .manual-button[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .manual-button:hover:not([disabled]) {
+          background: var(--color-midnight);
+        }
+        .section-feedback {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-3);
+        }
+        @media (max-width: 768px) {
+          .date-field input {
+            min-width: 0;
+            width: 100%;
+          }
+          .calendar-filters {
+            padding: var(--space-3);
+          }
         }
       `}</style>
     </div>
   );
+}
+
+function formatCurrency(amountMinor: number, currencyCode: string | null): string {
+  const currency = currencyCode ?? 'EUR';
+  return new Intl.NumberFormat('pt-PT', {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'symbol'
+  }).format(amountMinor / 100);
 }
