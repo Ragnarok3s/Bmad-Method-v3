@@ -119,8 +119,19 @@ program
     const baseDir = path.resolve(options.directory ?? '.');
     await ensureDirectory(baseDir);
     const answers = await inquirer.prompt([
-      { name: 'identifier', message: 'Identificador da extensão (ex: parceiros.analytics)', validate: Boolean },
-      { name: 'description', message: 'Descrição curta', default: 'Extensão BMAD personalizada' }
+      {
+        type: 'input',
+        name: 'identifier',
+        message: 'Identificador da extensão (ex: parceiros.analytics)',
+        validate: (value: string) =>
+          value.trim().length > 0 || 'Informe um identificador válido para a extensão.'
+      },
+      {
+        type: 'input',
+        name: 'description',
+        message: 'Descrição curta',
+        default: 'Extensão BMAD personalizada'
+      }
     ]);
 
     const manifestPath = path.join(baseDir, MANIFEST_FILENAME);

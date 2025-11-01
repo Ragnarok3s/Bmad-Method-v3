@@ -26,10 +26,10 @@
   },
   "devDependencies": {
     "@types/lodash.snakecase": "4.1.9",
-    "@vitest/coverage-v8": "^1.6.1",
-    "@vitest/coverage-istanbul": "^1.6.1",
-    "rimraf": "5.0.5",
-    "typescript": "5.4.5",
-    "vitest": "1.6.1"
+    "@vitest/coverage-v8": "^4.0.6",
+    "@vitest/coverage-istanbul": "^4.0.6",
+    "rimraf": "6.1.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.6"
   }
 }
