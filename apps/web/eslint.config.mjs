@@ -1,8 +1,17 @@
-import nextConfig from 'eslint-config-next';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { FlatCompat } from '@eslint/eslintrc';
 import testingLibrary from 'eslint-plugin-testing-library';
 
-export default [
-  ...nextConfig,
+const compat = new FlatCompat({
+  baseDirectory: dirname(fileURLToPath(import.meta.url))
+});
+
+const config = [
+  ...compat.config({
+    extends: ['next/core-web-vitals']
+  }),
   {
     rules: {
       '@next/next/no-html-link-for-pages': 'off',
@@ -42,3 +51,5 @@ export default [
     }
   }
 ];
+
+export default config;
