@@ -1,14 +1,18 @@
 :root {
   color-scheme: light;
-  --color-deep-blue: #0b3c5d;
-  --color-soft-aqua: #2ec4b6;
-  --color-calm-gold: #e0a458;
-  --color-neutral-1: #f4f5f7;
-  --color-neutral-2: #6b7280;
-  --color-coral: #ef6351;
-  --shadow-card: 0 12px 24px rgba(11, 60, 93, 0.08);
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --color-deep-blue: #2563eb;
+  --color-soft-aqua: #0ea5e9;
+  --color-calm-gold: #f59e0b;
+  --color-coral: #ef4444;
+  --color-success: #10b981;
+  --color-neutral-0: #ffffff;
+  --color-neutral-1: #f8fafc;
+  --color-neutral-2: #64748b;
+  --color-neutral-3: #1e293b;
+  --shadow-card: 0 24px 45px rgba(15, 23, 42, 0.08);
+  --shadow-flyout: 0 24px 60px rgba(15, 23, 42, 0.14);
+  --radius-md: 14px;
+  --radius-sm: 10px;
   --radius-xs: 6px;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --space-1: 4px;
@@ -18,6 +22,7 @@
   --space-5: 24px;
   --space-6: 32px;
   --space-7: 48px;
+  --space-8: 64px;
 }
 
 * {
@@ -30,7 +35,7 @@ body {
   margin: 0;
   font-family: var(--font-body);
   background-color: var(--color-neutral-1);
-  color: #1f2937;
+  color: var(--color-neutral-3);
 }
 
 body {

@@ -114,7 +114,7 @@ export function TourDialog() {
         .tour-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(11, 60, 93, 0.6);
+          background: rgba(37, 99, 235, 0.6);
           display: grid;
           place-items: center;
           padding: var(--space-6);

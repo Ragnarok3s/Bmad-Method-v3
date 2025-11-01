@@ -2,11 +2,29 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Bot,
+  Building2,
+  CalendarCheck,
+  CalendarDays,
+  CheckSquare,
+  ClipboardCheck,
+  LayoutDashboard,
+  LineChart,
+  ShieldCheck,
+  Sparkles,
+  Workflow,
+  Smartphone
+} from 'lucide-react';
 
 interface NavItem {
   href: string;
   label: string;
   description: string;
+  icon: React.ElementType;
 }
 
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -15,37 +33,117 @@ const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
   {
     heading: 'Operação diária',
     items: [
-      { href: '/', label: 'Dashboard', description: 'Resumo diário de ocupação e alertas críticos' },
-      { href: '/reservas', label: 'Reservas', description: 'Fluxos de check-in/out e ajustes de estadia' },
-      { href: '/calendario', label: 'Calendário', description: 'Disponibilidade por unidade e sincronização OTA' },
-      { href: '/housekeeping', label: 'Housekeeping', description: 'Atribuição de tarefas, incidentes e auditorias' },
-      { href: '/faturacao', label: 'Faturação', description: 'Checkout, notas de crédito e reconciliações' }
+      {
+        href: '/',
+        label: 'Dashboard',
+        description: 'Resumo diário de ocupação e alertas críticos',
+        icon: LayoutDashboard
+      },
+      {
+        href: '/reservas',
+        label: 'Reservas',
+        description: 'Fluxos de check-in/out e ajustes de estadia',
+        icon: CalendarCheck
+      },
+      {
+        href: '/calendario',
+        label: 'Calendário',
+        description: 'Disponibilidade por unidade e sincronização OTA',
+        icon: CalendarDays
+      },
+      {
+        href: '/housekeeping',
+        label: 'Housekeeping',
+        description: 'Atribuição de tarefas, incidentes e auditorias',
+        icon: ClipboardCheck
+      },
+      {
+        href: '/faturacao',
+        label: 'Faturação',
+        description: 'Checkout, notas de crédito e reconciliações',
+        icon: CheckSquare
+      }
     ]
   },
   {
     heading: 'Produtos e experiências',
     items: [
-      { href: '/owners', label: 'Portal Proprietários', description: 'Painel de partilha de resultados e documentos' },
-      { href: '/onboarding', label: 'Onboarding', description: 'Wizard guiado para novas propriedades e equipas' },
-      { href: '/mobile/housekeeping', label: 'App Housekeeping', description: 'Execução mobile com suporte offline' },
-      { href: '/mobile/gestor', label: 'App Gestor', description: 'KPIs móveis e aprovações rápidas' }
+      {
+        href: '/owners',
+        label: 'Portal Proprietários',
+        description: 'Painel de partilha de resultados e documentos',
+        icon: Building2
+      },
+      {
+        href: '/onboarding',
+        label: 'Onboarding',
+        description: 'Wizard guiado para novas propriedades e equipas',
+        icon: Sparkles
+      },
+      {
+        href: '/mobile/housekeeping',
+        label: 'App Housekeeping',
+        description: 'Execução mobile com suporte offline',
+        icon: Smartphone
+      },
+      {
+        href: '/mobile/gestor',
+        label: 'App Gestor',
+        description: 'KPIs móveis e aprovações rápidas',
+        icon: LineChart
+      }
     ]
   },
   {
     heading: 'Automação e inteligência',
     items: [
-      { href: '/agentes', label: 'Catálogo de Agentes', description: 'Bots operacionais por módulo e contexto' },
-      { href: '/playbooks', label: 'Playbooks Automatizados', description: 'Fluxos configurados e monitorização de adoção' },
-      { href: '/recommendations', label: 'Recomendações', description: 'Sugestões de upsell e alertas gerados por IA' }
+      {
+        href: '/agentes',
+        label: 'Catálogo de Agentes',
+        description: 'Bots operacionais por módulo e contexto',
+        icon: Bot
+      },
+      {
+        href: '/playbooks',
+        label: 'Playbooks Automatizados',
+        description: 'Fluxos configurados e monitorização de adoção',
+        icon: Workflow
+      },
+      {
+        href: '/recommendations',
+        label: 'Recomendações',
+        description: 'Sugestões de upsell e alertas gerados por IA',
+        icon: Sparkles
+      }
     ]
   },
   {
     heading: 'Governança e suporte',
     items: [
-      { href: '/observabilidade', label: 'Observabilidade', description: 'Logs, métricas e tracing da operação' },
-      { href: '/governanca', label: 'Governança', description: 'Políticas, auditoria e controlos de acesso' },
-      { href: '/analytics', label: 'Analytics', description: 'Dashboards avançados e relatórios exportáveis' },
-      { href: '/support/knowledge-base', label: 'Base de Conhecimento', description: 'Guias, SOPs e artigos de apoio' }
+      {
+        href: '/observabilidade',
+        label: 'Observabilidade',
+        description: 'Logs, métricas e tracing da operação',
+        icon: Activity
+      },
+      {
+        href: '/governanca',
+        label: 'Governança',
+        description: 'Políticas, auditoria e controlos de acesso',
+        icon: ShieldCheck
+      },
+      {
+        href: '/analytics',
+        label: 'Analytics',
+        description: 'Dashboards avançados e relatórios exportáveis',
+        icon: BarChart3
+      },
+      {
+        href: '/support/knowledge-base',
+        label: 'Base de Conhecimento',
+        description: 'Guias, SOPs e artigos de apoio',
+        icon: BookOpen
+      }
     ]
   }
 ];
@@ -66,6 +164,7 @@ export function MainNav() {
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                 const tooltipId = `nav-tooltip-${slugify(item.href)}-${slugify(item.label)}`;
+                const Icon = item.icon;
                 return (
                   <li key={item.href} className="main-nav__item">
                     <Link
@@ -74,6 +173,9 @@ export function MainNav() {
                       data-active={isActive ? 'true' : 'false'}
                       aria-describedby={tooltipId}
                     >
+                      <span className="main-nav__icon" aria-hidden="true">
+                        <Icon size={18} strokeWidth={1.6} />
+                      </span>
                       <span className="main-nav__label">{item.label}</span>
                     </Link>
                     <span role="tooltip" id={tooltipId} className="main-nav__tooltip">
@@ -116,25 +218,38 @@ export function MainNav() {
         }
         a {
           display: grid;
-          gap: var(--space-1);
+          grid-template-columns: auto 1fr;
+          align-items: center;
+          gap: var(--space-2);
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-sm);
           font-weight: 500;
-          color: var(--color-deep-blue);
-          background: rgba(11, 60, 93, 0.06);
+          color: var(--color-neutral-3);
+          background: rgba(148, 163, 184, 0.12);
           border: 1px solid transparent;
-          transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease;
+          transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease, color 0.2s ease;
         }
         a:hover,
         a:focus-visible {
-          background: rgba(46, 196, 182, 0.16);
-          border-color: rgba(46, 196, 182, 0.35);
+          background: rgba(37, 99, 235, 0.14);
+          border-color: rgba(37, 99, 235, 0.28);
           transform: translateY(-1px);
+          color: var(--color-deep-blue);
         }
         a[data-active='true'] {
-          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.85));
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(14, 165, 233, 0.92));
           color: #fff;
           box-shadow: var(--shadow-card);
+        }
+        .main-nav__icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.16);
+          color: inherit;
         }
         .main-nav__label {
           font-weight: 600;
@@ -146,7 +261,7 @@ export function MainNav() {
           top: 50%;
           transform: translateY(-50%);
           width: min(240px, 32vw);
-          background: #0b3c5d;
+          background: #0f172a;
           color: #fff;
           padding: var(--space-3);
           border-radius: var(--radius-sm);
@@ -167,7 +282,7 @@ export function MainNav() {
           height: 0;
           border-top: 6px solid transparent;
           border-bottom: 6px solid transparent;
-          border-right: 6px solid #0b3c5d;
+          border-right: 6px solid #0f172a;
         }
         .main-nav__item:hover .main-nav__tooltip,
         .main-nav__item:focus-within .main-nav__tooltip {
@@ -175,7 +290,10 @@ export function MainNav() {
           transform: translateY(-50%) translateX(4px);
         }
         a[data-active='true'] + .main-nav__tooltip {
-          background: rgba(11, 60, 93, 0.95);
+          background: rgba(15, 23, 42, 0.95);
+        }
+        a[data-active='true'] .main-nav__icon {
+          background: rgba(255, 255, 255, 0.22);
         }
         @media (prefers-reduced-motion: reduce) {
           .main-nav__tooltip {

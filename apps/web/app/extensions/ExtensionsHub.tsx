@@ -280,7 +280,7 @@ export function ExtensionsHub() {
           gap: var(--space-2);
           grid-template-columns: minmax(0, 1fr) auto;
           align-items: center;
-          border-bottom: 1px solid rgba(11, 60, 93, 0.12);
+          border-bottom: 1px solid rgba(37, 99, 235, 0.12);
           padding-bottom: var(--space-3);
         }
         .review-list li:last-of-type {
@@ -307,7 +307,7 @@ export function ExtensionsHub() {
           color: #4d3508;
         }
         .badge-live {
-          background: rgba(46, 196, 182, 0.25);
+          background: rgba(14, 165, 233, 0.25);
           color: #04504c;
         }
         .badge-draft {
@@ -397,7 +397,7 @@ export function ExtensionsHub() {
         .catalog td {
           text-align: left;
           padding: 0.75rem;
-          border-bottom: 1px solid rgba(11, 60, 93, 0.12);
+          border-bottom: 1px solid rgba(37, 99, 235, 0.12);
         }
         .catalog .sub {
           display: block;

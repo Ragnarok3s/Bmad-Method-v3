@@ -19,8 +19,8 @@ export default function AuthLayout({
           padding: var(--space-6);
           background: linear-gradient(
             135deg,
-            rgba(11, 60, 93, 0.15),
-            rgba(46, 196, 182, 0.2)
+            rgba(37, 99, 235, 0.15),
+            rgba(14, 165, 233, 0.2)
           );
         }
         .auth-content {
