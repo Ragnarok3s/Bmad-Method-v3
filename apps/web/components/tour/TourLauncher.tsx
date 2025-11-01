@@ -79,8 +79,8 @@ export function TourLauncher() {
           display: grid;
           padding: var(--space-4) var(--space-5);
           border-radius: var(--radius-md);
-          background: #fff;
-          border: 1px solid rgba(11, 60, 93, 0.1);
+          background: var(--color-neutral-0);
+          border: 1px solid rgba(148, 163, 184, 0.28);
           box-shadow: var(--shadow-card);
           max-width: 420px;
         }
@@ -114,7 +114,7 @@ export function TourLauncher() {
         strong {
           display: block;
           font-size: 1.1rem;
-          color: var(--color-deep-blue);
+          color: var(--color-neutral-3);
         }
         .tour-launcher__description {
           display: block;
@@ -144,7 +144,7 @@ export function TourLauncher() {
         .tour-launcher__select {
           display: inline-flex;
           align-items: center;
-          background: rgba(11, 60, 93, 0.05);
+          background: rgba(37, 99, 235, 0.1);
           border-radius: var(--radius-sm);
           padding: 0 var(--space-2);
         }
@@ -168,20 +168,22 @@ export function TourLauncher() {
           padding: var(--space-2) var(--space-4);
           font-weight: 600;
           cursor: pointer;
-          transition: background 0.2s ease, border 0.2s ease, color 0.2s ease;
+          transition: background 0.2s ease, border 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+          box-shadow: 0 12px 25px rgba(37, 99, 235, 0.2);
         }
         .tour-launcher__cta:hover,
         .tour-launcher__cta:focus-visible {
-          background: #07273b;
+          background: #1d4ed8;
         }
         .tour-launcher[data-completed='true'] .tour-launcher__cta {
-          background: rgba(46, 196, 182, 0.15);
+          background: rgba(14, 165, 233, 0.16);
           color: var(--color-deep-blue);
-          border-color: rgba(46, 196, 182, 0.35);
+          border-color: rgba(14, 165, 233, 0.32);
+          box-shadow: none;
         }
         .tour-launcher[data-completed='true'] .tour-launcher__cta:hover,
         .tour-launcher[data-completed='true'] .tour-launcher__cta:focus-visible {
-          background: rgba(46, 196, 182, 0.25);
+          background: rgba(14, 165, 233, 0.26);
         }
         @media (max-width: 768px) {
           .tour-launcher {

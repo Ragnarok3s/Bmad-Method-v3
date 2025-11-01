@@ -136,7 +136,7 @@ function OwnersShell({
           gap: var(--space-3);
         }
         input {
-          border: 1px solid rgba(11, 60, 93, 0.2);
+          border: 1px solid rgba(37, 99, 235, 0.2);
           border-radius: var(--radius-sm);
           padding: var(--space-3) var(--space-4);
           font-size: 1rem;
@@ -163,7 +163,7 @@ function OwnersShell({
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--space-5);
-          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.85));
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(14, 165, 233, 0.85));
           color: #fff;
           padding: var(--space-5);
           border-radius: var(--radius-lg);
@@ -193,7 +193,7 @@ function OwnersShell({
           border-radius: var(--radius-sm);
           font-weight: 500;
           color: var(--color-deep-blue);
-          background: rgba(11, 60, 93, 0.08);
+          background: rgba(37, 99, 235, 0.08);
         }
         .owners-nav a[aria-current='page'] {
           background: var(--color-deep-blue);

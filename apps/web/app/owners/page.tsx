@@ -370,7 +370,7 @@ export default function OwnersOverviewPage() {
         }
         .owners-form input,
         .owners-form select {
-          border: 1px solid rgba(11, 60, 93, 0.2);
+          border: 1px solid rgba(37, 99, 235, 0.2);
           border-radius: var(--radius-sm);
           padding: var(--space-3) var(--space-4);
           font-size: 1rem;
@@ -397,14 +397,14 @@ export default function OwnersOverviewPage() {
           gap: var(--space-3);
         }
         .owners-notifications li {
-          border: 1px solid rgba(11, 60, 93, 0.12);
+          border: 1px solid rgba(37, 99, 235, 0.12);
           border-radius: var(--radius-sm);
           padding: var(--space-3) var(--space-4);
-          background: rgba(11, 60, 93, 0.04);
+          background: rgba(37, 99, 235, 0.04);
         }
         .owners-notifications li[data-read='false'] {
-          border-color: rgba(46, 196, 182, 0.6);
-          background: rgba(46, 196, 182, 0.12);
+          border-color: rgba(14, 165, 233, 0.6);
+          background: rgba(14, 165, 233, 0.12);
         }
         .owners-notification-title {
           margin: 0;

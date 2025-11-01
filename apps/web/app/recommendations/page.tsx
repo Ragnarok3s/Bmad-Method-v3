@@ -318,7 +318,7 @@ export default function RecommendationsPage() {
         .chip {
           padding: var(--space-2) var(--space-3);
           border-radius: var(--radius-sm);
-          background: rgba(11, 60, 93, 0.08);
+          background: rgba(37, 99, 235, 0.08);
           border: none;
           font-weight: 500;
           color: var(--color-deep-blue);
@@ -328,7 +328,7 @@ export default function RecommendationsPage() {
         .chip:hover,
         .chip:focus-visible {
           transform: translateY(-1px);
-          background: rgba(46, 196, 182, 0.25);
+          background: rgba(14, 165, 233, 0.25);
         }
         .chip.active {
           background: var(--color-deep-blue);
@@ -338,7 +338,7 @@ export default function RecommendationsPage() {
         .search input {
           padding: var(--space-2) var(--space-3);
           border-radius: var(--radius-sm);
-          border: 1px solid rgba(11, 60, 93, 0.18);
+          border: 1px solid rgba(37, 99, 235, 0.18);
           min-width: 260px;
         }
         .header {
@@ -390,13 +390,13 @@ export default function RecommendationsPage() {
           padding: var(--space-2) var(--space-3);
           cursor: pointer;
           font-weight: 600;
-          background: rgba(11, 60, 93, 0.08);
+          background: rgba(37, 99, 235, 0.08);
           color: var(--color-deep-blue);
           transition: background 0.2s ease;
         }
         .decision-button.approve.selected,
         .decision-button.approve:hover {
-          background: rgba(46, 196, 182, 0.2);
+          background: rgba(14, 165, 233, 0.2);
         }
         .decision-button.reject.selected,
         .decision-button.reject:hover {

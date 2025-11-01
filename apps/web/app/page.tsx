@@ -707,8 +707,9 @@ function DashboardHero({
           grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
           padding: var(--space-6);
           border-radius: var(--radius-md);
-          background: linear-gradient(135deg, rgba(244, 245, 247, 0.92), rgba(46, 196, 182, 0.18));
-          border: 1px solid rgba(11, 60, 93, 0.08);
+          background: linear-gradient(135deg, rgba(248, 250, 252, 0.94), rgba(37, 99, 235, 0.12));
+          border: 1px solid rgba(148, 163, 184, 0.24);
+          box-shadow: var(--shadow-card);
         }
         .dashboard-hero__content {
           display: grid;
@@ -756,16 +757,16 @@ function DashboardHero({
         }
         .dashboard-hero__action--primary:hover,
         .dashboard-hero__action--primary:focus-visible {
-          background: #07273b;
+          background: #1d4ed8;
         }
         .dashboard-hero__action--secondary {
-          background: rgba(46, 196, 182, 0.12);
+          background: rgba(14, 165, 233, 0.14);
           color: var(--color-deep-blue);
-          border-color: rgba(46, 196, 182, 0.35);
+          border-color: rgba(14, 165, 233, 0.32);
         }
         .dashboard-hero__action--secondary:hover,
         .dashboard-hero__action--secondary:focus-visible {
-          background: rgba(46, 196, 182, 0.22);
+          background: rgba(14, 165, 233, 0.22);
         }
         .dashboard-hero__stats {
           margin: 0;
@@ -797,8 +798,8 @@ function DashboardHero({
           margin-top: var(--space-5);
           padding: var(--space-4);
           border-radius: var(--radius-sm);
-          border: 1px dashed rgba(11, 60, 93, 0.2);
-          background: rgba(255, 255, 255, 0.75);
+          border: 1px dashed rgba(37, 99, 235, 0.28);
+          background: rgba(255, 255, 255, 0.82);
           display: grid;
           gap: var(--space-3);
         }
@@ -1295,7 +1296,7 @@ export default function DashboardPage() {
           top: var(--space-1);
           bottom: var(--space-1);
           width: 2px;
-          background: rgba(11, 60, 93, 0.1);
+          background: rgba(37, 99, 235, 0.16);
         }
         .dashboard__priority-list li::after {
           content: '';
@@ -1306,7 +1307,7 @@ export default function DashboardPage() {
           height: 10px;
           border-radius: 999px;
           background: var(--color-deep-blue);
-          box-shadow: 0 0 0 4px rgba(11, 60, 93, 0.08);
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18);
         }
         .dashboard__priority-title {
           font-weight: 600;

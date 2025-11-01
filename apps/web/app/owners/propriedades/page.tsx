@@ -111,7 +111,7 @@ export default function OwnerPropertiesPage() {
           gap: var(--space-3);
         }
         .owners-property-grid div {
-          background: rgba(11, 60, 93, 0.06);
+          background: rgba(37, 99, 235, 0.06);
           border-radius: var(--radius-sm);
           padding: var(--space-3);
         }

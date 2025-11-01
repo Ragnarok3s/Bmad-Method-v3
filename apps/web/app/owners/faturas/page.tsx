@@ -112,7 +112,7 @@ export default function OwnerInvoicesPage() {
         td {
           padding: var(--space-3) var(--space-4);
           text-align: left;
-          border-bottom: 1px solid rgba(11, 60, 93, 0.12);
+          border-bottom: 1px solid rgba(37, 99, 235, 0.12);
         }
         tbody tr[data-status='overdue'] td {
           color: var(--color-coral);

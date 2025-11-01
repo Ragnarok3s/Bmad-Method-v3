@@ -205,7 +205,7 @@ export default function RecoveryPage() {
           color: var(--color-success, #0f7b6c);
         }
         .recovery-codes {
-          background: rgba(46, 196, 182, 0.12);
+          background: rgba(14, 165, 233, 0.12);
           border-radius: var(--radius-sm);
           padding: var(--space-3);
           display: grid;

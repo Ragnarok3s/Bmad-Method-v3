@@ -9,15 +9,15 @@ type CardProps = PropsWithChildren<{
 }>;
 
 const accentStyles: Record<NonNullable<CardProps['accent']>, string> = {
-  success: 'var(--color-soft-aqua)',
+  success: 'var(--color-success)',
   warning: 'var(--color-calm-gold)',
   critical: 'var(--color-coral)',
-  info: 'var(--color-deep-blue)'
+  info: 'var(--color-soft-aqua)'
 };
 
 export function Card({ title, description, accent, children }: CardProps) {
   return (
-    <article className="card">
+    <article className="card" data-accent={accent ?? 'none'}>
       {(title || description) && (
         <header>
           {title && <h3>{title}</h3>}
@@ -27,22 +27,45 @@ export function Card({ title, description, accent, children }: CardProps) {
       <div>{children}</div>
       <style jsx>{`
         .card {
-          background: #fff;
+          position: relative;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           padding: var(--space-5);
           box-shadow: var(--shadow-card);
-          border-left: ${accent ? `6px solid ${accentStyles[accent]}` : 'none'};
+          border: 1px solid rgba(15, 23, 42, 0.08);
           display: grid;
-          gap: var(--space-4);
+          gap: var(--space-5);
+        }
+        .card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: calc(var(--radius-md) - 1px);
+          border: 1px solid transparent;
+          pointer-events: none;
+        }
+        .card[data-accent='success']::before {
+          border-top-color: ${accentStyles.success};
+        }
+        .card[data-accent='warning']::before {
+          border-top-color: ${accentStyles.warning};
+        }
+        .card[data-accent='critical']::before {
+          border-top-color: ${accentStyles.critical};
+        }
+        .card[data-accent='info']::before {
+          border-top-color: ${accentStyles.info};
         }
         header h3 {
           margin: 0;
           font-size: 1.125rem;
-          color: var(--color-deep-blue);
+          color: var(--color-neutral-3);
+          letter-spacing: -0.01em;
         }
         .card-description {
           margin: var(--space-2) 0 0;
           color: var(--color-neutral-2);
+          line-height: 1.5;
         }
         @media (max-width: 768px) {
           .card {

@@ -409,12 +409,12 @@ export default function KnowledgeBasePage() {
           font-size: 0.75rem;
           padding: 0 var(--space-1);
           border-radius: var(--radius-pill);
-          background: rgba(46, 196, 182, 0.2);
+          background: rgba(14, 165, 233, 0.2);
         }
         .kb-announcement {
           margin: 0;
           padding: var(--space-2);
-          background: rgba(46, 196, 182, 0.16);
+          background: rgba(14, 165, 233, 0.16);
           border-radius: var(--radius-sm);
         }
         .kb-error {
@@ -445,7 +445,7 @@ export default function KnowledgeBasePage() {
           color: var(--color-neutral-2);
         }
         .kb-snippet {
-          background: rgba(11, 60, 93, 0.05);
+          background: rgba(37, 99, 235, 0.05);
           padding: var(--space-3);
           border-radius: var(--radius-sm);
           margin: 0;
@@ -465,7 +465,7 @@ export default function KnowledgeBasePage() {
           color: #fff;
         }
         .kb-result-actions button.secondary {
-          background: rgba(11, 60, 93, 0.12);
+          background: rgba(37, 99, 235, 0.12);
           color: var(--color-deep-blue);
         }
         @media (max-width: 960px) {
@@ -562,7 +562,7 @@ function KnowledgeBaseArticleDialog({
         .kb-dialog {
           position: fixed;
           inset: 0;
-          background: rgba(11, 60, 93, 0.6);
+          background: rgba(37, 99, 235, 0.6);
           display: grid;
           place-items: center;
           padding: var(--space-6);
@@ -593,7 +593,7 @@ function KnowledgeBaseArticleDialog({
           gap: var(--space-3);
         }
         .kb-dialog-snippet {
-          background: rgba(11, 60, 93, 0.04);
+          background: rgba(37, 99, 235, 0.04);
           border-radius: var(--radius-sm);
           padding: var(--space-3);
           display: grid;
@@ -613,7 +613,7 @@ function KnowledgeBaseArticleDialog({
           cursor: pointer;
         }
         .kb-dialog-pill {
-          background: rgba(46, 196, 182, 0.2);
+          background: rgba(14, 165, 233, 0.2);
           border-radius: var(--radius-pill);
           padding: 0 var(--space-2);
           font-size: 0.75rem;
@@ -633,7 +633,7 @@ function KnowledgeBaseArticleDialog({
           color: #fff;
         }
         .kb-dialog-footer .secondary {
-          background: rgba(11, 60, 93, 0.12);
+          background: rgba(37, 99, 235, 0.12);
           color: var(--color-deep-blue);
         }
         .kb-dialog-footer button:disabled {

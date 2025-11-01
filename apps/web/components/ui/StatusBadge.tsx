@@ -4,12 +4,37 @@ import { PropsWithChildren } from 'react';
 
 type Variant = 'success' | 'warning' | 'critical' | 'info' | 'neutral';
 
-const variantStyles: Record<Variant, { background: string; color: string; icon: string }> = {
-  success: { background: '#0f766e', color: '#ffffff', icon: '✔︎' },
-  warning: { background: '#b45309', color: '#ffffff', icon: '⚠︎' },
-  critical: { background: '#b91c1c', color: '#ffffff', icon: '⨉' },
-  info: { background: '#1d4ed8', color: '#ffffff', icon: 'ℹ︎' },
-  neutral: { background: '#374151', color: '#ffffff', icon: '●' }
+const variantStyles: Record<Variant, { background: string; color: string; icon: string; border: string }> = {
+  success: {
+    background: 'rgba(16, 185, 129, 0.14)',
+    color: '#047857',
+    icon: '●',
+    border: 'rgba(16, 185, 129, 0.28)'
+  },
+  warning: {
+    background: 'rgba(245, 158, 11, 0.16)',
+    color: '#92400e',
+    icon: '●',
+    border: 'rgba(245, 158, 11, 0.32)'
+  },
+  critical: {
+    background: 'rgba(239, 68, 68, 0.16)',
+    color: '#b91c1c',
+    icon: '●',
+    border: 'rgba(239, 68, 68, 0.32)'
+  },
+  info: {
+    background: 'rgba(37, 99, 235, 0.16)',
+    color: '#1d4ed8',
+    icon: '●',
+    border: 'rgba(37, 99, 235, 0.32)'
+  },
+  neutral: {
+    background: 'rgba(100, 116, 139, 0.14)',
+    color: '#475569',
+    icon: '●',
+    border: 'rgba(100, 116, 139, 0.24)'
+  }
 };
 
 interface StatusBadgeProps extends PropsWithChildren {
@@ -18,7 +43,7 @@ interface StatusBadgeProps extends PropsWithChildren {
 }
 
 export function StatusBadge({ children, variant = 'neutral', tooltip }: StatusBadgeProps) {
-  const { background, color, icon } = variantStyles[variant];
+  const { background, color, icon, border } = variantStyles[variant];
   return (
     <span className="status-badge" data-variant={variant} title={tooltip ?? undefined}>
       <span aria-hidden="true" className="status-badge__icon">
@@ -38,10 +63,10 @@ export function StatusBadge({ children, variant = 'neutral', tooltip }: StatusBa
           font-weight: 600;
           background: ${background};
           color: ${color};
-          border: 1px solid rgba(255, 255, 255, 0.24);
+          border: 1px solid ${border};
         }
         .status-badge__icon {
-          font-size: 0.875rem;
+          font-size: 0.625rem;
           line-height: 1;
         }
         .status-badge__text {
