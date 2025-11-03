@@ -27,17 +27,31 @@ export function usePageTour(config: TourRegistration) {
     return JSON.parse(metadataKey) as TourRegistration['metadata'];
   }, [metadataKey]);
 
+  const routeKey = useMemo(() => {
+    if (config.route === undefined) {
+      return undefined;
+    }
+    return JSON.stringify(config.route);
+  }, [config.route]);
+
+  const route = useMemo<TourRegistration['route']>(() => {
+    if (routeKey === undefined) {
+      return undefined;
+    }
+    return JSON.parse(routeKey) as TourRegistration['route'];
+  }, [routeKey]);
+
   const registration = useMemo<TourRegistration>(
     () => ({
       id: config.id,
       title: config.title,
       description: config.description,
-      route: config.route,
+      route,
       autoStart: config.autoStart,
       metadata,
       steps
     }),
-    [config.autoStart, config.description, config.id, config.route, config.title, metadata, steps]
+    [config.autoStart, config.description, config.id, config.title, metadata, route, steps]
   );
 
   useEffect(() => {

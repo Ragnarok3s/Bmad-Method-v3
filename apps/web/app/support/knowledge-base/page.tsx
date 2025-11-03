@@ -64,13 +64,15 @@ export default function KnowledgeBasePage() {
     []
   );
 
+  const tourRoute = useMemo(() => ['/support/knowledge-base'], []);
+
   usePageTour({
     id: 'support-knowledge-base',
     title: 'Tour do centro de suporte',
     description: 'Conheça pesquisa, categorias e snippets que alimentam o autoatendimento.',
     steps: tourSteps,
     autoStart: true,
-    route: ['/support/knowledge-base']
+    route: tourRoute
   });
 
   useEffect(() => {

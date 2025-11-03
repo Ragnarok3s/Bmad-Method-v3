@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body>
-        <Providers>
+        <Providers initialLocale="pt-BR">
           <SkipToContentLink targetId="conteudo-principal" />
           <AppChrome>{children}</AppChrome>
         </Providers>

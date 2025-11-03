@@ -9,6 +9,13 @@ import {
   type MessageDictionary
 } from './catalog';
 import { translate, type TranslationValues } from './translator';
+import enMessages from './locales/en.json';
+import ptBRMessages from './locales/pt-BR.json';
+
+const STATIC_MESSAGES: Partial<Record<LocaleCode, MessageDictionary>> = {
+  en: enMessages as MessageDictionary,
+  'pt-BR': ptBRMessages as MessageDictionary
+};
 
 type I18nContextValue = {
   locale: LocaleCode;
@@ -39,10 +46,13 @@ export function I18nProvider({
   initialLocale?: string;
   children: React.ReactNode;
 }) {
-  const [locale, setLocaleState] = useState<LocaleCode>(() => determineInitialLocale(initialLocale));
-  const [messages, setMessages] = useState<MessageDictionary | null>(null);
-  const [fallbackMessages, setFallbackMessages] = useState<MessageDictionary | null>(null);
-  const [ready, setReady] = useState<boolean>(false);
+  const initialResolvedLocale = determineInitialLocale(initialLocale);
+  const [locale, setLocaleState] = useState<LocaleCode>(initialResolvedLocale);
+  const [messages, setMessages] = useState<MessageDictionary | null>(STATIC_MESSAGES[initialResolvedLocale] ?? null);
+  const [fallbackMessages, setFallbackMessages] = useState<MessageDictionary | null>(
+    STATIC_MESSAGES[getFallbackLocale()] ?? null
+  );
+  const [ready, setReady] = useState<boolean>(Boolean(STATIC_MESSAGES[initialResolvedLocale]));
 
   useEffect(() => {
     let mounted = true;
@@ -68,6 +78,12 @@ export function I18nProvider({
   useEffect(() => {
     let mounted = true;
     const fallbackLocale = getFallbackLocale();
+    if (STATIC_MESSAGES[fallbackLocale]) {
+      setFallbackMessages(STATIC_MESSAGES[fallbackLocale] ?? null);
+      return () => {
+        mounted = false;
+      };
+    }
     loadLocaleMessages(fallbackLocale)
       .then((loaded) => {
         if (mounted) {
