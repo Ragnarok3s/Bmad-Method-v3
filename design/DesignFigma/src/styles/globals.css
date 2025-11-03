@@ -96,6 +96,37 @@
   --sidebar-accent-foreground: #111827;
   --sidebar-border: #E5E7EB;
   --sidebar-ring: #2563EB;
+
+  --app-background: var(--bg);
+  --app-surface: var(--surface);
+  --app-surface-muted: var(--surface-2);
+  --app-surface-overlay: rgba(255, 255, 255, 0.92);
+  --app-border-subtle: var(--border);
+  --app-border-strong: #CBD5E1;
+
+  --color-neutral-0: var(--surface);
+  --color-neutral-1: var(--bg);
+  --color-neutral-2: var(--text-muted);
+  --color-neutral-3: var(--text);
+  --color-neutral-4: var(--border);
+  --color-neutral-5: var(--surface-2);
+  --color-neutral-6: #E2E8F0;
+  --color-neutral-7: #94A3B8;
+  --color-neutral-8: #475569;
+  --color-neutral-9: #0F172A;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+
+  --tint-primary-soft: rgba(37, 99, 235, 0.12);
+  --tint-primary-strong: rgba(37, 99, 235, 0.28);
+  --tint-accent-soft: rgba(14, 165, 233, 0.16);
+  --tint-accent-strong: rgba(14, 165, 233, 0.28);
+  --tint-neutral-soft: rgba(148, 163, 184, 0.12);
+  --tint-neutral-strong: rgba(148, 163, 184, 0.24);
+  --tint-critical-soft: rgba(239, 68, 68, 0.16);
+  --tooltip-surface: #0F172A;
+  --tooltip-strong: rgba(15, 23, 42, 0.92);
+  --tooltip-text: #FFFFFF;
 }
 
 .dark {
@@ -156,6 +187,37 @@
   --sidebar-accent-foreground: #E5E7EB;
   --sidebar-border: #1F2937;
   --sidebar-ring: #2563EB;
+
+  --app-background: var(--bg);
+  --app-surface: #0F172A;
+  --app-surface-muted: #111827;
+  --app-surface-overlay: rgba(15, 23, 42, 0.88);
+  --app-border-subtle: #1F2937;
+  --app-border-strong: #273245;
+
+  --color-neutral-0: var(--app-surface);
+  --color-neutral-1: var(--bg);
+  --color-neutral-2: #9CA3AF;
+  --color-neutral-3: #E5E7EB;
+  --color-neutral-4: var(--app-border-subtle);
+  --color-neutral-5: var(--app-surface-muted);
+  --color-neutral-6: #1F2937;
+  --color-neutral-7: #6B7280;
+  --color-neutral-8: #CBD5E1;
+  --color-neutral-9: #F8FAFC;
+  --color-neutral-600: #CBD5E1;
+  --color-neutral-700: #E5E7EB;
+
+  --tint-primary-soft: rgba(37, 99, 235, 0.22);
+  --tint-primary-strong: rgba(37, 99, 235, 0.4);
+  --tint-accent-soft: rgba(14, 165, 233, 0.26);
+  --tint-accent-strong: rgba(14, 165, 233, 0.42);
+  --tint-neutral-soft: rgba(148, 163, 184, 0.18);
+  --tint-neutral-strong: rgba(148, 163, 184, 0.32);
+  --tint-critical-soft: rgba(244, 63, 94, 0.28);
+  --tooltip-surface: rgba(15, 23, 42, 0.92);
+  --tooltip-strong: rgba(15, 23, 42, 0.96);
+  --tooltip-text: #F8FAFC;
 }
 
 @theme inline {

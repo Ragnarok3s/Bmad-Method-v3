@@ -169,7 +169,7 @@ export function AgentsFilters({
         .agents-filters__clear-button {
           border-radius: var(--radius-sm);
           border: 1px solid var(--color-neutral-3);
-          background: #fff;
+          background: var(--color-neutral-0);
           color: var(--color-deep-blue);
           padding: var(--space-2) var(--space-4);
           font-weight: 600;

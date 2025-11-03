@@ -307,19 +307,19 @@ export function ExtensionsHub() {
           color: #4d3508;
         }
         .badge-live {
-          background: rgba(14, 165, 233, 0.25);
+          background: var(--tint-accent-strong);
           color: #04504c;
         }
         .badge-draft {
-          background: #e5e7eb;
+          background: var(--color-neutral-5);
           color: var(--color-neutral-2);
         }
         .badge-priority {
-          background: rgba(255, 99, 132, 0.15);
+          background: var(--tint-critical-soft);
           color: #b2203f;
         }
         .badge-owner {
-          background: rgba(0, 90, 255, 0.15);
+          background: var(--tint-primary-soft);
           color: #0f3a8d;
         }
         .cta {
@@ -335,7 +335,7 @@ export function ExtensionsHub() {
           gap: var(--space-4);
         }
         .timeline li {
-          background: #f8fafc;
+          background: var(--color-neutral-1);
           padding: var(--space-4);
           border-radius: var(--radius-md);
           border-left: 4px solid var(--color-soft-aqua);

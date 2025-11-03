@@ -6,6 +6,7 @@ import { useOffline } from '@/components/offline/OfflineContext';
 import { OfflineBanner } from '@/components/offline/OfflineBanner';
 import { MainNav } from '@/components/navigation/MainNav';
 import { TourDialog } from '@/components/tour/TourDialog';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
   weekday: 'long',
@@ -51,6 +52,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
           <p className="shell__auth-meta">Gestores, housekeeping e proprietários</p>
         </div>
         <div className="shell__actions">
+          <ThemeToggle className="shell__theme-toggle" />
           <button type="button" className="shell__action shell__action--primary">
             Sincronizar OTAs
           </button>
@@ -74,19 +76,21 @@ export function AppChrome({ children }: { children: ReactNode }) {
           display: grid;
           gap: var(--space-5);
           padding: var(--space-5) var(--space-6);
-          background: var(--color-neutral-1);
+          background: var(--app-background);
+          transition: background 0.3s ease;
         }
         .shell__header {
           display: grid;
           grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) auto;
           align-items: center;
           gap: var(--space-5);
-          background: rgba(255, 255, 255, 0.92);
+          background: var(--app-surface-overlay);
           padding: var(--space-4) var(--space-5);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
-          border: 1px solid rgba(148, 163, 184, 0.24);
+          border: 1px solid var(--app-border-strong);
           backdrop-filter: blur(18px);
+          transition: background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
         }
         .shell__brand {
           display: flex;
@@ -145,8 +149,8 @@ export function AppChrome({ children }: { children: ReactNode }) {
           justify-items: start;
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-sm);
-          background: rgba(37, 99, 235, 0.08);
-          border: 1px solid rgba(37, 99, 235, 0.2);
+          background: var(--tint-primary-soft);
+          border: 1px solid var(--tint-primary-strong);
         }
         .shell__auth-label {
           margin: 0;
@@ -183,9 +187,13 @@ export function AppChrome({ children }: { children: ReactNode }) {
         }
         .shell__actions {
           display: inline-flex;
+          align-items: center;
           gap: var(--space-3);
           flex-wrap: wrap;
           justify-content: flex-end;
+        }
+        .shell__theme-toggle {
+          flex: 0 0 auto;
         }
         .shell__action {
           font-weight: 600;
@@ -205,13 +213,13 @@ export function AppChrome({ children }: { children: ReactNode }) {
           background: #1d4ed8;
         }
         .shell__action--secondary {
-          background: rgba(14, 165, 233, 0.14);
+          background: var(--tint-accent-soft);
           color: var(--color-deep-blue);
-          border-color: rgba(14, 165, 233, 0.32);
+          border-color: var(--tint-accent-strong);
         }
         .shell__action--secondary:hover,
         .shell__action--secondary:focus-visible {
-          background: rgba(14, 165, 233, 0.24);
+          background: var(--tint-accent-strong);
         }
         .shell__body {
           display: grid;
@@ -251,6 +259,11 @@ export function AppChrome({ children }: { children: ReactNode }) {
           }
           .shell__actions {
             width: 100%;
+            justify-content: flex-start;
+            gap: var(--space-2);
+          }
+          .shell__theme-toggle {
+            flex: 0 0 auto;
           }
           .shell__actions .shell__action {
             flex: 1 1 auto;

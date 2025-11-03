@@ -227,14 +227,14 @@ export function MainNav() {
           border-radius: var(--radius-sm);
           font-weight: 500;
           color: var(--color-neutral-3);
-          background: rgba(148, 163, 184, 0.12);
+          background: var(--tint-neutral-soft);
           border: 1px solid transparent;
           transition: background 0.2s ease, border 0.2s ease, transform 0.2s ease, color 0.2s ease;
         }
         a:hover,
         a:focus-visible {
-          background: rgba(37, 99, 235, 0.14);
-          border-color: rgba(37, 99, 235, 0.28);
+          background: var(--tint-primary-soft);
+          border-color: var(--tint-primary-strong);
           transform: translateY(-1px);
           color: var(--color-deep-blue);
         }
@@ -250,7 +250,7 @@ export function MainNav() {
           width: 28px;
           height: 28px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.16);
+          background: var(--tint-neutral-soft);
           color: inherit;
         }
         .main-nav__label {
@@ -263,8 +263,8 @@ export function MainNav() {
           top: 50%;
           transform: translateY(-50%);
           width: min(240px, 32vw);
-          background: #0f172a;
-          color: #fff;
+          background: var(--tooltip-surface);
+          color: var(--tooltip-text);
           padding: var(--space-3);
           border-radius: var(--radius-sm);
           box-shadow: var(--shadow-flyout);
@@ -284,7 +284,7 @@ export function MainNav() {
           height: 0;
           border-top: 6px solid transparent;
           border-bottom: 6px solid transparent;
-          border-right: 6px solid #0f172a;
+          border-right: 6px solid var(--tooltip-surface);
         }
         .main-nav__item:hover .main-nav__tooltip,
         a:focus-visible + .main-nav__tooltip {
@@ -292,10 +292,10 @@ export function MainNav() {
           transform: translateY(-50%) translateX(4px);
         }
         a[data-active='true'] + .main-nav__tooltip {
-          background: rgba(15, 23, 42, 0.95);
+          background: var(--tooltip-strong);
         }
         a[data-active='true'] .main-nav__icon {
-          background: rgba(255, 255, 255, 0.22);
+          background: var(--tint-neutral-strong);
         }
         @media (prefers-reduced-motion: reduce) {
           .main-nav__tooltip {

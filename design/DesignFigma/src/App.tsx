@@ -15,6 +15,20 @@ import { IconsElevationPage } from './components/pages/icons-elevation';
 import { QADatePickerPage } from './components/pages/qa-date-picker';
 import { SystemPreferencesPage } from './components/pages/system-preferences';
 import { DesignTokensPage } from './components/pages/design-tokens';
+import {
+  AnalyticsModulePage,
+  GovernanceModulePage,
+  ObservabilityModulePage,
+  AgentsModulePage,
+  PlaybooksModulePage,
+  RecommendationsModulePage,
+  MarketplaceModulePage,
+  ExtensionsModulePage,
+  GuestExperienceModulePage,
+  OwnersModulePage,
+  SupportModulePage,
+  OnboardingModulePage
+} from './components/pages/modules';
 import { DensityProvider } from './components/density-context';
 
 export default function App() {
@@ -68,6 +82,30 @@ export default function App() {
         return <FormExamplePage />;
       case 'design-tokens':
         return <DesignTokensPage />;
+      case 'analytics':
+        return <AnalyticsModulePage />;
+      case 'governanca':
+        return <GovernanceModulePage />;
+      case 'observabilidade':
+        return <ObservabilityModulePage />;
+      case 'agentes':
+        return <AgentsModulePage />;
+      case 'playbooks':
+        return <PlaybooksModulePage />;
+      case 'recommendations':
+        return <RecommendationsModulePage />;
+      case 'marketplace':
+        return <MarketplaceModulePage />;
+      case 'extensions':
+        return <ExtensionsModulePage />;
+      case 'guest-experience':
+        return <GuestExperienceModulePage />;
+      case 'owners':
+        return <OwnersModulePage />;
+      case 'support':
+        return <SupportModulePage />;
+      case 'onboarding':
+        return <OnboardingModulePage />;
       default:
         return <CalendarPage />;
     }

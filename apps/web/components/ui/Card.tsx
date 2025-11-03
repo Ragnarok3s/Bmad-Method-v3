@@ -32,7 +32,7 @@ export function Card({ title, description, accent, children }: CardProps) {
           border-radius: var(--radius-md);
           padding: var(--space-5);
           box-shadow: var(--shadow-card);
-          border: 1px solid rgba(15, 23, 42, 0.08);
+          border: 1px solid var(--app-border-subtle);
           display: grid;
           gap: var(--space-5);
         }

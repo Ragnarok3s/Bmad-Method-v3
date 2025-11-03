@@ -541,7 +541,7 @@ export default function ReportsPage() {
           padding: var(--space-2);
           border: 1px solid var(--color-neutral-4);
           border-radius: var(--radius-sm);
-          background: #fff;
+          background: var(--color-neutral-0);
         }
         .hint {
           font-size: 0.75rem;

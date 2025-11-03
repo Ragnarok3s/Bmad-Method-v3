@@ -99,7 +99,7 @@ export default function OwnerInvoicesPage() {
         }
         .owners-table-wrapper {
           overflow-x: auto;
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
         }

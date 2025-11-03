@@ -192,7 +192,7 @@ export default function SuportePage() {
         }
         .suporte-highlights pre {
           margin: 0;
-          background: #fff;
+          background: var(--color-neutral-0);
           padding: var(--space-2);
           border-radius: var(--radius-sm);
           white-space: pre-wrap;

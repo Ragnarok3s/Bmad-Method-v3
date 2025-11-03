@@ -364,7 +364,7 @@ export default function GovernancaPage() {
         }
         .table-wrapper {
           overflow-x: auto;
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           border: 1px solid var(--color-neutral-4);
         }

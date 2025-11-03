@@ -123,7 +123,7 @@ function OwnersShell({
           padding: var(--space-6);
         }
         .owners-card {
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-lg);
           padding: var(--space-6);
           max-width: 420px;
@@ -177,13 +177,13 @@ function OwnersShell({
         }
         .owners-logout {
           align-self: flex-start;
-          background: rgba(255, 255, 255, 0.18);
+          background: var(--tint-neutral-soft);
         }
         .owners-nav {
           display: flex;
           flex-wrap: wrap;
           gap: var(--space-3);
-          background: #fff;
+          background: var(--color-neutral-0);
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
@@ -193,7 +193,7 @@ function OwnersShell({
           border-radius: var(--radius-sm);
           font-weight: 500;
           color: var(--color-deep-blue);
-          background: rgba(37, 99, 235, 0.08);
+          background: var(--tint-primary-soft);
         }
         .owners-nav a[aria-current='page'] {
           background: var(--color-deep-blue);

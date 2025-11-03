@@ -798,8 +798,8 @@ function DashboardHero({
           margin-top: var(--space-5);
           padding: var(--space-4);
           border-radius: var(--radius-sm);
-          border: 1px dashed rgba(37, 99, 235, 0.28);
-          background: rgba(255, 255, 255, 0.82);
+          border: 1px dashed var(--tint-primary-strong);
+          background: var(--app-surface-overlay);
           display: grid;
           gap: var(--space-3);
         }
@@ -838,7 +838,7 @@ function DashboardHero({
           gap: var(--space-2);
           padding: var(--space-4);
           border-radius: var(--radius-md);
-          background: #fff;
+          background: var(--color-neutral-0);
           box-shadow: var(--shadow-card);
           border-top: 4px solid var(--color-deep-blue);
         }
