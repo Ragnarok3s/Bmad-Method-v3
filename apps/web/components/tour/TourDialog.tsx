@@ -119,6 +119,7 @@ export function TourDialog() {
           place-items: center;
           padding: var(--space-6);
           z-index: 2000;
+          pointer-events: none;
         }
         .tour-content {
           position: relative;
@@ -130,6 +131,7 @@ export function TourDialog() {
           box-shadow: var(--shadow-card);
           display: grid;
           gap: var(--space-4);
+          pointer-events: auto;
         }
         .tour-step-counter {
           margin: 0;
