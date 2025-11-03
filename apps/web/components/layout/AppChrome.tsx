@@ -6,7 +6,11 @@ import { useOffline } from '@/components/offline/OfflineContext';
 import { OfflineBanner } from '@/components/offline/OfflineBanner';
 import { MainNav } from '@/components/navigation/MainNav';
 import { TourDialog } from '@/components/tour/TourDialog';
+<<<<<<< HEAD
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+=======
+import { useAnalytics } from '@/components/analytics/AnalyticsContext';
+>>>>>>> a198eb6b1ad76d6cf345db9ccaeffa5312598115
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
   weekday: 'long',
@@ -21,6 +25,7 @@ const TIME_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
 
 export function AppChrome({ children }: { children: ReactNode }) {
   const { isOffline } = useOffline();
+  const analytics = useAnalytics();
   const now = new Date();
   const todayLabel = DATE_FORMATTER.format(now);
   const timeLabel = TIME_FORMATTER.format(now);
@@ -52,13 +57,20 @@ export function AppChrome({ children }: { children: ReactNode }) {
           <p className="shell__auth-meta">Gestores, housekeeping e proprietários</p>
         </div>
         <div className="shell__actions">
-          <ThemeToggle className="shell__theme-toggle" />
-          <button type="button" className="shell__action shell__action--primary">
+          <Link
+            href="/calendario"
+            className="shell__action shell__action--primary"
+            onClick={() => analytics.track('app_chrome.quick_action', { action: 'sync_otas' })}
+          >
             Sincronizar OTAs
-          </button>
-          <button type="button" className="shell__action shell__action--secondary">
+          </Link>
+          <Link
+            href="/suporte"
+            className="shell__action shell__action--secondary"
+            onClick={() => analytics.track('app_chrome.quick_action', { action: 'register_incident' })}
+          >
             Registar incidente
-          </button>
+          </Link>
         </div>
       </header>
       <OfflineBanner />
@@ -202,6 +214,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
           cursor: pointer;
           border: 1px solid transparent;
           transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
         }
         .shell__action--primary {
           background: var(--color-deep-blue);
