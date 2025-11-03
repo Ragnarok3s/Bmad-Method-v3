@@ -393,7 +393,7 @@ export default function KnowledgeBasePage() {
         .kb-categories-list button {
           border-radius: var(--radius-pill);
           border: 1px solid var(--color-neutral-4);
-          background: #fff;
+          background: var(--color-neutral-0);
           padding: var(--space-1) var(--space-3);
           cursor: pointer;
           display: inline-flex;
@@ -430,7 +430,7 @@ export default function KnowledgeBasePage() {
         .kb-result {
           display: grid;
           gap: var(--space-3);
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           padding: var(--space-4);
           box-shadow: var(--shadow-card);
@@ -569,7 +569,7 @@ function KnowledgeBaseArticleDialog({
           z-index: 2100;
         }
         .kb-dialog-content {
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           max-width: 720px;
           width: 100%;

@@ -276,7 +276,7 @@ export default function PlaybooksPage() {
           border-radius: var(--radius-pill);
           padding: 0 var(--space-3);
           height: 32px;
-          background: #fff;
+          background: var(--color-neutral-0);
           cursor: pointer;
           font-weight: 600;
         }

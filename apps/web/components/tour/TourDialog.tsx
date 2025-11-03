@@ -123,7 +123,7 @@ export function TourDialog() {
         }
         .tour-content {
           position: relative;
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           max-width: 540px;
           width: 100%;

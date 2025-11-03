@@ -660,7 +660,7 @@ export default function CalendarPage() {
           display: grid;
           gap: var(--space-4);
           padding: var(--space-4);
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
         }

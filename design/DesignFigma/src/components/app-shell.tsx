@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  FileText, 
-  DollarSign, 
-  Users, 
-  Wrench, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Calendar,
+  FileText,
+  DollarSign,
+  Users,
+  Wrench,
+  BarChart3,
+  Settings,
   Bell,
   Search,
   Moon,
   Sun,
   Home,
   Menu,
-  X
+  X,
+  LineChart,
+  ShieldCheck,
+  Activity,
+  Bot,
+  Workflow,
+  Sparkles,
+  Store,
+  Puzzle,
+  Smile,
+  Briefcase,
+  LifeBuoy,
+  Rocket
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -94,14 +106,26 @@ export function AppShell({ currentPage, onNavigate, children, theme, onThemeTogg
 
   const navItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'calendar', icon: Calendar, label: 'Calendar' },
-    { id: 'reservations', icon: FileText, label: 'Reservations', badge: 3 },
-    { id: 'channels', icon: Home, label: 'Channels' },
-    { id: 'payments', icon: DollarSign, label: 'Payments' },
+    { id: 'calendar', icon: Calendar, label: 'Calendário' },
+    { id: 'reservations', icon: FileText, label: 'Reservas', badge: 3 },
     { id: 'housekeeping', icon: Users, label: 'Housekeeping', badge: 5 },
-    { id: 'maintenance', icon: Wrench, label: 'Maintenance', badge: 2 },
+    { id: 'maintenance', icon: Wrench, label: 'Manutenção', badge: 2 },
+    { id: 'analytics', icon: LineChart, label: 'Analytics' },
+    { id: 'observabilidade', icon: Activity, label: 'Observabilidade' },
+    { id: 'governanca', icon: ShieldCheck, label: 'Governança' },
+    { id: 'agentes', icon: Bot, label: 'Agentes' },
+    { id: 'playbooks', icon: Workflow, label: 'Playbooks' },
+    { id: 'recommendations', icon: Sparkles, label: 'Recomendações' },
+    { id: 'guest-experience', icon: Smile, label: 'Guest Experience' },
+    { id: 'marketplace', icon: Store, label: 'Marketplace' },
+    { id: 'extensions', icon: Puzzle, label: 'Extensões' },
+    { id: 'owners', icon: Briefcase, label: 'Owners' },
+    { id: 'support', icon: LifeBuoy, label: 'Suporte' },
+    { id: 'onboarding', icon: Rocket, label: 'Onboarding' },
+    { id: 'channels', icon: Home, label: 'Channels' },
+    { id: 'payments', icon: DollarSign, label: 'Pagamentos' },
     { id: 'reports', icon: BarChart3, label: 'Reports' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
+    { id: 'settings', icon: Settings, label: 'Settings' }
   ];
 
   return (

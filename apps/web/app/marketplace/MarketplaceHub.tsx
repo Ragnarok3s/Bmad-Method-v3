@@ -309,7 +309,7 @@ export function MarketplaceHub() {
           border: 1px solid var(--color-neutral-3);
           border-radius: 20px;
           padding: var(--space-6);
-          background: #fff;
+          background: var(--color-neutral-0);
         }
         .marketplace__showcase header {
           display: flex;
@@ -341,7 +341,7 @@ export function MarketplaceHub() {
           padding: var(--space-6);
         }
         .marketplace__install-panel {
-          background: #fff;
+          background: var(--color-neutral-0);
           border-radius: 24px;
           width: min(520px, 100%);
           padding: var(--space-6);
@@ -465,7 +465,7 @@ function AppCard({ app, onInstall }: AppCardProps) {
           border: 1px solid var(--color-neutral-3);
           border-radius: 24px;
           padding: var(--space-4);
-          background: #fff;
+          background: var(--color-neutral-0);
           display: grid;
           gap: var(--space-3);
         }

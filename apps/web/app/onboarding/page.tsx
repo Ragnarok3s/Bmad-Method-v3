@@ -363,7 +363,7 @@ function FieldStyles() {
         padding: var(--space-2);
         font: inherit;
         width: 100%;
-        background: #fff;
+        background: var(--color-neutral-0);
       }
       textarea {
         resize: vertical;

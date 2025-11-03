@@ -35,8 +35,8 @@ export function FilterPill({ label, selected = false, count, disabled = false, o
           align-items: center;
           gap: var(--space-2);
           border-radius: 999px;
-          border: 1px solid var(--color-neutral-3);
-          background: #fff;
+          border: 1px solid var(--color-neutral-4);
+          background: var(--color-neutral-0);
           padding: var(--space-1) var(--space-3);
           cursor: pointer;
           font-size: 0.875rem;
@@ -45,7 +45,7 @@ export function FilterPill({ label, selected = false, count, disabled = false, o
         }
         .filter-pill:hover:not(:disabled) {
           border-color: var(--color-deep-blue);
-          box-shadow: 0 0 0 2px rgba(25, 65, 185, 0.1);
+          box-shadow: 0 0 0 2px var(--tint-primary-soft);
         }
         .filter-pill:disabled {
           cursor: not-allowed;
