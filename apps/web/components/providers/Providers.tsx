@@ -15,7 +15,13 @@ function NavigationFallback() {
   return <span className="sr-only">{t('navigation')}</span>;
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  initialLocale
+}: {
+  children: React.ReactNode;
+  initialLocale?: string;
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -33,7 +39,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <I18nProvider>
+    <I18nProvider initialLocale={initialLocale}>
       <Suspense fallback={<NavigationFallback />}>
         <TelemetryProvider>
           <QueryClientProvider client={queryClient}>
