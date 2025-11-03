@@ -194,6 +194,8 @@ export function MainNav() {
           gap: var(--space-5);
           position: sticky;
           top: var(--space-4);
+          /* Keep navigation accessible when guided tour overlays are visible */
+          z-index: 2050;
         }
         .main-nav__section {
           display: grid;
