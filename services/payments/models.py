@@ -69,6 +69,18 @@ class CaptureResult:
 
 
 @dataclass(slots=True)
+class RefundResult:
+    refund_id: str
+    capture_id: str
+    authorization_id: str
+    amount: Decimal
+    currency: str
+    status: Literal["refunded", "partially_refunded", "failed"]
+    processed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
 class ReconciliationRecord:
     authorization_id: str
     capture_id: str | None

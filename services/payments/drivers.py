@@ -10,6 +10,7 @@ from .models import (
     CardData,
     CaptureResult,
     ReconciliationRecord,
+    RefundResult,
     TokenizedCard,
 )
 from .webhooks import WebhookEvent
@@ -32,6 +33,14 @@ class PaymentGatewayDriver(Protocol):
         amount: Decimal | None = None,
         metadata: Mapping[str, str] | None = None,
     ) -> CaptureResult: ...
+
+    def refund(
+        self,
+        capture_id: str,
+        *,
+        amount: Decimal | None = None,
+        metadata: Mapping[str, str] | None = None,
+    ) -> RefundResult: ...
 
     def fetch_reconciliation(self, settlement_date: date) -> Iterable[ReconciliationRecord]: ...
 

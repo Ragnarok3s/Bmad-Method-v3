@@ -1,0 +1,46 @@
+name: Payments Gateway Smoke Tests
+
+on:
+  push:
+    paths:
+      - 'services/billing/**'
+      - 'services/payments/**'
+      - 'tests/e2e/payments/**'
+      - 'docs/compliance/**'
+      - '.github/workflows/payments.yml'
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Run payments smoke suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run payments smoke tests
+        run: |
+          mkdir -p artifacts
+          pytest tests/e2e/payments -m "e2e and payments" --junitxml=artifacts/payments-e2e.xml
+
+      - name: Upload smoke test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: payments-e2e
+          path: |
+            artifacts/payments-e2e.xml
+            docs/compliance/releases/2024-07-15-billing-gateway/
