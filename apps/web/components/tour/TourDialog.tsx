@@ -80,7 +80,7 @@ export function TourDialog() {
       ref={dialogRef}
       className="tour-overlay"
       role="dialog"
-      aria-modal="true"
+      aria-modal="false"
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
     >
