@@ -285,7 +285,7 @@ export function MainNav() {
           border-right: 6px solid #0f172a;
         }
         .main-nav__item:hover .main-nav__tooltip,
-        .main-nav__item:focus-within .main-nav__tooltip {
+        a:focus-visible + .main-nav__tooltip {
           opacity: 1;
           transform: translateY(-50%) translateX(4px);
         }
