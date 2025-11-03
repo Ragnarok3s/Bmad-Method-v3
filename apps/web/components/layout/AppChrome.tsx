@@ -6,11 +6,7 @@ import { useOffline } from '@/components/offline/OfflineContext';
 import { OfflineBanner } from '@/components/offline/OfflineBanner';
 import { MainNav } from '@/components/navigation/MainNav';
 import { TourDialog } from '@/components/tour/TourDialog';
-<<<<<<< HEAD
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
-=======
 import { useAnalytics } from '@/components/analytics/AnalyticsContext';
->>>>>>> a198eb6b1ad76d6cf345db9ccaeffa5312598115
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('pt-PT', {
   weekday: 'long',
