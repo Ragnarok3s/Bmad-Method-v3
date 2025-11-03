@@ -226,6 +226,44 @@ describe('GuidedTourProvider integration', () => {
     expect(screen.getByTestId('is-completed')).toHaveTextContent('no');
   });
 
+  it('closes an active tour when the pathname changes', async () => {
+    currentPath = '/settings';
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <GuidedTourProvider>
+        <TourHarness />
+      </GuidedTourProvider>
+    );
+
+    await act(async () => {
+      await user.click(screen.getByTestId('manual-start'));
+    });
+
+    await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('open'));
+
+    currentPath = '/settings/profile';
+    rerender(
+      <GuidedTourProvider>
+        <TourHarness />
+      </GuidedTourProvider>
+    );
+
+    await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('closed'));
+    await waitFor(() =>
+      expect(trackMock).toHaveBeenCalledWith(
+        'tour.closed',
+        expect.objectContaining({ tourId: 'kb-tour', markedCompleted: false })
+      )
+    );
+
+    await act(async () => {
+      await user.click(screen.getByTestId('manual-start'));
+    });
+
+    await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('open'));
+  });
+
   it('registers and unregisters tours via usePageTour lifecycle', async () => {
     currentPath = '/';
     const user = userEvent.setup();

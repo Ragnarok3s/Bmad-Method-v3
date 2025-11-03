@@ -87,6 +87,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
   const [registrations, setRegistrations] = useState<Record<string, TourRegistration>>({});
   const [completed, setCompleted] = useState<string[]>([]);
   const autoStartTriggeredRef = useRef(new Set<string>());
+  const lastPathnameRef = useRef(pathname);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -261,6 +262,26 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
       break;
     }
   }, [completedSet, isOpen, pathname, registrations, startTour]);
+
+  useEffect(() => {
+    if (!pathname) {
+      return;
+    }
+    if (lastPathnameRef.current === pathname) {
+      return;
+    }
+    lastPathnameRef.current = pathname;
+
+    if (isOpen) {
+      close();
+    }
+
+    if (activeTourId) {
+      setActiveTourId(null);
+    }
+
+    setCurrentIndex(0);
+  }, [activeTourId, close, isOpen, pathname, setCurrentIndex]);
 
   const activeTour = useMemo(() => {
     if (!activeTourId) {
