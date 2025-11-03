@@ -25,12 +25,14 @@ export function SectionHeader({ children, subtitle, actions }: SectionHeaderProp
         }
         h2 {
           margin: 0;
-          color: var(--color-deep-blue);
+          color: var(--color-neutral-3);
           font-size: 1.5rem;
+          letter-spacing: -0.01em;
         }
         p {
           margin: var(--space-2) 0 0;
           color: var(--color-neutral-2);
+          line-height: 1.5;
         }
       `}</style>
     </header>

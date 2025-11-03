@@ -74,17 +74,19 @@ export function AppChrome({ children }: { children: ReactNode }) {
           display: grid;
           gap: var(--space-5);
           padding: var(--space-5) var(--space-6);
+          background: var(--color-neutral-1);
         }
         .shell__header {
           display: grid;
           grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr) minmax(0, 0.9fr) auto;
           align-items: center;
           gap: var(--space-5);
-          background: #fff;
+          background: rgba(255, 255, 255, 0.92);
           padding: var(--space-4) var(--space-5);
           border-radius: var(--radius-md);
           box-shadow: var(--shadow-card);
-          border: 1px solid rgba(11, 60, 93, 0.08);
+          border: 1px solid rgba(148, 163, 184, 0.24);
+          backdrop-filter: blur(18px);
         }
         .shell__brand {
           display: flex;
@@ -97,10 +99,10 @@ export function AppChrome({ children }: { children: ReactNode }) {
           justify-content: center;
           width: 48px;
           height: 48px;
-          border-radius: 12px;
+          border-radius: 16px;
           font-weight: 700;
           letter-spacing: 0.08em;
-          background: linear-gradient(135deg, rgba(11, 60, 93, 0.95), rgba(46, 196, 182, 0.8));
+          background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(14, 165, 233, 0.88));
           color: #fff;
         }
         .shell__product {
@@ -113,7 +115,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
         .shell__brand h1 {
           margin: 0;
           font-size: 1.5rem;
-          color: var(--color-deep-blue);
+          color: var(--color-neutral-3);
         }
         .shell__context {
           display: grid;
@@ -131,7 +133,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
           margin: 0;
           font-weight: 600;
           font-size: 1.125rem;
-          color: var(--color-deep-blue);
+          color: var(--color-neutral-3);
         }
         .shell__context-meta {
           margin: 0;
@@ -143,8 +145,8 @@ export function AppChrome({ children }: { children: ReactNode }) {
           justify-items: start;
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-sm);
-          background: rgba(11, 60, 93, 0.05);
-          border: 1px solid rgba(11, 60, 93, 0.08);
+          background: rgba(37, 99, 235, 0.08);
+          border: 1px solid rgba(37, 99, 235, 0.2);
         }
         .shell__auth-label {
           margin: 0;
@@ -168,7 +170,7 @@ export function AppChrome({ children }: { children: ReactNode }) {
         }
         .shell__auth-link:hover,
         .shell__auth-link:focus-visible {
-          color: #07273b;
+          color: #1e40af;
         }
         .shell__auth-link:hover::after,
         .shell__auth-link:focus-visible::after {
@@ -196,24 +198,26 @@ export function AppChrome({ children }: { children: ReactNode }) {
         .shell__action--primary {
           background: var(--color-deep-blue);
           color: #fff;
+          box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
         }
         .shell__action--primary:hover,
         .shell__action--primary:focus-visible {
-          background: #07273b;
+          background: #1d4ed8;
         }
         .shell__action--secondary {
-          background: rgba(46, 196, 182, 0.12);
+          background: rgba(14, 165, 233, 0.14);
           color: var(--color-deep-blue);
-          border-color: rgba(46, 196, 182, 0.35);
+          border-color: rgba(14, 165, 233, 0.32);
         }
         .shell__action--secondary:hover,
         .shell__action--secondary:focus-visible {
-          background: rgba(46, 196, 182, 0.2);
+          background: rgba(14, 165, 233, 0.24);
         }
         .shell__body {
           display: grid;
           grid-template-columns: 320px 1fr;
           gap: var(--space-5);
+          align-items: start;
         }
         .shell__sidebar {
           min-width: 0;

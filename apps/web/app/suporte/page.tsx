@@ -165,7 +165,7 @@ export default function SuportePage() {
       </Card>
       <style jsx>{`
         .suporte-announcement {
-          background: rgba(46, 196, 182, 0.15);
+          background: rgba(14, 165, 233, 0.15);
           padding: var(--space-2) var(--space-3);
           border-radius: var(--radius-sm);
           margin: 0 0 var(--space-3);
@@ -186,7 +186,7 @@ export default function SuportePage() {
         .suporte-highlights li {
           display: grid;
           gap: var(--space-2);
-          background: rgba(11, 60, 93, 0.04);
+          background: rgba(37, 99, 235, 0.04);
           padding: var(--space-3);
           border-radius: var(--radius-sm);
         }
