@@ -1,6 +1,41 @@
+let registerSpy: jest.Mock;
+
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+
+jest.mock('../TourContext', () => {
+  const actual = jest.requireActual('../TourContext');
+  const registerWrapperMap = new WeakMap<
+    ReturnType<typeof actual.useGuidedTour>['registerTour'],
+    ReturnType<typeof actual.useGuidedTour>['registerTour']
+  >();
+
+  return {
+    __esModule: true,
+    ...actual,
+    useGuidedTour: (...args: Parameters<typeof actual.useGuidedTour>) => {
+      const context = actual.useGuidedTour(...args);
+      const originalRegister = context.registerTour;
+      let wrappedRegister = registerWrapperMap.get(originalRegister);
+
+      if (!wrappedRegister) {
+        wrappedRegister = (registration: Parameters<typeof originalRegister>[0]) => {
+          if (registerSpy) {
+            registerSpy(registration);
+          }
+          return originalRegister(registration);
+        };
+        registerWrapperMap.set(originalRegister, wrappedRegister);
+      }
+
+      return {
+        ...context,
+        registerTour: wrappedRegister
+      };
+    }
+  };
+});
 
 import { GuidedTourProvider, useGuidedTour } from '../TourContext';
 import { usePageTour } from '../usePageTour';
@@ -73,6 +108,7 @@ describe('GuidedTourProvider integration', () => {
     currentPath = '/';
     trackMock.mockClear();
     window.localStorage.clear();
+    registerSpy = jest.fn();
   });
 
   it('persists completed tours across reloads without re-opening the popup', async () => {
@@ -220,5 +256,44 @@ describe('GuidedTourProvider integration', () => {
     });
 
     await waitFor(() => expect(screen.getByTestId('tour-count')).toHaveTextContent('0'));
+  });
+
+  it('only registers a tour once when config values remain identical across renders', async () => {
+    currentPath = '/knowledge-base';
+
+    const baseSteps = [
+      { id: 'welcome', title: 'Bem-vindo', description: 'Introdução' },
+      { id: 'finish', title: 'Concluir', description: 'Finalizar' }
+    ];
+
+    function ReRenderingHarness() {
+      const [renderCount, setRenderCount] = React.useState(0);
+      const steps = React.useMemo(() => baseSteps.map((step) => ({ ...step })), [renderCount]);
+
+      usePageTour({
+        id: 'kb-tour',
+        title: 'Knowledge Base tour',
+        steps,
+        route: '/knowledge-base',
+        metadata: { version: '1' }
+      });
+
+      React.useEffect(() => {
+        if (renderCount < 2) {
+          setRenderCount((count) => count + 1);
+        }
+      }, [renderCount]);
+
+      return null;
+    }
+
+    render(
+      <GuidedTourProvider>
+        <ReRenderingHarness />
+      </GuidedTourProvider>
+    );
+
+    await waitFor(() => expect(registerSpy).toHaveBeenCalledTimes(1));
+    expect(registerSpy).toHaveBeenCalledTimes(1);
   });
 });
