@@ -14,6 +14,7 @@ from ..models import (
     CardData,
     CaptureResult,
     ReconciliationRecord,
+    RefundResult,
     TokenizedCard,
 )
 from ..webhooks import WebhookEvent
@@ -24,6 +25,7 @@ class _AuthorizationState:
     result: AuthorizationResult
     captured_amount: Decimal = Decimal("0")
     capture_status: str = "pending"
+    refunded_amount: Decimal = Decimal("0")
 
 
 class InMemoryGatewayDriver(PaymentGatewayDriver):
@@ -35,10 +37,12 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
         self._tokens: dict[str, TokenizedCard] = {}
         self._authorizations: dict[str, _AuthorizationState] = {}
         self._captures: dict[str, CaptureResult] = {}
+        self._refunds: dict[str, RefundResult] = {}
 
     def tokenize(self, card: CardData, *, customer_reference: str | None = None) -> TokenizedCard:
         token_value = token_hex(12)
         token_reference = f"{self.name}_tok_{len(self._tokens) + 1:06d}"
+        card_state = "invalid" if card.pan.endswith("0002") else "valid"
         token = TokenizedCard(
             token=token_value,
             token_reference=token_reference,
@@ -47,13 +51,42 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
             fingerprint=hmac.new(
                 self._webhook_secret, card.pan.encode("utf-8"), digestmod="sha256"
             ).hexdigest(),
-            metadata={"customer_reference": customer_reference} if customer_reference else {},
+            metadata={
+                "customer_reference": customer_reference,
+                "card_state": card_state,
+            }
+            if customer_reference
+            else {"card_state": card_state},
         )
         self._tokens[token_reference] = token
         return token
 
     def preauthorize(self, request: AuthorizationRequest) -> AuthorizationResult:
         authorization_id = f"{self.name}_auth_{len(self._authorizations) + 1:06d}"
+        token = self._tokens.get(request.token_reference)
+        forced_outcome = request.metadata.get("test_outcome") if request.metadata else None
+        if forced_outcome == "error":
+            raise RuntimeError("Gateway temporary failure")
+        if token and token.metadata.get("card_state") == "invalid":
+            return AuthorizationResult(
+                authorization_id=authorization_id,
+                amount=request.amount,
+                currency=request.currency,
+                status="declined",
+                capture_pending=False,
+                gateway_reference=request.token_reference,
+                metadata={"reason": "invalid_card"},
+            )
+        if forced_outcome == "declined":
+            return AuthorizationResult(
+                authorization_id=authorization_id,
+                amount=request.amount,
+                currency=request.currency,
+                status="declined",
+                capture_pending=False,
+                gateway_reference=request.token_reference,
+                metadata=dict(request.metadata),
+            )
         result = AuthorizationResult(
             authorization_id=authorization_id,
             amount=request.amount,
@@ -76,17 +109,51 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
         state = self._authorizations[authorization_id]
         capture_amount = amount or state.result.amount
         capture_id = f"{self.name}_cap_{len(self._captures) + 1:06d}"
+        status = "captured"
+        if capture_amount < state.result.amount:
+            status = "partially_captured"
         result = CaptureResult(
             capture_id=capture_id,
             authorization_id=authorization_id,
             amount=capture_amount,
             currency=state.result.currency,
-            status="captured",
+            status=status,
             metadata=dict(metadata or {}),
         )
         state.captured_amount += capture_amount
-        state.capture_status = "captured"
+        state.capture_status = status
         self._captures[capture_id] = result
+        return result
+
+    def refund(
+        self,
+        capture_id: str,
+        *,
+        amount: Decimal | None = None,
+        metadata: Mapping[str, str] | None = None,
+    ) -> RefundResult:
+        capture = self._captures[capture_id]
+        state = self._authorizations[capture.authorization_id]
+        refund_amount = amount or capture.amount
+        if refund_amount > capture.amount:
+            raise ValueError("Cannot refund more than captured amount")
+        refund_id = f"{self.name}_ref_{len(self._refunds) + 1:06d}"
+        total_refunded = state.refunded_amount + refund_amount
+        if total_refunded > state.captured_amount:
+            raise ValueError("Refund exceeds captured amount")
+        status = "refunded" if total_refunded == state.captured_amount else "partially_refunded"
+        result = RefundResult(
+            refund_id=refund_id,
+            capture_id=capture_id,
+            authorization_id=capture.authorization_id,
+            amount=refund_amount,
+            currency=capture.currency,
+            status=status,
+            metadata=dict(metadata or {}),
+        )
+        state.refunded_amount = total_refunded
+        state.capture_status = status
+        self._refunds[refund_id] = result
         return result
 
     def fetch_reconciliation(self, settlement_date: date) -> Iterable[ReconciliationRecord]:
@@ -128,7 +195,11 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
     def get_capture(self, capture_id: str) -> CaptureResult:
         return self._captures[capture_id]
 
+    def get_refund(self, refund_id: str) -> RefundResult:
+        return self._refunds[refund_id]
+
     def reset(self) -> None:
         self._tokens.clear()
         self._authorizations.clear()
         self._captures.clear()
+        self._refunds.clear()

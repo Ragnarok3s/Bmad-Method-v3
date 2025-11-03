@@ -60,6 +60,65 @@ def test_authorization_and_capture_flow(service: PaymentGatewayService) -> None:
     assert summary.gateway == "stripe"
 
 
+def test_refund_flow(service: PaymentGatewayService) -> None:
+    card = CardData(pan="4111111111111111", expiry_month=3, expiry_year=2032, cvv="555")
+    stored = service.tokenize(card, gateway="stripe")
+
+    authorization = service.preauthorize(
+        stored.token_reference,
+        gateway="stripe",
+        amount=Decimal("100.00"),
+        currency="BRL",
+        capture=True,
+    )
+    capture = service.capture(authorization.authorization_id, gateway="stripe")
+
+    partial_refund = service.refund(
+        capture.capture_id,
+        gateway="stripe",
+        amount=Decimal("30.00"),
+    )
+    assert partial_refund.status == "partially_refunded"
+    assert partial_refund.amount == Decimal("30.00")
+
+    final_refund = service.refund(
+        capture.capture_id,
+        gateway="stripe",
+        amount=Decimal("70.00"),
+    )
+    assert final_refund.status == "refunded"
+    assert final_refund.amount == Decimal("70.00")
+
+
+def test_authorization_decline_for_invalid_card(service: PaymentGatewayService) -> None:
+    card = CardData(pan="4000000000000002", expiry_month=9, expiry_year=2031, cvv="123")
+    stored = service.tokenize(card, gateway="stripe")
+
+    result = service.preauthorize(
+        stored.token_reference,
+        gateway="stripe",
+        amount=Decimal("75.00"),
+        currency="BRL",
+    )
+
+    assert result.status == "declined"
+    assert result.metadata.get("reason") == "invalid_card"
+
+
+def test_authorization_gateway_error(service: PaymentGatewayService) -> None:
+    card = CardData(pan="4111111111111111", expiry_month=4, expiry_year=2033, cvv="111")
+    stored = service.tokenize(card, gateway="stripe")
+
+    with pytest.raises(RuntimeError):
+        service.preauthorize(
+            stored.token_reference,
+            gateway="stripe",
+            amount=Decimal("80.00"),
+            currency="BRL",
+            metadata={"test_outcome": "error"},
+        )
+
+
 def test_webhook_dispatch_validates_signature(service: PaymentGatewayService) -> None:
     captured_events: list[str] = []
 

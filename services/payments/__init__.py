@@ -7,6 +7,7 @@ from .models import (
     CaptureResult,
     ReconciliationRecord,
     ReconciliationSummary,
+    RefundResult,
     TokenizedCard,
 )
 from .storage import SecureTokenVault, StoredToken
@@ -23,6 +24,7 @@ __all__ = [
     "PaymentGatewayService",
     "ReconciliationRecord",
     "ReconciliationSummary",
+    "RefundResult",
     "SecureTokenVault",
     "StoredToken",
     "TokenizedCard",

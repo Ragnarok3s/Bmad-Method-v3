@@ -12,6 +12,7 @@ from .models import (
     CardData,
     CaptureResult,
     ReconciliationSummary,
+    RefundResult,
 )
 from .storage import SecureTokenVault, StoredToken
 from .webhooks import WebhookRegistry
@@ -85,6 +86,17 @@ class PaymentGatewayService:
     ) -> CaptureResult:
         driver = self._drivers.get(gateway)
         return driver.capture(authorization_id, amount=amount, metadata=metadata)
+
+    def refund(
+        self,
+        capture_id: str,
+        *,
+        gateway: str,
+        amount: Decimal | None = None,
+        metadata: Mapping[str, str] | None = None,
+    ) -> RefundResult:
+        driver = self._drivers.get(gateway)
+        return driver.refund(capture_id, amount=amount, metadata=metadata)
 
     def reconcile(self, *, gateway: str, settlement_date: date) -> ReconciliationSummary:
         driver = self._drivers.get(gateway)
