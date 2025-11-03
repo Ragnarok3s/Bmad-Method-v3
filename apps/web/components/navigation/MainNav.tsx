@@ -194,6 +194,8 @@ export function MainNav() {
           gap: var(--space-5);
           position: sticky;
           top: var(--space-4);
+          /* Keep navigation accessible when guided tour overlays are visible */
+          z-index: 2050;
         }
         .main-nav__section {
           display: grid;
@@ -285,7 +287,7 @@ export function MainNav() {
           border-right: 6px solid #0f172a;
         }
         .main-nav__item:hover .main-nav__tooltip,
-        .main-nav__item:focus-within .main-nav__tooltip {
+        a:focus-visible + .main-nav__tooltip {
           opacity: 1;
           transform: translateY(-50%) translateX(4px);
         }
