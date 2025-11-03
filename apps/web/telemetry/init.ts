@@ -1,6 +1,7 @@
 import { diag, DiagConsoleLogger, DiagLogLevel, trace } from '@opentelemetry/api';
 import { logs } from '@opentelemetry/api-logs';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import type { Resource } from '@opentelemetry/resources';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs';
@@ -53,8 +54,8 @@ function parseHeaders(raw?: string) {
   }, {} as Record<string, string>);
 }
 
-function createResource() {
-  return new Resource({
+function createResource(): Resource {
+  return resourceFromAttributes({
     'service.name': process.env.NEXT_PUBLIC_OTEL_SERVICE_NAME ?? 'bmad-web-app',
     'service.namespace': process.env.NEXT_PUBLIC_OTEL_SERVICE_NAMESPACE ?? 'bmad.platform',
     'deployment.environment': process.env.NEXT_PUBLIC_ENVIRONMENT ?? 'local',
