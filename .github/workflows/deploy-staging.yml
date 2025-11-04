@@ -113,3 +113,29 @@ jobs:
       - name: Garantir falha se rollout não estabilizar
         if: steps.rollout.outcome == 'failure'
         run: exit 1
+
+  performance-tests:
+    name: k6 Critical Scenarios
+    needs: validate-rollout
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare performance report directory
+        run: mkdir -p quality/reports/performance/k6
+
+      - name: Run k6 staging checks
+        uses: grafana/k6-action@v0.2.0
+        with:
+          filename: quality/performance/k6/critical-scenarios.js
+          flags: --summary-export quality/performance/k6/critical-scenarios-summary.json
+
+      - name: Upload k6 summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-critical-scenarios
+          path: quality/performance/k6
