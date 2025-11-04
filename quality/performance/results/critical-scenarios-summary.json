@@ -1,0 +1,243 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {},
+                "name": "setup",
+                "path": "::setup"
+            },
+            "teardown": {
+                "checks": {},
+                "name": "teardown",
+                "path": "::teardown",
+                "id": "a8a9942382e8ffe2e56ef29e664b8229",
+                "groups": {}
+            }
+        },
+        "checks": {
+            "catalogue responde 200": {
+                "passes": 1,
+                "fails": 0,
+                "name": "catalogue responde 200",
+                "path": "::catalogue responde 200",
+                "id": "bfb8620abbe43e049d7fe6180048f703"
+            },
+            "kb catalogue responde 200": {
+                "name": "kb catalogue responde 200",
+                "path": "::kb catalogue responde 200",
+                "id": "5e88876ca677ab25abbd3c569bae8831",
+                "passes": 40,
+                "fails": 0
+            },
+            "kb catalogue possui artigos": {
+                "passes": 40,
+                "fails": 0,
+                "name": "kb catalogue possui artigos",
+                "path": "::kb catalogue possui artigos",
+                "id": "1f8a49e7e7839957c2f3a09562f941e0"
+            },
+            "catalogue retorna lista": {
+                "id": "0d313f0628b027ed281ac083cdf91ffb",
+                "passes": 1,
+                "fails": 0,
+                "name": "catalogue retorna lista",
+                "path": "::catalogue retorna lista"
+            },
+            "kb article responde 200": {
+                "name": "kb article responde 200",
+                "path": "::kb article responde 200",
+                "id": "44b55ebd79e2f1115ab4acc0d1054150",
+                "passes": 40,
+                "fails": 0
+            },
+            "kb article possui conteúdo": {
+                "name": "kb article possui conteúdo",
+                "path": "::kb article possui conteúdo",
+                "id": "329c67b7eb5d47e151ebfb71fb43d307",
+                "passes": 40,
+                "fails": 0
+            },
+            "kb telemetry aceita evento": {
+                "id": "f7438f8a18fc0a8ad03710b2a6c55aa3",
+                "passes": 40,
+                "fails": 0,
+                "name": "kb telemetry aceita evento",
+                "path": "::kb telemetry aceita evento"
+            },
+            "contract responde 200": {
+                "path": "::contract responde 200",
+                "id": "6605458cad2a7c122e2f29f457766ce6",
+                "passes": 2,
+                "fails": 0,
+                "name": "contract responde 200"
+            },
+            "contract possui versão": {
+                "fails": 0,
+                "name": "contract possui versão",
+                "path": "::contract possui versão",
+                "id": "61774f080fe3602cffd1dfa27735e4b6",
+                "passes": 2
+            },
+            "install aceita sandbox": {
+                "name": "install aceita sandbox",
+                "path": "::install aceita sandbox",
+                "id": "f46d0e4633a1337f11918324621fe10f",
+                "passes": 2,
+                "fails": 0
+            }
+        }
+    },
+    "metrics": {
+        "http_req_receiving": {
+            "avg": 0.12201623199999997,
+            "p(90)": 0.18548120000000004,
+            "p(95)": 0.23787719999999998,
+            "p(99)": 0.39685064000000037
+        },
+        "checks": {
+            "passes": 208,
+            "fails": 0,
+            "value": 1
+        },
+        "iteration_duration": {
+            "avg": 514.6926715111111,
+            "p(90)": 505.016577,
+            "p(95)": 905.0673433999987,
+            "p(99)": 1003.5346248000001
+        },
+        "http_req_sending": {
+            "p(99)": 0.28903800000000024,
+            "avg": 0.07106786400000004,
+            "p(90)": 0.10911900000000001,
+            "p(95)": 0.12406599999999998
+        },
+        "data_received": {
+            "count": 26755,
+            "rate": 1327.3213149395756
+        },
+        "http_reqs": {
+            "count": 125,
+            "rate": 6.201276933935599
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 0.6620471279999998,
+            "p(90)": 0.8161856000000001,
+            "p(95)": 0.9995217999999998,
+            "p(99)": 1.9311159600000003
+        },
+        "checks{scenario:partner_contract}": {
+            "passes": 6,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.95": false
+            },
+            "value": 1
+        },
+        "http_req_duration": {
+            "avg": 0.6620471279999998,
+            "p(90)": 0.8161856000000001,
+            "p(95)": 0.9995217999999998,
+            "p(99)": 1.9311159600000003,
+            "thresholds": {
+                "p(95)<800": false,
+                "avg<500": false
+            }
+        },
+        "vus_max": {
+            "value": 3,
+            "min": 3,
+            "max": 3
+        },
+        "http_req_blocked": {
+            "avg": 0.24999761600000003,
+            "p(90)": 0.42086780000000007,
+            "p(95)": 0.4664812,
+            "p(99)": 0.6406325200000008
+        },
+        "iterations": {
+            "count": 43,
+            "rate": 2.133239265273846
+        },
+        "knowledge_base_telemetry_failures": {
+            "passes": 0,
+            "fails": 40,
+            "thresholds": {
+                "rate<0.05": false
+            },
+            "value": 0
+        },
+        "checks{scenario:marketplace_browse}": {
+            "passes": 2,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.95": false
+            },
+            "value": 1
+        },
+        "http_req_tls_handshaking": {
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "avg": 0
+        },
+        "checks{scenario:knowledge_base_engagement}": {
+            "passes": 200,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.95": false
+            },
+            "value": 1
+        },
+        "data_sent": {
+            "count": 20209,
+            "rate": 1002.5728444632362
+        },
+        "marketplace_install_latency": {
+            "p(90)": 0.617752,
+            "p(95)": 0.6278904999999999,
+            "p(99)": 0.6360013,
+            "avg": 0.536644,
+            "thresholds": {
+                "p(95)<900": false
+            }
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 2
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 125,
+            "thresholds": {
+                "rate<0.02": false
+            },
+            "value": 0
+        },
+        "http_req_connecting": {
+            "avg": 0.16740905599999997,
+            "p(90)": 0.27660080000000004,
+            "p(95)": 0.3429892,
+            "p(99)": 0.49533504000000045
+        },
+        "http_req_waiting": {
+            "avg": 0.468963032,
+            "p(90)": 0.5372578000000002,
+            "p(95)": 0.6685299999999998,
+            "p(99)": 1.5232276800000029
+        }
+    },
+    "setup_data": {
+        "kbSleep": 0.5,
+        "marketplacePartner": "smart-pricing",
+        "telemetrySurface": "test-run",
+        "workspaceId": "test-workspace",
+        "baseUrl": "http://127.0.0.1:18080",
+        "installActor": "qa-local@bmad.io"
+    }
+}

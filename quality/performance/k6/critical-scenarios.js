@@ -2,13 +2,23 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
-const BASE_URL = __ENV.K6_BASE_URL || 'https://staging.bmad-method.internal';
-const MARKETPLACE_PARTNER = __ENV.K6_PARTNER_ID || 'smart-pricing';
-const WORKSPACE_ID = __ENV.K6_WORKSPACE_ID || 'staging-observability';
-const TELEMETRY_SURFACE = __ENV.K6_KB_SURFACE || 'k6-critical-flows';
-
 const installLatency = new Trend('marketplace_install_latency', true);
 const telemetryFailures = new Rate('knowledge_base_telemetry_failures');
+
+const contractRampDuration = __ENV.K6_CONTRACT_RAMP_DURATION || '2m';
+const contractPlateauDuration = __ENV.K6_CONTRACT_PLATEAU_DURATION || '2m';
+const contractCooldownDuration = __ENV.K6_CONTRACT_COOLDOWN_DURATION || '1m';
+
+function buildConfigFromEnv() {
+  return {
+    baseUrl: __ENV.K6_BASE_URL || 'https://staging.bmad-method.internal',
+    marketplacePartner: __ENV.K6_PARTNER_ID || 'smart-pricing',
+    workspaceId: __ENV.K6_WORKSPACE_ID || 'staging-observability',
+    telemetrySurface: __ENV.K6_KB_SURFACE || 'k6-critical-flows',
+    installActor: __ENV.K6_INSTALL_ACTOR || 'qa@bmad.io',
+    kbSleep: Number(__ENV.K6_KB_SLEEP || 1)
+  };
+}
 
 export const options = {
   thresholds: {
@@ -34,9 +44,9 @@ export const options = {
       startRate: 1,
       timeUnit: '1m',
       stages: [
-        { target: Number(__ENV.K6_CONTRACT_MAX_RATE || 12), duration: '2m' },
-        { target: Number(__ENV.K6_CONTRACT_MAX_RATE || 12), duration: '2m' },
-        { target: 0, duration: '1m' }
+        { target: Number(__ENV.K6_CONTRACT_MAX_RATE || 12), duration: contractRampDuration },
+        { target: Number(__ENV.K6_CONTRACT_MAX_RATE || 12), duration: contractPlateauDuration },
+        { target: 0, duration: contractCooldownDuration }
       ],
       preAllocatedVUs: Number(__ENV.K6_CONTRACT_VUS || 4),
       exec: 'partnerContractFlow'
@@ -50,8 +60,18 @@ export const options = {
   }
 };
 
-export function marketplaceBrowse() {
-  const response = http.get(`${BASE_URL}/marketplace/apps`, {
+export function setup() {
+  const config = buildConfigFromEnv();
+  console.log(`[setup] Executando cenários críticos contra ${config.baseUrl}`);
+  return config;
+}
+
+export function teardown(config) {
+  console.log(`[teardown] Concluído o teste do marketplace para ${config.baseUrl}`);
+}
+
+export function marketplaceBrowse(config) {
+  const response = http.get(`${config.baseUrl}/marketplace/apps`, {
     tags: { name: 'marketplace_catalogue' }
   });
 
@@ -63,27 +83,28 @@ export function marketplaceBrowse() {
   sleep(1);
 }
 
-export function partnerContractFlow() {
-  const contractResponse = http.get(`${BASE_URL}/marketplace/apps/${MARKETPLACE_PARTNER}/contract`, {
+export function partnerContractFlow(config) {
+  const contractResponse = http.get(`${config.baseUrl}/marketplace/apps/${config.marketplacePartner}/contract`, {
     tags: { name: 'partner_contract' }
   });
 
   const contractData = contractResponse.json();
+  const contractHasVersion = Boolean(contractData && contractData.version);
   check(contractResponse, {
     'contract responde 200': (res) => res.status === 200,
-    'contract possui versão': () => Boolean(contractData?.version)
+    'contract possui versão': () => contractHasVersion
   });
 
   const installPayload = {
-    workspaceId: WORKSPACE_ID,
-    scopes: contractData?.scopes || [],
-    grantedBy: __ENV.K6_INSTALL_ACTOR || 'qa@bmad.io',
+    workspaceId: config.workspaceId,
+    scopes: Array.isArray(contractData && contractData.scopes) ? contractData.scopes : [],
+    grantedBy: config.installActor,
     sandboxRequested: true,
     correlationId: `k6-${__VU}-${Date.now()}`
   };
 
   const installResponse = http.post(
-    `${BASE_URL}/marketplace/apps/${MARKETPLACE_PARTNER}/install`,
+    `${config.baseUrl}/marketplace/apps/${config.marketplacePartner}/install`,
     JSON.stringify(installPayload),
     {
       headers: { 'Content-Type': 'application/json' },
@@ -99,13 +120,14 @@ export function partnerContractFlow() {
   sleep(1);
 }
 
-export function knowledgeBaseEngagement() {
-  const catalogueResponse = http.get(`${BASE_URL}/support/knowledge-base/catalog?limit=5`, {
+export function knowledgeBaseEngagement(config) {
+  const catalogueResponse = http.get(`${config.baseUrl}/support/knowledge-base/catalog?limit=5`, {
     tags: { name: 'kb_catalogue' }
   });
 
   const catalogue = catalogueResponse.json();
-  const hasArticles = Array.isArray(catalogue?.articles) && catalogue.articles.length > 0;
+  const articles = catalogue && catalogue.articles;
+  const hasArticles = Array.isArray(articles) && articles.length > 0;
 
   check(catalogueResponse, {
     'kb catalogue responde 200': (res) => res.status === 200,
@@ -118,24 +140,27 @@ export function knowledgeBaseEngagement() {
     return;
   }
 
-  const target = catalogue.articles[Math.floor(Math.random() * catalogue.articles.length)];
-  const articleResponse = http.get(`${BASE_URL}/support/knowledge-base/articles/${target.slug}`, {
+  const target = articles[Math.floor(Math.random() * articles.length)];
+  const articleResponse = http.get(`${config.baseUrl}/support/knowledge-base/articles/${target.slug}`, {
     tags: { name: 'kb_article' }
   });
 
   check(articleResponse, {
     'kb article responde 200': (res) => res.status === 200,
-    'kb article possui conteúdo': (res) => Boolean(res.json()?.content)
+    'kb article possui conteúdo': (res) => {
+      const articleBody = res.json();
+      return Boolean(articleBody && articleBody.content);
+    }
   });
 
   const telemetryPayload = {
     event: 'article_view',
     slug: target.slug,
-    surface: TELEMETRY_SURFACE
+    surface: config.telemetrySurface
   };
 
   const telemetryResponse = http.post(
-    `${BASE_URL}/support/knowledge-base/telemetry`,
+    `${config.baseUrl}/support/knowledge-base/telemetry`,
     JSON.stringify(telemetryPayload),
     {
       headers: { 'Content-Type': 'application/json' },
@@ -150,5 +175,5 @@ export function knowledgeBaseEngagement() {
     'kb telemetry aceita evento': () => accepted
   });
 
-  sleep(Number(__ENV.K6_KB_SLEEP || 1));
+  sleep(config.kbSleep);
 }
