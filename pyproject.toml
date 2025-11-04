@@ -30,6 +30,7 @@ dependencies = [
   "email-validator==2.3.0",
   "python-multipart==0.0.20",
   "pandas==2.3.3",
+  "pactman==2.31.0",
 ]
 
 [tool.setuptools]

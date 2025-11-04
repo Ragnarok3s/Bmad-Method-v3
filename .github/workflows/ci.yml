@@ -93,6 +93,9 @@ jobs:
       - name: Execute Quality Gates
         run: ./scripts/run-quality-gates.sh
 
+      - name: Run Accessibility Audit (axe-core)
+        run: ./scripts/quality/run-axe.sh
+
       - name: Upload Test & QA Artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -102,3 +105,4 @@ jobs:
             artifacts/
             docs/evidencias/
             grafana/
+            quality/reports/a11y/

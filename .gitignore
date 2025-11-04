@@ -10,3 +10,4 @@ dist/
 apps/web/.next/
 apps/web/out/
 **/.next/static/media/*.woff2
+tests/contracts/pacts/*.json
