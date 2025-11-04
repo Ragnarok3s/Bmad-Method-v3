@@ -38,7 +38,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 200 and (A / B) > 0.015
+            expression: B > 200 and (A / B) > 0.01
             type: math
             datasourceUid: __expr__
         labels:
@@ -47,7 +47,40 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Erro 5xx acima de 1.5% com mais de 200 requisições"
+          summary: "Erro 5xx acima de 1% com mais de 200 requisições"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
+        for: 5m
+        noDataState: Alerting
+        execErrState: Alerting
+      - uid: latency-slo-breach
+        title: LatencySloBreach
+        condition: C
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: prometheus-staging
+            model:
+              expr: |
+                histogram_quantile(0.95, sum(rate(http_server_duration_bucket{service_name="bmad-core-service", deployment_environment="staging"}[5m])) by (le))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: A > 0.5
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: sre
+          playbook: latency
+          environment: staging
+          severity: critical
+        annotations:
+          summary: "Latência P95 acima de 500 ms por 5 minutos"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 5m
         noDataState: Alerting

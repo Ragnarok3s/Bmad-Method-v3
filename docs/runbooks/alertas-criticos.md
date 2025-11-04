@@ -8,9 +8,10 @@
 Descrever o fluxo de resposta para os alertas críticos configurados na Sprint 0 e garantir restauração rápida do serviço.
 
 ## Disparadores
-- **PlaybookErrorRate**: taxa de erro 5xx > 1,5% por 5 minutos consecutivos com pelo menos 200 requisições.
+- **PlaybookErrorRate**: taxa de erro 5xx > 1% por 5 minutos consecutivos com pelo menos 200 requisições.
 - **PipelineFailureBurst**: falha em 2 ou mais execuções do pipeline CI/CD em 10 minutos.
 - **EngagementDrop**: queda ≥ 30% na métrica de engajamento em 30 minutos.
+- **LatencySloBreach**: latência HTTP P95 > 500 ms em 5 minutos consecutivos.
 
 ## Responsáveis
 - **Primário**: Inês Duarte (SRE On-call) – PagerDuty `bmad-platform-staging` (rota `staging-critical`).

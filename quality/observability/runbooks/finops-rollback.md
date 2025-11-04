@@ -69,3 +69,9 @@ scripts/finops/rollback_and_tag.py tag \
 - Arquivos em `artifacts/finops/` para cada execução.
 - Registros do Terraform (`terraform.tfstate` e logs) versionados em bucket remoto.
 - Check `FinOps Guardrails` marcado como obrigatório na pipeline.
+
+## Auditoria de 04/11/2025
+
+- Testes `validate`, `tag --dry-run` e `rollback --dry-run` executados com sucesso, gerando artefatos `validation-<timestamp>.json`, `tagging-<timestamp>.json` e `rollback-<timestamp>.json` em `artifacts/finops/`.
+- Ledger atualizado automaticamente com `ticket`, `owner` e `cost_center`, garantindo alinhamento entre tagging FinOps e histórico de incidentes.
+- Logs dos comandos devem ser anexados ao incidente correspondente e compartilhados nos canais de notificação (`#incident`, PagerDuty) quando utilizados em produção.

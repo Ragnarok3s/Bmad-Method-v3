@@ -8,10 +8,11 @@ Descrever a resposta operacional para alertas críticos configurados nos painéi
 
 | Alerta | Métrica | Limite Crítico | Ação Primária |
 | --- | --- | --- | --- |
-| `PlaybookErrorRate` | Taxa de respostas 5xx vs total de requisições | > 1,5% com pelo menos 200 requisições em 5 minutos | Engajar SRE on-call e iniciar checklist de mitigação |
+| `PlaybookErrorRate` | Taxa de respostas 5xx vs total de requisições | > 1% com pelo menos 200 requisições em 5 minutos | Engajar SRE on-call e iniciar checklist de mitigação |
 | `AvailabilityDrop` | Disponibilidade derivada de requisições 2xx-4xx | < 99,5% sustentados por 10 minutos | Avaliar rollback automático e validar impacto de usuários |
 | `PipelineFailureBurst` | Falhas acumuladas de pipelines de deploy em 10 minutos | ≥ 2 falhas | Acionar time DevOps e interromper deploy até estabilidade |
 | `EngagementDrop` | Page views agregados em 30 min vs média da última hora | Queda ≥ 30% | Confirmar origem (incidente, experimento, release) e notificar produto |
+| `LatencySloBreach` | Latência HTTP P95 (histogram_quantile 0.95) | > 500 ms por 5 minutos consecutivos | Investigar regressão de performance e acionar rollback |
 
 ## Procedimento Geral
 
@@ -24,6 +25,7 @@ Descrever a resposta operacional para alertas críticos configurados nos painéi
 ## Indicadores de Recuperação
 
 - Taxa de erro < 1% por ao menos 15 minutos.
+- Latência HTTP P95 < 500 ms em três janelas consecutivas de 5 minutos.
 - Disponibilidade ≥ 99,7% por 2 janelas consecutivas de 10 minutos.
 - Pipelines executando com sucesso por pelo menos uma hora.
 - Engajamento retomando 95% da média anterior à queda.
@@ -38,3 +40,8 @@ Descrever a resposta operacional para alertas críticos configurados nos painéi
 - Screenshot do painel correspondente.
 - Número do incidente PagerDuty.
 - Saída dos comandos de rollback/tagging anexada ao ticket.
+
+## Auditoria de 04/11/2025
+
+- Regras de alerta revisadas para alinhar limites a SLOs de erro (≤1%) e latência P95 (≤500 ms) definidos em `docs/runbooks/alertas-criticos.md`.
+- Execuções de validação (`validate`), `tag` (com `--dry-run`) e `rollback` confirmaram geração de artefatos em `artifacts/finops/` e atualização das tags no ledger FinOps, garantindo rastreabilidade para incidentes futuros.
