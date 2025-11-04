@@ -15,7 +15,19 @@ Restaurar a reconciliação correta entre transações autorizadas, capturadas e
 ## Investigação
 1. **Validar Escopo**
    - Identificar PSP afetado, período (timestamp) e tipo de divergência (faltando captura, liquidação em duplicidade, etc.).
-   - Exportar snapshot com `scripts/reconciliation/export_diff.py --psp <psp> --from <ts> --to <ts>`.
+   - Gerar snapshot diretamente do banco (via `psql`, DataGrip ou ferramenta equivalente) para o PSP/período afetado. Exemplo:
+     ```sql
+     SELECT i.provider_reference,
+            t.transaction_type,
+            t.status,
+            t.amount_minor,
+            t.processed_at
+     FROM payment_transactions t
+     JOIN payment_intents i ON i.id = t.intent_id
+     WHERE i.provider = '<psp>'
+       AND t.created_at BETWEEN <from> AND <to>
+     ORDER BY t.created_at;
+     ```
 2. **Checar Jobs**
    - No Airflow UI, verificar estado das tasks `fetch_psp_statements` e `match_transactions`.
    - Em caso de falha, coletar logs (`airflow tasks logs`).
@@ -28,7 +40,11 @@ Restaurar a reconciliação correta entre transações autorizadas, capturadas e
      ```
    - Verificar tópicos Kafka (`reconciliation.events`) para mensagens com erro.
 4. **Dependências Externas**
-   - Confirmar disponibilidade das APIs PSP via `scripts/reconciliation/healthcheck.py --psp <psp>`.
+   - Confirmar disponibilidade das APIs PSP executando `curl` a partir de um pod do billing gateway:
+     ```
+     kubectl exec -n billing-gateway deploy/billing-gateway -- \
+       curl -sS https://<psp-health-endpoint>/status | jq '.status'
+     ```
 
 ## Ações de Contenção
 - Pausar reconciliação automática para PSP afetado: `/billing-gateway reconciliation pause <psp>` (Slack-bot).
@@ -37,9 +53,20 @@ Restaurar a reconciliação correta entre transações autorizadas, capturadas e
 ## Mitigação
 1. **Reprocessamento**
    - Reexecutar DAG no Airflow com `Trigger DAG` para o intervalo afetado.
-   - Se falha persistir, executar `scripts/reconciliation/replay.py --psp <psp> --from <ts> --to <ts>` para replay manual.
+   - Se falha persistir, acionar reconciliação manual pelo serviço core:
+     ```
+     kubectl exec -n billing-gateway deploy/billing-gateway-worker -- \
+       curl -sS -X POST http://billing-gateway-core:8000/payments/reconciliation \
+         -H "Authorization: Bearer <token>"
+     ```
 2. **Correção de Dados**
-   - Ajustar registros inconsistentes via `scripts/reconciliation/fix_entry.py --transaction-id <id> --status <status>` conforme orientação do financeiro.
+   - Ajustar registros inconsistentes atualizando diretamente o banco (após aprovação do financeiro):
+     ```sql
+     UPDATE payment_transactions
+     SET status = '<status>', processed_at = NOW()
+     WHERE id = <transaction_id>;
+     ```
+   - Registrar a correção no incidente e em `payment_reconciliation_logs.notes` para rastreabilidade.
 3. **Rollback de Deploy**
    - Se reconciliação quebrou após release, realizar rollback do worker:
      ```
