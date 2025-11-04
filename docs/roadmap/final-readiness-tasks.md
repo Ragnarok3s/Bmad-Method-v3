@@ -6,7 +6,7 @@ Conjunto de ações restantes para concluir a preparação comercial antes do go
 - Implementar a validação de `idempotency_key` no gateway de pagamentos e promover as atualizações necessárias no modelo de reconciliação do data warehouse para refletir os campos novos exigidos no relatório final de compliance.
 
 :::task-stub{title="Encerrar BILL-230 e atualizar reconciliação"}
-1. Revisar `services/billing/api/routes.py` e drivers do gateway em `services/billing/` para garantir a propagação e validação do `idempotency_key` em chamadas externas (ticket `BILL-230`).
+1. Revisar `services/billing/api/routes.py` e os drivers/clients do gateway em `services/payments/` (por exemplo `services/payments/drivers.py` e `services/payments/gateways/`) para garantir a propagação e validação do `idempotency_key` em chamadas externas (ticket `BILL-230`).
 2. Atualizar contratos e testes de integração relacionados (`tests/e2e/payments/test_gateway_flows.py`, `tests/integration/test_payments_gateway.py`) cobrindo cenários com chave idempotente repetida.
 3. Ajustar modelos do data warehouse em `analytics/dbt/models/` (criar pasta `payments/` se necessário) incorporando colunas de reconciliação exigidas no relatório e atualizar o arquivo `schema.yml` correspondente (por exemplo em `analytics/dbt/models/silver/schema.yml`).
 4. Atualizar checkboxes pendentes em `docs/compliance/releases/2024-07-15-billing-gateway/final-report.md` com evidências anexadas no mesmo diretório.
