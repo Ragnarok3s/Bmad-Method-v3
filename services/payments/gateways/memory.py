@@ -38,6 +38,7 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
         self._authorizations: dict[str, _AuthorizationState] = {}
         self._captures: dict[str, CaptureResult] = {}
         self._refunds: dict[str, RefundResult] = {}
+        self._capture_refunds: dict[str, Decimal] = {}
 
     def tokenize(self, card: CardData, *, customer_reference: str | None = None) -> TokenizedCard:
         token_value = token_hex(12)
@@ -138,6 +139,9 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
         if refund_amount > capture.amount:
             raise ValueError("Cannot refund more than captured amount")
         refund_id = f"{self.name}_ref_{len(self._refunds) + 1:06d}"
+        capture_refunded = self._capture_refunds.get(capture_id, Decimal("0")) + refund_amount
+        if capture_refunded > capture.amount:
+            raise ValueError("Refund exceeds capture amount for capture")
         total_refunded = state.refunded_amount + refund_amount
         if total_refunded > state.captured_amount:
             raise ValueError("Refund exceeds captured amount")
@@ -154,6 +158,7 @@ class InMemoryGatewayDriver(PaymentGatewayDriver):
         state.refunded_amount = total_refunded
         state.capture_status = status
         self._refunds[refund_id] = result
+        self._capture_refunds[capture_id] = capture_refunded
         return result
 
     def fetch_reconciliation(self, settlement_date: date) -> Iterable[ReconciliationRecord]:
