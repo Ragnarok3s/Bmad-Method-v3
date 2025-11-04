@@ -1,57 +1,68 @@
 'use client';
 
-import { PropsWithChildren } from 'react';
+import { type CSSProperties, PropsWithChildren } from 'react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Dot,
+  Info,
+  OctagonAlert,
+  type LucideIcon
+} from 'lucide-react';
 
-type Variant = 'success' | 'warning' | 'critical' | 'info' | 'neutral';
+import { getStatusToken, type StatusVariant } from '@/src/theme/statusTokens';
 
-const variantStyles: Record<Variant, { background: string; color: string; icon: string; border: string }> = {
-  success: {
-    background: 'rgba(16, 185, 129, 0.14)',
-    color: '#047857',
-    icon: '●',
-    border: 'rgba(16, 185, 129, 0.28)'
-  },
-  warning: {
-    background: 'rgba(245, 158, 11, 0.16)',
-    color: '#92400e',
-    icon: '●',
-    border: 'rgba(245, 158, 11, 0.32)'
-  },
-  critical: {
-    background: 'rgba(239, 68, 68, 0.16)',
-    color: '#b91c1c',
-    icon: '●',
-    border: 'rgba(239, 68, 68, 0.32)'
-  },
-  info: {
-    background: 'rgba(37, 99, 235, 0.16)',
-    color: '#1d4ed8',
-    icon: '●',
-    border: 'rgba(37, 99, 235, 0.32)'
-  },
-  neutral: {
-    background: 'rgba(100, 116, 139, 0.14)',
-    color: '#475569',
-    icon: '●',
-    border: 'rgba(100, 116, 139, 0.24)'
-  }
+const variantIcons: Record<StatusVariant, LucideIcon> = {
+  success: CheckCircle2,
+  warning: AlertTriangle,
+  critical: OctagonAlert,
+  info: Info,
+  neutral: Dot
 };
 
 interface StatusBadgeProps extends PropsWithChildren {
-  variant?: Variant;
+  variant?: StatusVariant;
   tooltip?: string;
+  icon?: LucideIcon;
+  ariaLabel?: string;
+  focusable?: boolean;
 }
 
-export function StatusBadge({ children, variant = 'neutral', tooltip }: StatusBadgeProps) {
-  const { background, color, icon, border } = variantStyles[variant];
+export function StatusBadge({
+  children,
+  variant = 'neutral',
+  tooltip,
+  icon,
+  ariaLabel,
+  focusable = false
+}: StatusBadgeProps) {
+  const token = getStatusToken(variant);
+  const IconComponent = icon ?? variantIcons[variant];
+  const customProperties = {
+    '--status-badge-surface': token.surface,
+    '--status-badge-text': token.text,
+    '--status-badge-border': token.border,
+    '--status-badge-icon': token.icon
+  } as CSSProperties;
+
   return (
-    <span className="status-badge" data-variant={variant} title={tooltip ?? undefined}>
-      <span aria-hidden="true" className="status-badge__icon">
-        {icon}
-      </span>
-      <span className="status-badge__text">{children}</span>
+    <span
+      className="status-badge"
+      data-variant={variant}
+      title={tooltip ?? undefined}
+      role="status"
+      aria-label={ariaLabel ?? undefined}
+      tabIndex={focusable ? 0 : undefined}
+      style={customProperties}
+    >
+      <IconComponent aria-hidden="true" className="status-badge__icon" size={14} strokeWidth={2} />
+      <span className="status-badge__text">{children ?? token.label}</span>
       <style jsx>{`
         .status-badge {
+          --status-badge-surface: var(--status-neutral-surface);
+          --status-badge-text: var(--status-neutral-text);
+          --status-badge-border: var(--status-neutral-border);
+          --status-badge-icon: var(--status-neutral-icon);
           display: inline-flex;
           align-items: center;
           justify-content: flex-start;
@@ -61,13 +72,20 @@ export function StatusBadge({ children, variant = 'neutral', tooltip }: StatusBa
           border-radius: var(--radius-xs);
           font-size: 0.8125rem;
           font-weight: 600;
-          background: ${background};
-          color: ${color};
-          border: 1px solid ${border};
+          background: var(--status-badge-surface);
+          color: var(--status-badge-text);
+          border: 1px solid var(--status-badge-border);
+          transition: outline 0.2s ease;
+        }
+        .status-badge:focus-visible {
+          outline: 2px solid var(--status-badge-border);
+          outline-offset: 2px;
         }
         .status-badge__icon {
-          font-size: 0.625rem;
-          line-height: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--status-badge-icon);
         }
         .status-badge__text {
           line-height: 1.2;
