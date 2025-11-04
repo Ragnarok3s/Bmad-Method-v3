@@ -15,13 +15,14 @@ Padronizar o uso da automação de rollback e tagging de custos para incidentes 
 1. Terraform inicializado com `terraform init` em `platform/iac/terraform`.
 2. Workspace correspondente (`staging`, `qa`, `production`) selecionado.
 3. Releases registradas no arquivo `releases/ledger.json` (ver seção "Registro de Releases").
+4. Aprovações de compliance arquivadas em `docs/compliance/approvals/`.
 
 ## Fluxo de Rollback Automatizado
 
 ```bash
 scripts/finops/rollback_and_tag.py rollback \
-  --environment staging \
-  --release 2024.07.10-rc1 \
+  --environment production \
+  --release 2024.07.15 \
   --terraform-dir platform/iac/terraform \
   --dry-run
 ```
@@ -35,8 +36,8 @@ scripts/finops/rollback_and_tag.py rollback \
 
 ```bash
 scripts/finops/rollback_and_tag.py tag \
-  --environment staging \
-  --release 2024.07.10-rc1 \
+  --environment production \
+  --release 2024.07.15 \
   --owner squad-platform \
   --cost-center PLT01 \
   --ticket INCIDENT-123
@@ -51,11 +52,11 @@ scripts/finops/rollback_and_tag.py tag \
 - Os releases ativos devem ser registrados via:
   ```bash
   scripts/finops/rollback_and_tag.py record-release \
-    --release 2024.07.10-rc1 \
-    --environment staging \
-    --artifact sha256:abcd...
+    --release 2024.07.15 \
+    --environment production \
+    --artifact sha256:billing-gateway-2024-07-15
   ```
-- O comando cria/atualiza `releases/ledger.json`.
+- O comando cria/atualiza `releases/ledger.json` e associa arquivos de aprovação.
 
 ## Checks na Pipeline
 
@@ -63,6 +64,7 @@ scripts/finops/rollback_and_tag.py tag \
   - Ledger existe e tem release ativo para o deploy.
   - Todos os recursos Terraform possuem tags `cost_center`, `owner`, `environment`.
   - Rollback automatizado está configurado.
+  - Aprovações obrigatórias estão presentes no caminho `docs/compliance/approvals/`.
 
 ## Evidências
 

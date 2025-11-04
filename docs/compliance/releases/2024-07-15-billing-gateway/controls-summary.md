@@ -7,3 +7,5 @@
 | Logs mascarados | Serialização em `TokenizedCardResponse` impede retorno de PAN. | ✅ Implementado |
 | Limite de estorno | `InMemoryGatewayDriver.refund` bloqueia valores acima do capturado. | ✅ Implementado |
 | Testes E2E recorrentes | Workflow `payments.yml` executa smoke tests e publica artefatos. | ✅ Implementado |
+| Monitoramento de idempotência | Alerta `BillingGatewayIdempotency` em `grafana/alerts/production-billing.yaml`. | ✅ Configurado |
+| Checklist PCI assinado | [`checklist-signoff.md`](./checklist-signoff.md). | ✅ Arquivado |
