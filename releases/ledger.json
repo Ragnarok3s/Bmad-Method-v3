@@ -10,6 +10,21 @@
           "owner": "squad-platform"
         }
       }
+    },
+    "production": {
+      "2024.07.15": {
+        "artifact": "sha256:billing-gateway-2024-07-15",
+        "active": false,
+        "created_at": "2024-07-15T12:30:00",
+        "tags": {
+          "cost_center": "PLT01",
+          "owner": "squad-platform",
+          "service": "billing-gateway"
+        },
+        "approvals": [
+          "docs/compliance/approvals/2024-07-15-billing-gateway.md"
+        ]
+      }
     }
   }
 }
