@@ -1,12 +1,16 @@
-# Runbook – Alertas Críticos (PlaybookErrorRate, PipelineFailureBurst, EngagementDrop)
+# Runbook – Alertas Críticos (legacy)
+
+> [!IMPORTANT]
+> Este runbook foi migrado para `quality/observability/runbooks/critical-alerts.md`. As instruções abaixo permanecem por
+> compatibilidade histórica, mas os limites e procedimentos oficiais estão descritos na nova versão.
 
 ## Objetivo
 Descrever o fluxo de resposta para os alertas críticos configurados na Sprint 0 e garantir restauração rápida do serviço.
 
 ## Disparadores
-- **PlaybookErrorRate**: taxa de erro 5xx > 2% por 5 minutos consecutivos.
-- **PipelineFailureBurst**: falha em mais de 3 execuções consecutivas do pipeline CI/CD.
-- **EngagementDrop**: queda > 20% na métrica de engajamento diário dos usuários.
+- **PlaybookErrorRate**: taxa de erro 5xx > 1,5% por 5 minutos consecutivos com pelo menos 200 requisições.
+- **PipelineFailureBurst**: falha em 2 ou mais execuções do pipeline CI/CD em 10 minutos.
+- **EngagementDrop**: queda ≥ 30% na métrica de engajamento em 30 minutos.
 
 ## Responsáveis
 - **Primário**: Inês Duarte (SRE On-call) – PagerDuty `bmad-platform-staging` (rota `staging-critical`).

@@ -1,0 +1,15 @@
+{
+  "releases": {
+    "staging": {
+      "2024.07.10-rc1": {
+        "artifact": "sha256:placeholder",
+        "active": true,
+        "created_at": "2024-07-10T00:00:00",
+        "tags": {
+          "cost_center": "PLT01",
+          "owner": "squad-platform"
+        }
+      }
+    }
+  }
+}
