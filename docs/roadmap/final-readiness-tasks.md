@@ -18,7 +18,7 @@ Conjunto de ações restantes para concluir a preparação comercial antes do go
 :::task-stub{title="Formalizar retenção automatizada e thresholds de observabilidade"}
 1. Consolidar evidências de retenção em `docs/evidencias/compliance/privacy-readiness.yaml` e submeter a revisão jurídica, anexando parecer em `docs/compliance/releases/2024-07-15-billing-gateway/`.
 2. Revisar dashboards e alertas em `grafana/dashboards/` e `grafana/alerts/` ajustando thresholds conforme baseline acordado; registrar alterações em `quality/observability/runbooks/critical-alerts.md`.
-3. Executar `scripts/finops/rollback_and_tag.py` (`--validate` e `--apply`) garantindo logs e relatórios em `analytics/finops/reports/2025-11.md`.
+3. Executar `scripts/finops/rollback_and_tag.py validate --environment <alvo>` seguido de `scripts/finops/rollback_and_tag.py rollback --environment <alvo> --dry-run` (removendo `--dry-run` quando for hora de aplicar) garantindo logs e relatórios em `analytics/finops/reports/2025-11.md`.
 4. Atualizar a matriz de riscos em `docs/roadmap-riscos.md` marcando os itens como mitigados e registrar o encerramento das ações A2/A4 em `docs/roadmap/readiness-meetings.md`.
 :::
 
@@ -36,7 +36,7 @@ Conjunto de ações restantes para concluir a preparação comercial antes do go
 - Garantir que a automação de rollback/tagging e a retenção de métricas >30 dias estejam operacionais após os ajustes recentes.
 
 :::task-stub{title="Validar automações de observabilidade e FinOps"}
-1. Executar cenários de rollback simulados usando `scripts/finops/rollback_and_tag.py simulate --environment staging` e registrar resultados em `quality/observability/runbooks/finops-rollback.md`.
+1. Executar cenários de rollback simulados usando `scripts/finops/rollback_and_tag.py rollback --environment staging --dry-run` (e, se necessário, a variante sem `--dry-run` para aplicar) registrando resultados em `quality/observability/runbooks/finops-rollback.md`.
 2. Verificar políticas de retenção em `grafana/analytics/` e `grafana/staging/` assegurando que métricas críticas possuam retenção configurada conforme as recomendações A4.
 3. Atualizar `docs/roadmap-riscos.md` e `analytics/finops/reports/2025-11.md` com o status pós-validação, destacando custos estimados do novo ciclo de retenção.
 4. Notificar conclusão em `releases/2024-07-15-billing-gateway/go-no-go.md` adicionando adendo de monitoramento e anexar quaisquer scripts ou dashboards ajustados a `quality/observability/runbooks/`.
