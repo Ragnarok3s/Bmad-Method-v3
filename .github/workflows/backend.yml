@@ -1,0 +1,53 @@
+name: Backend Identity Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/identity/**'
+      - 'tests/services/identity/**'
+      - 'docs/security/**'
+      - '.github/workflows/backend.yml'
+      - 'pyproject.toml'
+      - 'requirements.txt'
+  push:
+    branches: [main]
+    paths:
+      - 'services/identity/**'
+      - 'tests/services/identity/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  identity-suite:
+    name: Run Identity Service Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Run pytest suite
+        run: |
+          mkdir -p reports
+          pytest tests/services/identity \
+            --junitxml=reports/identity-tests.xml \
+            --cov=services.identity \
+            --cov-report=xml:reports/identity-coverage.xml \
+            --cov-report=term-missing
+
+      - name: Upload identity test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: identity-test-reports
+          path: reports/
