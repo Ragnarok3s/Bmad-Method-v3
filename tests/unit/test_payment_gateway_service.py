@@ -90,6 +90,41 @@ def test_refund_flow(service: PaymentGatewayService) -> None:
     assert final_refund.amount == Decimal("70.00")
 
 
+def test_refund_rejects_repeat_capture_exceeding_amount(service: PaymentGatewayService) -> None:
+    card = CardData(pan="4111111111111111", expiry_month=6, expiry_year=2030, cvv="999")
+    stored = service.tokenize(card, gateway="stripe")
+
+    authorization = service.preauthorize(
+        stored.token_reference,
+        gateway="stripe",
+        amount=Decimal("50.00"),
+        currency="BRL",
+        capture=True,
+    )
+    capture = service.capture(authorization.authorization_id, gateway="stripe")
+
+    first_refund = service.refund(
+        capture.capture_id,
+        gateway="stripe",
+        amount=Decimal("20.00"),
+    )
+    assert first_refund.status == "partially_refunded"
+
+    second_refund = service.refund(
+        capture.capture_id,
+        gateway="stripe",
+        amount=Decimal("30.00"),
+    )
+    assert second_refund.status == "refunded"
+
+    with pytest.raises(ValueError):
+        service.refund(
+            capture.capture_id,
+            gateway="stripe",
+            amount=Decimal("5.00"),
+        )
+
+
 def test_authorization_decline_for_invalid_card(service: PaymentGatewayService) -> None:
     card = CardData(pan="4000000000000002", expiry_month=9, expiry_year=2031, cvv="123")
     stored = service.tokenize(card, gateway="stripe")
