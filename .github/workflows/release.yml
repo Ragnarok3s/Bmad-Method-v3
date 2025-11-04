@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_ref:
+        description: "Reference or tag to start the changelog range"
+        required: false
+        type: string
+      to_ref:
+        description: "Reference or tag to end the changelog range"
+        required: false
+        type: string
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  changelog:
+    name: Generate changelog and validate evidence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies (optional)
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Generate changelog
+        env:
+          DISPATCH_FROM: ${{ github.event.inputs.from_ref || '' }}
+          DISPATCH_TO: ${{ github.event.inputs.to_ref || '' }}
+        run: |
+          set -eo pipefail
+          TO_REF="${DISPATCH_TO:-$GITHUB_SHA}"
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && [ -z "${DISPATCH_TO}" ]; then
+            TO_REF="$GITHUB_REF_NAME"
+          fi
+          mkdir -p release-notes
+          args=(--to-ref "$TO_REF" --output release-notes/CHANGELOG.md)
+          if [ -n "${DISPATCH_FROM}" ]; then
+            args+=(--from-ref "${DISPATCH_FROM}")
+          else
+            args+=(--auto-range)
+          fi
+          python scripts/changelog/generate.py "${args[@]}"
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-changelog
+          path: release-notes/CHANGELOG.md
+
+      - name: Validate compliance evidence manifests
+        run: |
+          python scripts/compliance/verify_evidence.py || {
+            echo "::warning::Compliance evidence validation failed";
+            exit 1;
+          }
