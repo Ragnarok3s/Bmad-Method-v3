@@ -1,5 +1,6 @@
 locals {
-  evidence_file = "${path.module}/../../../../artifacts/finops/state-${var.environment}.json"
+  evidence_dir  = "${path.module}/../../../../artifacts/finops"
+  evidence_file = "${local.evidence_dir}/state-${var.environment}.json"
 }
 
 resource "null_resource" "finops_guardrail" {
@@ -13,7 +14,7 @@ resource "null_resource" "finops_guardrail" {
 
   provisioner "local-exec" {
     when    = create
-    command = "echo '{\"status\":\"${var.finops_mode}\",\"environment\":\"${var.environment}\",\"release\":\"${var.release}\"}' > ${local.evidence_file}"
+    command = "mkdir -p ${local.evidence_dir} && echo '{\"status\":\"${var.finops_mode}\",\"environment\":\"${var.environment}\",\"release\":\"${var.release}\"}' > ${local.evidence_file}"
   }
 }
 
