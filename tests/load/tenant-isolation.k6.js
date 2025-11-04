@@ -2,10 +2,18 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend } from 'k6/metrics';
 
-const BASE_URL = __ENV.CORE_API_BASE_URL || 'http://localhost:8000';
-const PLATFORM_TOKEN = __ENV.CORE_PLATFORM_TOKEN || 'platform-secret';
-
 const responseTrend = new Trend('tenant_kpi_duration');
+
+function buildConfigFromEnv() {
+  return {
+    baseUrl: __ENV.CORE_API_BASE_URL || 'http://localhost:8000',
+    platformToken: __ENV.CORE_PLATFORM_TOKEN || 'platform-secret',
+    tenants: [
+      { slug: 'pilot', headers: { 'X-Tenant-Slug': 'pilot' } },
+      { slug: 'beta', headers: { 'X-Tenant-Slug': 'beta' } }
+    ]
+  };
+}
 
 export const options = {
   scenarios: {
@@ -35,14 +43,20 @@ export const options = {
   }
 };
 
-const TENANTS = [
-  { slug: 'pilot', headers: { 'X-Tenant-Slug': 'pilot' } },
-  { slug: 'beta', headers: { 'X-Tenant-Slug': 'beta' } }
-];
+export function setup() {
+  const config = buildConfigFromEnv();
+  console.log(`[setup] Validando isolamento de tenant contra ${config.baseUrl}`);
+  return config;
+}
 
-export default function () {
-  const tenant = TENANTS[__ITER % TENANTS.length];
-  const res = http.get(`${BASE_URL}/reports/kpis`, { headers: tenant.headers });
+export function teardown(config) {
+  console.log(`[teardown] Execução concluída para ${config.baseUrl}`);
+}
+
+export default function (config) {
+  const tenants = config.tenants;
+  const tenant = tenants[__ITER % tenants.length];
+  const res = http.get(`${config.baseUrl}/reports/kpis`, { headers: tenant.headers });
   responseTrend.add(res.timings.duration, { tenant: tenant.slug });
   check(res, {
     'status 200': (r) => r.status === 200,
@@ -51,11 +65,11 @@ export default function () {
   sleep(0.5);
 }
 
-export function platformScenario() {
-  const res = http.get(`${BASE_URL}/tenants/reports/kpis`, {
+export function platformScenario(config) {
+  const res = http.get(`${config.baseUrl}/tenants/reports/kpis`, {
     headers: {
       'X-Tenant-Scope': 'platform',
-      'X-Tenant-Platform-Token': PLATFORM_TOKEN
+      'X-Tenant-Platform-Token': config.platformToken
     }
   });
   check(res, {
