@@ -43,3 +43,9 @@ Este documento descreve o fluxo validado para preparar o ambiente local de desen
 - Valide os datasets com `./scripts/infra/seed-dev-data.sh --mode validate` sempre que atualizar arquivos em `tests/data/seed/`.
 - Aplique o seed com `./scripts/infra/seed-dev-data.sh --mode apply` após o provisionamento; as métricas ficarão em `artifacts/seed/dev_seed.prom` para posterior upload no CI/CD.
 - Consulte o runbook `docs/runbooks/seed-data-jobs.md` para troubleshooting, owners e integrações com Grafana/PagerDuty.
+
+## Testes de Integração e Quality Gates
+
+- Execute os testes de integração diretamente com `pytest -m integration` quando precisar isolar cenários específicos. Todos os módulos em `tests/integration/` estão marcados com `@pytest.mark.integration`, permitindo filtrar a suíte completa.
+- Utilize `./scripts/test-integration.sh` para gerar a cobertura consolidada (`artifacts/coverage/integration-coverage.xml`) e o relatório JUnit correspondente. O script registra uma mensagem informativa caso não existam cenários, sem falhar a execução.
+- Após gerar os artefatos de cobertura e segurança, rode `./scripts/run-quality-gates.sh` para validar os relatórios. O script agora avisa previamente quando algum artefato obrigatório estiver ausente antes de delegar a verificação para `scripts/verify_quality_gates.py`.

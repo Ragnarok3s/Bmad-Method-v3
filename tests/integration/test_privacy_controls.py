@@ -18,7 +18,9 @@ DATASET_PATH = Path(__file__).resolve().parents[1] / "data" / "synthetic_guests.
 MATRIX_PATH = Path(__file__).resolve().parents[2] / "docs" / "evidencias" / "compliance" / "privacy-readiness.yaml"
 
 
-@pytest.mark.integration
+pytestmark = pytest.mark.integration
+
+
 def test_synthetic_dataset_is_masked() -> None:
     dataset = json.loads(DATASET_PATH.read_text(encoding="utf-8"))
     masked_records = [mask_personal_identifiers(record) for record in dataset]
@@ -26,7 +28,6 @@ def test_synthetic_dataset_is_masked() -> None:
     assert all(is_record_synthetic(record) for record in masked_records)
 
 
-@pytest.mark.integration
 def test_retention_policy_applies() -> None:
     dataset = json.loads(DATASET_PATH.read_text(encoding="utf-8"))
     sanitized = enforce_retention_policy(dataset, retention_days=45, reference=date(2024, 8, 1))
@@ -34,7 +35,6 @@ def test_retention_policy_applies() -> None:
     assert sanitized == [dataset[1]]
 
 
-@pytest.mark.integration
 def test_privacy_matrix_is_ready() -> None:
     controls = build_privacy_matrix(MATRIX_PATH)
     statuses = {control.module: control.status for control in controls}

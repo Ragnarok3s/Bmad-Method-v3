@@ -9,6 +9,9 @@ from services.core.domain.models import Partner, PartnerSLA, SLAStatus
 from services.core.main import build_application
 
 
+pytestmark = pytest.mark.integration
+
+
 def build_client(tmp_path) -> TestClient:
     settings = CoreSettings(
         database_url=f"sqlite:///{tmp_path}/integration.db",

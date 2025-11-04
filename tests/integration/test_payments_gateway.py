@@ -9,12 +9,15 @@ from services.payments import CardData, DriverNotRegisteredError, PaymentGateway
 from services.payments.gateways import InMemoryGatewayDriver
 
 
+pytestmark = pytest.mark.integration
+
+
 def test_end_to_end_payment_flow() -> None:
     service = PaymentGatewayService(secret_key=b"integration-secret")
     service.register_driver(InMemoryGatewayDriver("stripe", webhook_secret="whsec_int"))
     service.register_driver(InMemoryGatewayDriver("adyen", webhook_secret="whsec_alt"))
 
-    card = CardData(pan="4000000000000002", expiry_month=8, expiry_year=2031, cvv="999")
+    card = CardData(pan="4000000000009999", expiry_month=8, expiry_year=2031, cvv="999")
 
     stripe_token = service.tokenize(card, gateway="stripe", customer_reference="guest-1")
     adyen_token = service.tokenize(card, gateway="adyen", customer_reference="guest-1")
@@ -29,6 +32,8 @@ def test_end_to_end_payment_flow() -> None:
         currency="USD",
         capture=True,
     )
+    assert stripe_auth.status == "approved"
+
     stripe_capture = service.capture(
         stripe_auth.authorization_id,
         gateway="stripe",
@@ -42,6 +47,7 @@ def test_end_to_end_payment_flow() -> None:
         currency="EUR",
         capture=False,
     )
+    assert adyen_auth.status == "approved"
     adyen_capture = service.capture(adyen_auth.authorization_id, gateway="adyen", amount=Decimal("85.00"))
 
     stripe_summary = service.reconcile(gateway="stripe", settlement_date=date(2024, 7, 30))

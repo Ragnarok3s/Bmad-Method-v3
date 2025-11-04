@@ -13,6 +13,9 @@ from services.core.main import build_application
 from services.core.services.bundles import BundleUsageService
 
 
+pytestmark = pytest.mark.integration
+
+
 def build_client(tmp_path) -> tuple[TestClient, KafkaStream]:
     settings = CoreSettings(
         database_url=f"sqlite:///{tmp_path}/bundle-usage.db",
