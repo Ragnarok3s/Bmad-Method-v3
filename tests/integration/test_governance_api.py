@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
 from services.core.config import CoreSettings, TenantSettings
 from services.core.main import build_application
+
+
+pytestmark = pytest.mark.integration
 
 
 def build_client(tmp_path) -> TestClient:

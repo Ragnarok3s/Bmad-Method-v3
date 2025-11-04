@@ -10,6 +10,9 @@ from services.core.main import build_application
 from services.core.metrics import record_dashboard_request
 
 
+pytestmark = pytest.mark.integration
+
+
 @pytest.fixture(scope="module")
 def client() -> Iterator[TestClient]:
     settings = CoreSettings(tenancy=TenantSettings(platform_token="platform-secret"))

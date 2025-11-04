@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 from services.core.config import CoreSettings, TenantSettings
@@ -7,6 +8,9 @@ from services.core.database import get_database
 from services.core.domain.models import Agent, AgentRole, AuthSession, AuditLog
 from services.core.main import build_application
 from services.core.security import AuthenticationService
+
+
+pytestmark = pytest.mark.integration
 
 
 def build_client(tmp_path) -> TestClient:
