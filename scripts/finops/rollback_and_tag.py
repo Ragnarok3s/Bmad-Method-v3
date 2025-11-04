@@ -57,14 +57,16 @@ def _run_terraform(terraform_dir: Path, action: str, variables: Dict[str, Any], 
     for key, value in variables.items():
         var_args.extend(["-var", f"{key}={value}"])
 
+    terraform_action = "apply" if action == "apply" else "plan"
     cmd = [
         "terraform",
         "-chdir",
         str(terraform_dir),
-        "apply" if action == "apply" else "plan",
-        "-auto-approve",
-        *var_args,
+        terraform_action,
     ]
+    if terraform_action == "apply":
+        cmd.append("-auto-approve")
+    cmd.extend(var_args)
     subprocess.run(cmd, check=True, env=env)
 
 
