@@ -18,7 +18,31 @@
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "ms"
+          "unit": "ms",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 400
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "custom": {
+            "lineWidth": 2,
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          }
         },
         "overrides": []
       },
@@ -98,7 +122,31 @@
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "percentunit"
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.008
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          },
+          "custom": {
+            "lineWidth": 2,
+            "thresholdsStyle": {
+              "mode": "area"
+            }
+          }
         },
         "overrides": []
       },

@@ -95,6 +95,50 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "Views Semanais por Bundle",
+      "id": 8,
+      "datasource": "observability-prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "green",
+                "value": 350
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(bmad_web_bundle_view_total{workspace=~\"$workspace\", bundle_id=~\"$bundle\"}[7d]))"
+        }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Weekly Activations por Bundle",
       "id": 3,
@@ -119,7 +163,24 @@
       "fieldConfig": {
         "defaults": {
           "unit": "h",
-          "decimals": 1
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 12
+              }
+            ]
+          }
         }
       },
       "targets": [
@@ -137,7 +198,24 @@
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "decimals": 1
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.22
+              },
+              {
+                "color": "green",
+                "value": 0.25
+              }
+            ]
+          }
         }
       },
       "targets": [
