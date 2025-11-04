@@ -26,8 +26,8 @@ Reduzir a latência P95 do billing gateway para níveis aceitáveis (< 500 ms) q
 
 ## Ações de Mitigação
 1. **HPA / Scaling Manual**
-   - Se HPA no máximo, aplicar scale out manual: `kubectl scale deploy/billing-gateway --replicas <n>`.
-   - Confirmar pod readiness (`kubectl get pods`).
+   - Se HPA no máximo, aplicar scale out manual: `kubectl scale -n billing-gateway deploy/billing-gateway --replicas <n>`.
+   - Confirmar pod readiness (`kubectl get pods -n billing-gateway`).
 2. **Feature Flags**
    - Desativar features pesadas (ex.: `billing-gateway.sync_risk_checks`) temporariamente via LaunchDarkly.
 3. **Failover PSP**
