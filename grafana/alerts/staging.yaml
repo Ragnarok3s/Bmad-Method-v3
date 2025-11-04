@@ -38,7 +38,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 0 and (A / B) > 0.02
+            expression: B > 200 and (A / B) > 0.015
             type: math
             datasourceUid: __expr__
         labels:
@@ -47,8 +47,8 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Erro 5xx acima de 2% em staging"
-          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+          summary: "Erro 5xx acima de 1.5% com mais de 200 requisições"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 5m
         noDataState: Alerting
         execErrState: Alerting
@@ -71,7 +71,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: A > 3
+            expression: A >= 2
             type: math
             datasourceUid: __expr__
         labels:
@@ -80,9 +80,9 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Pipelines falharam mais de 3 vezes nos últimos 10 minutos"
-          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
-        for: 2m
+          summary: "Pipelines falharam 2 vezes ou mais nos últimos 10 minutos"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
+        for: 3m
         noDataState: NoData
         execErrState: Alerting
       - uid: engagement-drop
@@ -118,16 +118,67 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 0 and (A < (B * 0.8))
+            expression: B > 0 and (A < (B * 0.7))
             type: math
             datasourceUid: __expr__
         labels:
           team: product-ops
           playbook: engagement
         annotations:
-          summary: "Queda de 20% no engajamento web vs média da última hora"
-          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+          summary: "Queda de 30% no engajamento web vs média da última hora"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 4m
+        noDataState: NoData
+        execErrState: Alerting
+      - uid: availability-drop
+        title: AvailabilityDrop
+        condition: D
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: prometheus-staging
+            model:
+              expr: |
+                sum(rate(http_server_duration_count{service_name="bmad-core-service", http_response_status_code=~"5..", deployment_environment="staging"}[10m]))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: B
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: prometheus-staging
+            model:
+              expr: |
+                sum(rate(http_server_duration_count{service_name="bmad-core-service", deployment_environment="staging"}[10m]))
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: C
+            expression: B > 300
+            type: math
+            datasourceUid: __expr__
+          - refId: D
+            expression: C and (1 - (A / B)) < 0.995
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: sre
+          playbook: availability
+          environment: staging
+          severity: critical
+        annotations:
+          summary: "Disponibilidade abaixo de 99.5% em 10 minutos"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
+        for: 10m
         noDataState: NoData
         execErrState: Alerting
 receivers:

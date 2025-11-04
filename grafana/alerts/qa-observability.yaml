@@ -1,4 +1,40 @@
 apiVersion: 1
+groups:
+  - orgId: 1
+    name: QA Quality Gates
+    folder: QA
+    interval: 1m
+    rules:
+      - uid: qa-gate-critical
+        title: QualityGateCritical
+        condition: B
+        data:
+          - refId: A
+            queryType: PromQL
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: prometheus-qa
+            model:
+              expr: |
+                last_over_time(quality_gate_status{gate=~"critical", environment="qa"}[5m])
+              instant: true
+              interval: ""
+              intervalMs: 60000
+              legendFormat: ""
+              maxDataPoints: 43200
+          - refId: B
+            expression: A < 1
+            type: math
+            datasourceUid: __expr__
+        labels:
+          team: qa
+          gate: critical
+          severity: critical
+        annotations:
+          summary: "Gate crítico de QA reprovado em ambiente QA"
+          runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/qa-gates.md"
+        for: 3m
 policies:
   - orgId: 1
     receiver: qa-ceremonies

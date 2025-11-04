@@ -44,12 +44,17 @@ def test_all_routes_point_to_staging_critical_receiver() -> None:
 def test_rules_reference_runbook() -> None:
     data = _load_alerts()
     groups = data.get("groups", [])
-    runbook_url = "https://github.com/bmad-method/Bmad-Method-v3/blob/main/docs/runbooks/alertas-criticos.md"
+    runbook_url = "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
 
     missing_runbook: list[str] = []
     for group in groups:
         for rule in group.get("rules", []):
-            if rule.get("title") in {"PlaybookErrorRate", "PipelineFailureBurst", "EngagementDrop"}:
+            if rule.get("title") in {
+                "PlaybookErrorRate",
+                "PipelineFailureBurst",
+                "EngagementDrop",
+                "AvailabilityDrop",
+            }:
                 annotations = rule.get("annotations", {})
                 if annotations.get("runbook_url") != runbook_url:
                     missing_runbook.append(rule.get("title"))

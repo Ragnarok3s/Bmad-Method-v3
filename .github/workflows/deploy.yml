@@ -1,0 +1,150 @@
+name: Deploy Platform
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  finops-guardrails:
+    name: FinOps Guardrails
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.ledger.outputs.release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Obter release ativo
+        id: ledger
+        run: |
+          python - <<'PY' > release.txt
+import json
+from pathlib import Path
+
+ledger = Path('releases/ledger.json')
+data = json.loads(ledger.read_text())
+staging = data['releases'].get('staging', {})
+active = next((key for key, info in staging.items() if info.get('active')), '')
+if not active:
+    raise SystemExit('Nenhum release ativo em staging')
+print(active, end='')
+PY
+          release=$(cat release.txt)
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+      - name: Validar guardrails FinOps
+        run: |
+          python scripts/finops/rollback_and_tag.py validate --environment staging --release "${{ steps.ledger.outputs.release }}" --dry-run
+      - name: Registrar release ativo
+        if: success()
+        run: |
+          echo "Release ativo: ${{ steps.ledger.outputs.release }}"
+
+  prechecks:
+    name: Validar build e testes
+    needs: finops-guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            **/package-lock.json
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            **/requirements.txt
+      - name: Install Node dependencies
+        run: |
+          if [ -f package.json ] && [ -f package-lock.json ]; then
+            npm ci
+          fi
+          if compgen -G "**/package.json" > /dev/null; then
+            find . -maxdepth 4 -name package.json -print0 | while IFS= read -r -d '' pkg; do
+              dir="$(dirname "$pkg")"
+              if [ -f "$dir/package-lock.json" ]; then
+                (cd "$dir" && npm ci)
+              fi
+            done
+          fi
+      - name: Install Python dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          if compgen -G "**/requirements.txt" > /dev/null; then
+            find . -maxdepth 4 -name requirements.txt -print0 | while IFS= read -r -d '' req; do
+              pip install -r "$req"
+            done
+          fi
+      - name: Executar testes essenciais
+        run: |
+          ./scripts/test-unit.sh
+          ./scripts/test-integration.sh
+      - name: Validar Observabilidade
+        run: |
+          python scripts/verify_observability_gates.py
+
+  deploy:
+    name: Promover para staging via GitOps
+    needs:
+      - prechecks
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.bmad-method.internal
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Preparar pacote de manifests
+        run: |
+          mkdir -p artifacts/manifests
+          kubectl kustomize design/k8s/staging > artifacts/manifests/staging.yaml
+          cp design/docker-compose.dev.yml artifacts/manifests/docker-compose.dev.yml
+      - name: Validar datasets sintéticos e gerar métricas de seed
+        run: |
+          ./scripts/infra/seed-staging-data.sh --mode validate
+      - name: Publicar evidências de seed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seed-metrics
+          path: artifacts/seed
+      - name: Publicar pacote para aprovação manual
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-manifests
+          path: artifacts/manifests
+      - name: Placeholder de sincronização GitOps
+        run: |
+          echo "Repositório de manifests deve receber commit via pipeline externa após aprovação manual."
+
+  validate-rollout:
+    name: Monitorar rollout e rollback automático
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validar rollout automatizado
+        id: rollout
+        continue-on-error: true
+        run: ./scripts/infra/validate-rollout.sh bmad-method-staging backend identity frontend
+      - name: Executar rollback automático
+        if: steps.rollout.outcome == 'failure'
+        run: ./scripts/infra/rollback-staging.sh bmad-method-staging backend identity frontend
+      - name: Garantir falha se rollout não estabilizar
+        if: steps.rollout.outcome == 'failure'
+        run: exit 1
