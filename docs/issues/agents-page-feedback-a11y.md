@@ -1,19 +1,16 @@
 # Issue: Feedback insuficiente e acessibilidade limitada na página de agentes
 
-## Problema
-A página `/agentes` apresenta mensagens de erro e vazios dentro de `Card` sem semântica apropriada (`role="alert"`, foco automático), o botão "Limpar filtros" reutiliza estilo de retry sem indicar estado de carregamento, e os filtros não expõem resumo das seleções ou atualização dinâmica para leitores de ecrã. 【F:apps/web/app/agents/page.tsx†L53-L155】【F:apps/web/components/agents/AgentsFilters.tsx†L28-L136】
+## Estado
+✅ Resolvido em 2025-03-04. A rota `/agentes` foi alinhada ao catálogo dinâmico partilhado com `/agents`, com foco automático em alertas, botões reutilizáveis e testes de acessibilidade documentados.
 
-## Impacto
-- Utilizadores com leitores de ecrã não recebem feedback imediato quando ocorre erro ou quando os filtros são aplicados.
-- Não há confirmação visual clara após limpar filtros, prejudicando UX.
-- Dificulta conformidade com WCAG 2.1 (4.1.3 Status Messages, 3.2.2 On Input).
+## Resumo da solução
+- A página passa a reutilizar `AgentsCatalogView`, garantindo `role="alert"`, `aria-live` e foco programático para erro, vazio e paginação.【F:apps/web/components/agents/AgentsCatalogView.tsx†L42-L209】【F:apps/web/app/agentes/page.tsx†L1-L36】
+- O botão extraído `AgentActionButton` aplica estados `loading/disabled`, foco visível e variantes consistentes para ações de retry, limpeza e lançamento de bundles.【F:apps/web/components/agents/AgentActionButton.tsx†L1-L63】【F:apps/web/components/agents/AgentsCatalogView.tsx†L150-L209】
+- Testes RTL + `jest-axe` confirmam foco automático e anúncios `aria-live` para erro, vazio e paginação na rota localizada.【F:apps/web/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】
 
-## Ações recomendadas
-1. Adicionar `role="alert"` + `aria-live="assertive"` nos `Card` de erro/vazio e mover foco para o container ao disparar `refresh` ou `setPage`. 【F:apps/web/app/agents/page.tsx†L53-L138】
-2. Incluir `aria-live="polite"` e resumo textual (ex.: "3 competências ativas") na barra de filtros; disponibilizar botão dedicado "Limpar tudo" desabilitado enquanto `loading === true`. 【F:apps/web/components/agents/AgentsFilters.tsx†L55-L134】
-3. Refatorar `retry-button` para componente reutilizável com estados `loading`, `disabled` e foco visível consistente. 【F:apps/web/app/agents/page.tsx†L141-L205】
-4. Cobrir comportamento com testes de acessibilidade (React Testing Library + `axe-core`) validando anúncios via `aria-live`.
+## Evidências
+- Execução da suíte de testes `apps/web/app/agentes/__tests__/AgentesPage.test.tsx` e `apps/web/app/agents/__tests__/AgentsPage.test.tsx` (regressão cruzada) sem violações de acessibilidade.【F:apps/web/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】【F:apps/web/app/agents/__tests__/AgentsPage.test.tsx†L1-L120】
+- Instrumentação dos eventos `bundle_view` e `bundle_launch` com atributos `bundle_id`, `bundle_type`, `workspace` e `context` replicados via `useAnalytics` e OTel.【F:apps/web/components/agents/AgentsCatalogView.tsx†L70-L107】
 
-## Referências / Mockups
-- Padrão GOV.UK "Error summary" para foco automático.
-- Componentes de filtros com contadores expandidos (Figma: `Hospitality Agent Catalog v2`).
+## Follow-up
+- Monitorizar métricas `bundle_view` e `bundle_launch` na variante localizada durante o trimestre Q3 2025 e reportar anomalias na revisão mensal do roadmap.【F:docs/product/backlog.md†L101-L108】

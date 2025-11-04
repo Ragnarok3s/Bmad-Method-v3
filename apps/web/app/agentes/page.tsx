@@ -1,60 +1,45 @@
 'use client';
 
-import { Card } from '@/components/ui/Card';
-import { SectionHeader } from '@/components/layout/SectionHeader';
-import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
-import { StatusBadge } from '@/components/ui/StatusBadge';
+import { AgentsCatalogView, type AgentsCatalogCopy } from '@/components/agents/AgentsCatalogView';
 
-const agentes = [
-  {
-    nome: 'Concierge Digital',
-    competencias: ['Upsell de experiências', 'Integração com CRM'],
-    sla: 'Tempo de resposta < 2 min',
-    estado: 'Disponível',
-    variant: 'success' as const
+const copy: AgentsCatalogCopy = {
+  header: {
+    title: 'Configuração de agentes',
+    subtitle: 'Catálogo centralizado com filtros e pré-configurações'
   },
-  {
-    nome: 'Agente de Manutenção',
-    competencias: ['Workflows corretivos', 'Alertas IoT'],
-    sla: 'Escalonamento automático',
-    estado: 'Atualizar credenciais',
-    variant: 'warning' as const
+  loadingLabel: 'A sincronizar catálogo de agentes…',
+  error: {
+    title: 'Não foi possível carregar o catálogo',
+    description: 'Verifique a ligação ao Core Service ou tente novamente em instantes.',
+    actionLabel: 'Tentar novamente',
+    actionLoadingLabel: 'A tentar novamente…'
   },
-  {
-    nome: 'Assistente Revenue',
-    competencias: ['Recomendações tarifárias', 'Monitorização de concorrentes'],
-    sla: 'Relatórios diários às 07h',
-    estado: 'Manutenção programada',
-    variant: 'critical' as const
+  empty: {
+    title: 'Nenhum agente encontrado com os filtros atuais',
+    description: 'Altere os filtros de competência ou disponibilidade para explorar mais opções.',
+    actionLabel: 'Limpar filtros'
+  },
+  metadata: {
+    competenciesTitle: 'Competências principais',
+    integrationsTitle: 'Integrações certificadas',
+    automationLabel: 'Automação',
+    automationFallback: 'Sob consulta',
+    languagesLabel: 'Idiomas',
+    responseLabel: (value) => `Resposta média: ${value} min`,
+    responseFallback: 'Resposta média: Sob consulta'
+  },
+  pagination: {
+    ariaLabel: 'Paginação do catálogo de agentes',
+    previousLabel: 'Anterior',
+    nextLabel: 'Seguinte',
+    summary: (page, totalPages, totalItems) => `Página ${page} de ${totalPages} · ${totalItems} agentes`
+  },
+  bundleAction: {
+    label: 'Lançar bundle',
+    loadingLabel: 'A preparar bundle…'
   }
-];
+};
 
 export default function AgentesPage() {
-  return (
-    <div>
-      <SectionHeader subtitle="Catálogo centralizado com filtros e pré-configurações">
-        Configuração de agentes
-      </SectionHeader>
-      <ResponsiveGrid columns={3}>
-        {agentes.map((agente) => (
-          <Card key={agente.nome} title={agente.nome} description={agente.sla}>
-            <StatusBadge variant={agente.variant}>{agente.estado}</StatusBadge>
-            <ul>
-              {agente.competencias.map((competencia) => (
-                <li key={competencia}>{competencia}</li>
-              ))}
-            </ul>
-          </Card>
-        ))}
-      </ResponsiveGrid>
-      <style jsx>{`
-        ul {
-          margin: 0;
-          padding-left: var(--space-5);
-          display: grid;
-          gap: var(--space-2);
-        }
-      `}</style>
-    </div>
-  );
+  return <AgentsCatalogView copy={copy} />;
 }
