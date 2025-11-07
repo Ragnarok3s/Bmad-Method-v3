@@ -1,18 +1,15 @@
-# Issue: Serviço Payments ausente do repositório
+# Issue: Serviço Payments – status atualizado
 
-## Problema
-O repositório não contém diretório `services/payments`, nem componentes de aplicação ou testes associados ao processamento de pagamentos.
+## Resumo da implementação atual
+- O serviço está consolidado em `services/payments`, com `PaymentGatewayService` orquestrando tokenização, autorizações e reconciliação (`api.py`).
+- `drivers.py` expõe o registro de gateways e erros de driver, enquanto `gateways/` traz o driver em memória usado nos testes e base para integrações reais.
+- `storage.py` implementa `SecureTokenVault` com criptografia simétrica e `webhooks.py` registra manipuladores com segredos por gateway.
 
-## Evidências
-- `find . -path '*services/payments*'` não localiza arquivos.
-- Ausência de documentação ou scripts de execução de testes (`npm test`, `pytest`) relacionados ao serviço.
+## Evidências de funcionamento
+- O teste de integração `tests/integration/test_payments_gateway.py` valida o fluxo ponta a ponta de tokenização, autorização, captura, reconciliação e tratamento de driver não registrado.
+- A API de alto nível está disponível para serviços consumidores via `services/payments/__init__.py`, que reexporta `PaymentGatewayService`, `CardData` e erros relevantes.
 
-## Impacto
-- Impossibilidade de auditar integrações com gateways de pagamento, PCI DSS ou fluxos de faturamento.
-- Bloqueio para análises de validação de entrada, tratamento de erros financeiros e reconciliação.
-- Outros serviços que dependam de pagamentos não podem ser verificados.
-
-## Ações recomendadas
-1. Restaurar ou adicionar o código do serviço Payments ao monorepo com suas dependências declaradas.
-2. Publicar instruções de configuração (chaves de API, ambientes sandbox) e scripts de teste automatizado.
-3. Registrar contratos de integração com serviços consumidores (ex.: faturamento, reservas) e requisitos de conformidade.
+## Próximos passos
+1. Adicionar drivers concretos para gateways externos (Stripe, Adyen) aproveitando a abstração existente em `services/payments/gateways`.
+2. Configurar testes de contrato com ambientes sandbox, reaproveitando os cenários do `test_payments_gateway.py` e expandindo para fluxos de estorno.
+3. Publicar guia de integração e SLIs de conciliação para monitoramento financeiro.
