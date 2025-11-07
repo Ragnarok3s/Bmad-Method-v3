@@ -4,6 +4,10 @@
   "timezone": "browser",
   "schemaVersion": 38,
   "refresh": "5m",
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
   "panels": [
     {
       "type": "stat",

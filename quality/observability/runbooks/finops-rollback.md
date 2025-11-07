@@ -72,6 +72,10 @@ scripts/finops/rollback_and_tag.py tag \
 - Registros do Terraform (`terraform.tfstate` e logs) versionados em bucket remoto.
 - Check `FinOps Guardrails` marcado como obrigatório na pipeline.
 
+## Execuções Recentes
+
+- **07/11/2025 – Staging:** `scripts/finops/rollback_and_tag.py rollback --environment staging --dry-run` gerou o artefato `artifacts/finops/rollback-20251107T161307Z.json`, validando o release ativo `2024.07.10-rc1` sem aplicar mudanças Terraform. Execução real mantida em espera até janela aprovada pelo comitê de readiness.
+
 ## Auditoria de 04/11/2025
 
 - Testes `validate`, `tag --dry-run` e `rollback --dry-run` executados com sucesso, gerando artefatos `validation-<timestamp>.json`, `tagging-<timestamp>.json` e `rollback-<timestamp>.json` em `artifacts/finops/`.
