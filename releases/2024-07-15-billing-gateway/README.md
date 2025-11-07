@@ -8,6 +8,7 @@
   - DPIA revisada e assinada por Security & Privacy.
   - Checklist PCI assinado e arquivado com aprovações formais.
   - Runbooks e manuais de suporte atualizados com as lições da release.
+- **Flag operacional:** `BILLING_GATEWAY_ENABLE_REAL` mantido em `0`, direcionando o backend para o mock documentado em [`docs/feature-flags/billing-gateway-mock.md`](../../docs/feature-flags/billing-gateway-mock.md). Suites com `@pytest.mark.real_gateway` permanecem desativadas até novo go/no-go.
 
 ## Artefatos de Compliance e Suporte
 - [`docs/compliance/releases/2024-07-15-billing-gateway/final-report.md`](../../docs/compliance/releases/2024-07-15-billing-gateway/final-report.md)
@@ -27,3 +28,4 @@
 1. Monitorar alerta `BillingGatewayIdempotency` nas primeiras 24h pós deploy.
 2. Validar integração com gateway externo antes de liberar para parceiros (`BILL-230`).
 3. Atualizar indicadores de autorização e fraude nos dashboards de produto.
+4. Rever decisão sobre ativação do PSP real após conclusão dos checkpoints de risco e execução das suítes `pytest -m real_gateway`.

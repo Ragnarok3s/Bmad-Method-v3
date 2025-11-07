@@ -8,6 +8,7 @@ import requests
 from pactman import Consumer, Like, Provider
 
 from services.core.marketplace.contracts import ConsentScope
+from tests.conftest import is_real_gateway_enabled
 
 
 @pytest.fixture(scope="session")
@@ -46,7 +47,7 @@ def marketplace_pact(pact_directory: Path) -> Path:
             "categories": ["Finance", "Compliance"],
             "icon_url": None,
             "contractVersion": "2024-03-30",
-            "sandboxOnly": True,
+            "sandboxOnly": not is_real_gateway_enabled(),
         },
     ]
 

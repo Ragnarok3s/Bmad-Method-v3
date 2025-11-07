@@ -29,6 +29,16 @@ Este manual complementa o `manual-do-usuario.md` com foco em continuidade de neg
 - Acompanhar o alerta `BillingGatewayIdempotency` em conjunto com os alertas descritos em `quality/observability/runbooks/critical-alerts.md`.
 - Registrar no ledger `releases/ledger.json` qualquer alteração de estado (ativação/rollback) utilizando `scripts/finops/rollback_and_tag.py record-release`.
 
+## Comunicado Pagamentos (Flag de Contingência)
+- **Mensagem padrão para o canal `#support-billing`**: “O módulo de pagamentos segue operando em modo sandbox. Não há cobranças reais até nova sinalização do steering. Registre solicitações financeiras no playbook manual e mantenha o flag `BILLING_GATEWAY_ENABLE_REAL` desligado.”
+- **Abertura de chamados**: categorize como "Solicitação" com tag `payments-mock` e referencie o guia [`docs/feature-flags/billing-gateway-mock.md`](../feature-flags/billing-gateway-mock.md).
+- **Procedimento para retomar o PSP real**:
+  1. Confirmar aprovação do steering no roadmap de riscos.
+  2. Coordenar com Engenharia para definir `BILLING_GATEWAY_ENABLE_REAL=1` no ambiente alvo.
+  3. Solicitar evidências das suítes `pytest -m real_gateway` e anexar no ticket.
+  4. Atualizar este manual e o README da release ativa informando a mudança de estado.
+- **Rollback**: caso ocorram incidentes, reverter o flag para `0`, atualizar o canal com a mensagem “Reversão aplicada — permanecemos em modo sandbox” e registrar o evento no ledger de releases.
+
 ## Próximos Passos
 - Automatizar disparo de comunicação via Slack/Teams durante ativação de runbooks.
 - Integrar métricas de MTTR/MTBF diretamente no dashboard de suporte.

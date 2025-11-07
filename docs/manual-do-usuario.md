@@ -101,6 +101,13 @@ Para garantir consistência com os fluxos documentados em [`design/hospitality-u
 - **Protótipo Interativo do MVP**: walkthrough dos fluxos críticos disponível em [`design/hospitality-ux/prototipo-interativo.md`](../design/hospitality-ux/prototipo-interativo.md#hand-off-2024-07-15) com links para o Figma e checklist de acessibilidade.
 - **Wireframes e Guia Visual**: documentação de referência para estados de tela e tokens em [`design/hospitality-ux/wireframes.md`](../design/hospitality-ux/wireframes.md) e [`design/hospitality-ux/guia-visual.md`](../design/hospitality-ux/guia-visual.md).
 
+## Limitações Temporárias de Pagamentos
+
+- O módulo de cobranças ainda não opera com PSP real. O flag `BILLING_GATEWAY_ENABLE_REAL` permanece desligado conforme plano de contingência em [`docs/roadmap-riscos.md`](roadmap-riscos.md) e detalhamento em [`docs/feature-flags/billing-gateway-mock.md`](feature-flags/billing-gateway-mock.md).
+- Todas as tokenizações, autorizações e reconciliações são simuladas com dados mascarados. Utilize o fluxo financeiro manual descrito nos playbooks até nova orientação.
+- Quando o projeto retomar o tema, siga o procedimento de reversão: solicitar aprovação ao steering, habilitar o flag conforme o guia de feature flag, executar a suíte `pytest -m real_gateway` e comunicar o suporte interno (ver instruções atualizadas em [`docs/support/user-manual.md`](support/user-manual.md)).
+- Caso algum parceiro questione disponibilidade de pagamentos, comunique que a função está em fase de homologação e registre o interesse para priorização futura.
+
 ### Checklist de Acesso e Alinhamento
 
 - [ ] Confirmar que o time possui acesso ao Figma com permissão de visualização nos arquivos listados acima (`HospOps DS`).
