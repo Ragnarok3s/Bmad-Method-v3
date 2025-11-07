@@ -20,4 +20,8 @@
 
 ## Follow-ups Anteriores
 - [x] Publicação do template do dashboard alinhado com governança.
-- [ ] Evidências de retenção automatizada ainda pendentes (transferido para ação de Ana Souza com due 12/07).
+- [x] Evidências de retenção automatizada consolidadas em 07/11/2025 (`docs/evidencias/compliance/retencao-automatica-2025-11.md`) com parecer jurídico anexado e comunicação registrada ao comitê.
+
+## Atualização 07/11/2025
+
+- Comitê de readiness informado via canal `#governanca-readiness` sobre a conclusão das ações A2 (retenção) e A4 (observabilidade/FinOps), com links para o runbook atualizado e para o parecer jurídico em `docs/evidencias/compliance/parecer-juridico-retencao-2025-11.md`.

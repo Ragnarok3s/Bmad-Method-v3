@@ -38,7 +38,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 200 and (A / B) > 0.01
+            expression: B > 250 and (A / B) > 0.008
             type: math
             datasourceUid: __expr__
         labels:
@@ -47,7 +47,7 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Erro 5xx acima de 1% com mais de 200 requisições"
+          summary: "Erro 5xx acima de 0,8% com mais de 250 requisições"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 5m
         noDataState: Alerting
@@ -71,7 +71,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: A > 0.5
+            expression: A > 0.45
             type: math
             datasourceUid: __expr__
         labels:
@@ -80,7 +80,7 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Latência P95 acima de 500 ms por 5 minutos"
+          summary: "Latência P95 acima de 450 ms por 5 minutos"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 5m
         noDataState: Alerting
@@ -104,7 +104,7 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: A >= 2
+            expression: A >= 3
             type: math
             datasourceUid: __expr__
         labels:
@@ -113,7 +113,7 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Pipelines falharam 2 vezes ou mais nos últimos 10 minutos"
+          summary: "Pipelines falharam 3 vezes ou mais nos últimos 10 minutos"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 3m
         noDataState: NoData
@@ -151,14 +151,14 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 0 and (A < (B * 0.7))
+            expression: B > 0 and (A < (B * 0.75))
             type: math
             datasourceUid: __expr__
         labels:
           team: product-ops
           playbook: engagement
         annotations:
-          summary: "Queda de 30% no engajamento web vs média da última hora"
+          summary: "Queda de 25% no engajamento web vs média da última hora"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 4m
         noDataState: NoData
@@ -196,11 +196,11 @@ groups:
               legendFormat: ""
               maxDataPoints: 43200
           - refId: C
-            expression: B > 300
+            expression: B > 400
             type: math
             datasourceUid: __expr__
           - refId: D
-            expression: C and (1 - (A / B)) < 0.995
+            expression: C and (1 - (A / B)) < 0.997
             type: math
             datasourceUid: __expr__
         labels:
@@ -209,7 +209,7 @@ groups:
           environment: staging
           severity: critical
         annotations:
-          summary: "Disponibilidade abaixo de 99.5% em 10 minutos"
+          summary: "Disponibilidade abaixo de 99.7% com pelo menos 400 requisições em 10 minutos"
           runbook_url: "https://github.com/bmad-method/Bmad-Method-v3/blob/main/quality/observability/runbooks/critical-alerts.md"
         for: 10m
         noDataState: NoData
