@@ -9,11 +9,18 @@ on:
       - 'docs/compliance/**'
       - '.github/workflows/payments.yml'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment for manual dispatch'
+        required: false
+        default: staging-prod
+        type: string
 
 jobs:
   smoke:
     name: Run payments smoke suite
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging-prod' }}
 
     steps:
       - name: Checkout repository
