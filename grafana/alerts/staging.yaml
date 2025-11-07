@@ -175,7 +175,7 @@ groups:
             datasourceUid: prometheus-staging
             model:
               expr: |
-                sum(rate(http_server_duration_count{service_name="bmad-core-service", http_response_status_code=~"5..", deployment_environment="staging"}[10m]))
+                sum(increase(http_server_duration_count{service_name="bmad-core-service", http_response_status_code=~"5..", deployment_environment="staging"}[10m]))
               instant: true
               interval: ""
               intervalMs: 60000
@@ -189,7 +189,7 @@ groups:
             datasourceUid: prometheus-staging
             model:
               expr: |
-                sum(rate(http_server_duration_count{service_name="bmad-core-service", deployment_environment="staging"}[10m]))
+                sum(increase(http_server_duration_count{service_name="bmad-core-service", deployment_environment="staging"}[10m]))
               instant: true
               interval: ""
               intervalMs: 60000
