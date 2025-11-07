@@ -15,3 +15,7 @@ controles:
     requisito: "Rotinas de seed utilizam datasets sintéticos mascarados e geram evidências em artifacts/seed/"
     status: "aprovado"
     evidencia: "docs/evidencias/compliance/seed-datasets/README.md"
+  - modulo: "Retenção Automatizada"
+    requisito: "Consolidação das execuções de retenção e parecer jurídico aprovado"
+    status: "aprovado"
+    evidencia: "docs/evidencias/compliance/retencao-automatica-2025-11.md"

@@ -1,0 +1,15 @@
+{
+  "environment": "staging",
+  "exported_at": "2025-11-07T12:45:00Z",
+  "policy": {
+    "name": "reservas-pii-retention",
+    "retention_days": 730,
+    "anonymization": "tokenize-email-phone"
+  },
+  "metrics": {
+    "records_scanned": 18234,
+    "records_flagged_for_anonymization": 123,
+    "records_removed": 97,
+    "evidence_log": "s3://bmad-compliance-retention/logs/2025/11/07/reservas-job.log"
+  }
+}
