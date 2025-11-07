@@ -17,6 +17,7 @@ Atualização de 09/07/2024 consolidando riscos críticos do roadmap Sprint 0 / 
 
 ## Planos de Contingência
 - Se o risco de pagamentos persistir após 11/07, considerar fallback com mock de gateway e limitar escopo de billing na Sprint 1.
+- **Status 10/07:** Flag `BILLING_GATEWAY_ENABLE_REAL=0` ativada e backend apontando para o mock descrito em [`docs/feature-flags/billing-gateway-mock.md`](feature-flags/billing-gateway-mock.md); cenários reais suspensos até novo checkpoint do steering.
 - Para não conformidade de retenção, bloquear deploys que envolvam dados sensíveis até que as evidências estejam anexadas e validadas.
 - Caso automações de rollback não estejam prontas até 10/07, agendar janela adicional de infraestrutura em 13/07 com suporte do time de FinOps.
 

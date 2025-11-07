@@ -2,17 +2,28 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+import os
 
 import pytest
 from fastapi.testclient import TestClient
 
 from services.billing.api import create_app
+from tests.conftest import is_real_gateway_enabled
 
 
 @pytest.fixture()
 def client() -> TestClient:
     app = create_app()
     return TestClient(app)
+
+
+@pytest.fixture()
+def gateway_alias() -> str:
+    if not is_real_gateway_enabled():
+        return os.getenv("BILLING_GATEWAY_SANDBOX_ALIAS", "sandbox")
+    pytest.skip(
+        "Fluxos E2E de cobrança real estão bloqueados enquanto o flag de contingência estiver ativo."
+    )
 
 
 @pytest.fixture()
@@ -40,10 +51,16 @@ def invalid_card() -> dict[str, object]:
 
 @pytest.mark.e2e
 @pytest.mark.payments
-def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str, object]) -> None:
+def test_full_payment_flow_with_refund(
+    client: TestClient, gateway_alias: str, valid_card: dict[str, object]
+) -> None:
     token_response = client.post(
         "/billing/tokenize",
-        json={"gateway": "sandbox", "card": valid_card, "customer_reference": "guest-001"},
+        json={
+            "gateway": gateway_alias,
+            "card": valid_card,
+            "customer_reference": "guest-001",
+        },
     )
     assert token_response.status_code == 201, token_response.text
     token = token_response.json()
@@ -51,7 +68,7 @@ def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str,
     auth_response = client.post(
         "/billing/authorizations",
         json={
-            "gateway": "sandbox",
+            "gateway": gateway_alias,
             "token_reference": token["token_reference"],
             "amount": "150.00",
             "currency": "BRL",
@@ -66,7 +83,7 @@ def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str,
     capture_response = client.post(
         "/billing/captures",
         json={
-            "gateway": "sandbox",
+            "gateway": gateway_alias,
             "authorization_id": authorization["authorization_id"],
         },
     )
@@ -77,7 +94,7 @@ def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str,
     refund_response = client.post(
         "/billing/refunds",
         json={
-            "gateway": "sandbox",
+            "gateway": gateway_alias,
             "capture_id": capture["capture_id"],
             "amount": "150.00",
         },
@@ -88,7 +105,7 @@ def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str,
 
     reconciliation = client.get(
         "/billing/reconciliation",
-        params={"gateway": "sandbox", "settlement_date": date.today().isoformat()},
+        params={"gateway": gateway_alias, "settlement_date": date.today().isoformat()},
     )
     assert reconciliation.status_code == 200, reconciliation.text
     data = reconciliation.json()
@@ -98,15 +115,20 @@ def test_full_payment_flow_with_refund(client: TestClient, valid_card: dict[str,
 
 @pytest.mark.e2e
 @pytest.mark.payments
-def test_invalid_card_decline(client: TestClient, invalid_card: dict[str, object]) -> None:
-    token_response = client.post("/billing/tokenize", json={"gateway": "sandbox", "card": invalid_card})
+def test_invalid_card_decline(
+    client: TestClient, gateway_alias: str, invalid_card: dict[str, object]
+) -> None:
+    token_response = client.post(
+        "/billing/tokenize",
+        json={"gateway": gateway_alias, "card": invalid_card},
+    )
     assert token_response.status_code == 201, token_response.text
     token = token_response.json()
 
     auth_response = client.post(
         "/billing/authorizations",
         json={
-            "gateway": "sandbox",
+            "gateway": gateway_alias,
             "token_reference": token["token_reference"],
             "amount": "55.00",
             "currency": "BRL",
@@ -120,14 +142,18 @@ def test_invalid_card_decline(client: TestClient, invalid_card: dict[str, object
 
 @pytest.mark.e2e
 @pytest.mark.payments
-def test_gateway_failure_returns_502(client: TestClient, valid_card: dict[str, object]) -> None:
-    token_response = client.post("/billing/tokenize", json={"gateway": "sandbox", "card": valid_card})
+def test_gateway_failure_returns_502(
+    client: TestClient, gateway_alias: str, valid_card: dict[str, object]
+) -> None:
+    token_response = client.post(
+        "/billing/tokenize", json={"gateway": gateway_alias, "card": valid_card}
+    )
     token = token_response.json()
 
     error_response = client.post(
         "/billing/authorizations",
         json={
-            "gateway": "sandbox",
+            "gateway": gateway_alias,
             "token_reference": token["token_reference"],
             "amount": "45.00",
             "currency": "BRL",

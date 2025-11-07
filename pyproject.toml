@@ -63,5 +63,6 @@ markers = [
   "e2e: cenários ponta a ponta que simulam fluxos completos do MVP",
   "reservations: cenários críticos de reservas e gestão de disponibilidade",
   "payments: fluxos de tokenização, captura e reconciliação",
+  "real_gateway: cenários que dependem do PSP real e são pulados quando o flag de contingência está desligado",
   "ota: contratos e integrações com parceiros OTA"
 ]
