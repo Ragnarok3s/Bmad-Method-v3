@@ -16,11 +16,19 @@ on:
       - 'services/identity/**'
       - 'tests/services/identity/**'
       - '.github/workflows/backend.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment for manual dispatch'
+        required: false
+        default: staging-prod
+        type: string
 
 jobs:
   identity-suite:
     name: Run Identity Service Tests
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging-prod' }}
 
     steps:
       - name: Checkout
