@@ -30,6 +30,11 @@
 - Automação de rollback/tagging FinOps em fase de conclusão, com janela de contingência planejada se necessário.
 - Thresholds de observabilidade aguardam revisão agendada para 15/07.
 
+## Atualização 07/11/2025
+- Retenção baseline aplicada aos manifestos Grafana (`grafana/analytics/*.json`, `grafana/staging/*.json`), garantindo 30 dias para painéis executivos e 14 dias para staging conforme A4.
+- Runbook `quality/observability/runbooks/finops-rollback.md` atualizado com execução `rollback --environment staging --dry-run` (artefato `rollback-20251107T161307Z.json`).
+- Relatório `analytics/finops/reports/2025-11.md` revisado com nova projeção (-1,4%) e checklist comunicado aos times de Operações/FinOps.
+
 ## Decisão
 - **Status aprovado com ressalvas operacionais**: seguir com promoção após cumprir `BILL-230`, anexar evidências finais de retenção e confirmar revisão de thresholds.
 - Owners das ações pós go-live registrados em `docs/roadmap/readiness-meetings.md`.
