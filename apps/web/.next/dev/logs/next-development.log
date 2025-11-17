@@ -1,0 +1,15 @@
+[00:00:00.866] Server  LOG     
+[00:00:00.866] Server  LOG        We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+[00:00:00.866] Server  LOG        The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+[00:00:00.867] Server  LOG        	- include was updated to add '.next/dev/types/**/*.ts'
+[00:00:00.867] Server  LOG     
+[00:00:00.867] Server  LOG        The following mandatory changes were made to your tsconfig.json:
+
+[00:00:00.867] Server  LOG        	- jsx was set to react-jsx (next.js uses the React automatic runtime)
+[00:00:00.867] Server  LOG     
+[00:00:01.061] Server  LOG      ✓ Ready in 679ms
+[00:00:06.975] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.226] Browser INFO    [Telemetry] NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT não definido; instrumentações serão registradas sem exportadores.
+[00:00:36.997] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:37.150] Browser INFO    [Telemetry] NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT não definido; instrumentações serão registradas sem exportadores.

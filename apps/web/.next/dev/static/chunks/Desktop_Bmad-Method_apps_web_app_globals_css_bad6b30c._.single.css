@@ -1,0 +1,203 @@
+/* [project]/Desktop/Bmad-Method/apps/web/app/globals.css [app-client] (css) */
+:root {
+  --lightningcss-light: initial;
+  --lightningcss-dark: ;
+  color-scheme: light;
+  --color-deep-blue: #2563eb;
+  --color-soft-aqua: #0ea5e9;
+  --color-calm-gold: #f59e0b;
+  --color-coral: #ef4444;
+  --color-success: #10b981;
+  --app-background: #f8fafc;
+  --app-surface: #fff;
+  --app-surface-muted: #f1f5f9;
+  --app-surface-overlay: #ffffffeb;
+  --app-border-subtle: #e2e8f0;
+  --app-border-strong: #cbd5e1;
+  --color-neutral-0: var(--app-surface);
+  --color-neutral-1: var(--app-background);
+  --color-neutral-2: #64748b;
+  --color-neutral-3: #111827;
+  --color-neutral-4: var(--app-border-subtle);
+  --color-neutral-5: var(--app-surface-muted);
+  --color-neutral-6: #e2e8f0;
+  --color-neutral-7: #94a3b8;
+  --color-neutral-8: #475569;
+  --color-neutral-9: #0f172a;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --shadow-card: 0 24px 45px #0f172a14;
+  --shadow-flyout: 0 24px 60px #0f172a24;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --tint-primary-soft: #2563eb1f;
+  --tint-primary-strong: #2563eb47;
+  --tint-accent-soft: #0ea5e929;
+  --tint-accent-strong: #0ea5e947;
+  --tint-neutral-soft: #94a3b81f;
+  --tint-neutral-strong: #94a3b83d;
+  --tint-critical-soft: #ef444429;
+  --status-success-surface: #d1fae5;
+  --status-success-border: #0f766e;
+  --status-success-text: #065f46;
+  --status-success-icon: #047857;
+  --status-warning-surface: #fef3c7;
+  --status-warning-border: #f59e0b;
+  --status-warning-text: #92400e;
+  --status-warning-icon: #b45309;
+  --status-critical-surface: #fee2e2;
+  --status-critical-border: #ef4444;
+  --status-critical-text: #b91c1c;
+  --status-critical-icon: #dc2626;
+  --status-info-surface: #dbeafe;
+  --status-info-border: #1d4ed8;
+  --status-info-text: #1d4ed8;
+  --status-info-icon: #1d4ed8;
+  --status-neutral-surface: #e2e8f0;
+  --status-neutral-border: #64748b;
+  --status-neutral-text: #1e293b;
+  --status-neutral-icon: #475569;
+  --tooltip-surface: #0f172a;
+  --tooltip-strong: #0f172aeb;
+  --tooltip-text: #fff;
+}
+
+.dark {
+  --lightningcss-light: ;
+  --lightningcss-dark: initial;
+  color-scheme: dark;
+  --app-background: #0b1220;
+  --app-surface: #0f172a;
+  --app-surface-muted: #111827;
+  --app-surface-overlay: #0f172ae0;
+  --app-border-subtle: #1f2937;
+  --app-border-strong: #273245;
+  --color-neutral-0: var(--app-surface);
+  --color-neutral-1: var(--app-background);
+  --color-neutral-2: #9ca3af;
+  --color-neutral-3: #e5e7eb;
+  --color-neutral-4: var(--app-border-subtle);
+  --color-neutral-5: var(--app-surface-muted);
+  --color-neutral-6: #1f2937;
+  --color-neutral-7: #6b7280;
+  --color-neutral-8: #cbd5e1;
+  --color-neutral-9: #f8fafc;
+  --color-neutral-600: #cbd5e1;
+  --color-neutral-700: #e5e7eb;
+  --shadow-card: 0 24px 45px #02061799;
+  --shadow-flyout: 0 24px 60px #020617b8;
+  --tint-primary-soft: #2563eb38;
+  --tint-primary-strong: #2563eb66;
+  --tint-accent-soft: #0ea5e942;
+  --tint-accent-strong: #0ea5e96b;
+  --tint-neutral-soft: #94a3b82e;
+  --tint-neutral-strong: #94a3b852;
+  --tint-critical-soft: #f43f5e47;
+  --status-success-surface: #064e3b;
+  --status-success-border: #34d399;
+  --status-success-text: #ecfdf5;
+  --status-success-icon: #6ee7b7;
+  --status-warning-surface: #78350f;
+  --status-warning-border: #fbbf24;
+  --status-warning-text: #fefce8;
+  --status-warning-icon: #fde68a;
+  --status-critical-surface: #7f1d1d;
+  --status-critical-border: #f87171;
+  --status-critical-text: #fee2e2;
+  --status-critical-icon: #fca5a5;
+  --status-info-surface: #1e3a8a;
+  --status-info-border: #60a5fa;
+  --status-info-text: #dbeafe;
+  --status-info-icon: #bfdbfe;
+  --status-neutral-surface: #1f2937;
+  --status-neutral-border: #94a3b8;
+  --status-neutral-text: #e2e8f0;
+  --status-neutral-icon: #cbd5e1;
+  --tooltip-surface: #0f172aeb;
+  --tooltip-strong: #0f172af5;
+  --tooltip-text: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--font-body);
+  background-color: var(--app-background);
+  color: var(--color-neutral-3);
+  margin: 0;
+  padding: 0;
+  transition: background-color .3s, color .3s;
+}
+
+body {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--color-soft-aqua);
+  outline-offset: 2px;
+}
+
+button {
+  font-family: inherit;
+}
+
+main {
+  display: block;
+}
+
+.skip-link {
+  background: var(--color-deep-blue);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.skip-link:focus {
+  top: var(--space-3);
+}
+
+.sr-only {
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  position: absolute;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, :before, :after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/*# sourceMappingURL=Desktop_Bmad-Method_apps_web_app_globals_css_bad6b30c._.single.css.map*/
