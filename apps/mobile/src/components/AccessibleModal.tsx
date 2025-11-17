@@ -1,13 +1,5 @@
-import { useEffect, useRef } from 'react';
-import {
-  AccessibilityInfo,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  findNodeHandle
-} from 'react-native';
+import { useEffect, useRef, type ComponentRef, type JSX } from 'react';
+import { AccessibilityInfo, Modal, StyleSheet, Text, TouchableOpacity, View, findNodeHandle } from 'react-native';
 
 export interface AccessibleModalProps {
   visible: boolean;
@@ -36,7 +28,7 @@ export function AccessibleModal({
   confirmAccessibilityLabel,
   cancelAccessibilityLabel
 }: AccessibleModalProps): JSX.Element {
-  const confirmRef = useRef<TouchableOpacity | null>(null);
+  const confirmRef = useRef<ComponentRef<typeof TouchableOpacity> | null>(null);
 
   useEffect(() => {
     if (!visible) {
@@ -45,7 +37,11 @@ export function AccessibleModal({
     const timeout = setTimeout(() => {
       const node = confirmRef.current ? findNodeHandle(confirmRef.current) : null;
       if (node) {
-        AccessibilityInfo.setAccessibilityFocus(node).catch(() => undefined);
+        try {
+          AccessibilityInfo.setAccessibilityFocus(node);
+        } catch {
+          // native focus failed; ignore
+        }
       }
     }, 150);
     return () => clearTimeout(timeout);

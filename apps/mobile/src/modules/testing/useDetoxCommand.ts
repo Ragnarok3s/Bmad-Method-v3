@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import { NativeEventEmitter, NativeModules, type NativeModule } from 'react-native';
 
 type CommandPayload = Record<string, unknown> | undefined;
 
@@ -20,7 +20,7 @@ export function useDetoxCommand(type: string, handler: CommandHandler): void {
     if (!isDetoxAvailable()) {
       return;
     }
-    const detoxModule = (NativeModules as unknown as { Detox: object }).Detox;
+    const detoxModule = (NativeModules as unknown as { Detox: NativeModule }).Detox;
     const emitter = new NativeEventEmitter(detoxModule);
     const subscription = emitter.addListener('DetoxAction', (action: DetoxAction) => {
       if (action.type === type) {

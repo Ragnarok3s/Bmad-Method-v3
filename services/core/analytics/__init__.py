@@ -10,11 +10,6 @@ from .ingestion import (
     KafkaMessage,
     KafkaStreamConfig,
     KafkaStream,
-    DeltaLakeConfig,
-    DeltaLakeWriter,
-    DeltaWriteResult,
-    StreamingIngestionPipeline,
-    StreamingIngestionResult,
 )
 from .query import (
     MetricSpec,
@@ -33,11 +28,6 @@ __all__ = [
     "KafkaMessage",
     "KafkaStreamConfig",
     "KafkaStream",
-    "DeltaLakeConfig",
-    "DeltaLakeWriter",
-    "DeltaWriteResult",
-    "StreamingIngestionPipeline",
-    "StreamingIngestionResult",
     "QueryFilter",
     "MetricSpec",
     "QueryResult",
