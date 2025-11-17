@@ -11,11 +11,13 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "types": [
       "jest",
@@ -41,7 +43,8 @@
     "**/*.mjs",
     ".next/types/**/*.ts",
     "../tests/**/*.ts",
-    "../tests/**/*.tsx"
+    "../tests/**/*.tsx",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
