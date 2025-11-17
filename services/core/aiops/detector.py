@@ -76,9 +76,6 @@ class AIOpsAnomalyDetector:
         results.extend(self._detect_telemetry())
         return results
 
-    def detect_recommendations(self) -> list[Recommendation]:
-        return [result.to_recommendation(now_provider=self._now_provider) for result in self.detect()]
-
     def _detect_reservations(self) -> list[AnomalyDetectionResult]:
         baseline = self.registry.load_latest("reservations.daily_volume")
         if baseline is None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Iterable, MutableMapping, Protocol, Sequence
+from typing import Any, Iterable, MutableMapping, Protocol, Sequence
 
 from sqlalchemy import inspect as sa_inspect, select
 from sqlalchemy.orm import Session
@@ -136,16 +136,6 @@ class IncrementalAnalyticsPipeline:
                 )
             )
         return results
-
-    def cached_state(self) -> Dict[str, datetime | None]:
-        return {
-            name: max((source.cursor(record) for record in records.values()), default=None)
-            for name, records in self._datasets.items()
-            for source in [self._sources[name]]
-        }
-
-    def reset(self) -> None:
-        self._datasets.clear()
 
 
 # Pipeline padrão reutilizado pelos serviços.
