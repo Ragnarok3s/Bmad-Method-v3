@@ -7,22 +7,24 @@ import sys
 from pathlib import Path
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
 def _ensure_repo_root() -> None:
-    root = Path(__file__).resolve().parents[1]
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
 
 
 _ensure_repo_root()
 
-from quality.pci import generate_pci_report  # noqa: E402
+from backend.quality.pci import generate_pci_report  # noqa: E402
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Executa verificações PCI simuladas")
     parser.add_argument(
         "--output",
-        default="quality/reports",
+        default=REPO_ROOT / "backend/quality/reports",
         help="Diretório onde o relatório pci-report.json será salvo",
     )
     args = parser.parse_args()
