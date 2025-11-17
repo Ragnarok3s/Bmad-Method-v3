@@ -2,16 +2,17 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$ROOT_DIR/backend"
 ARTIFACT_DIR="$ROOT_DIR/artifacts"
 JUNIT_DIR="$ARTIFACT_DIR/junit"
 
 mkdir -p "$JUNIT_DIR"
 
 run_pytest_e2e() {
-  if compgen -G "$ROOT_DIR/tests/e2e/*.py" > /dev/null; then
+  if compgen -G "$BACKEND_DIR/tests/e2e/*.py" > /dev/null; then
     echo "[test-e2e] Executando pytest -m e2e"
     (
-      cd "$ROOT_DIR" && \
+      cd "$BACKEND_DIR" && \
       pytest \
         -m e2e \
         --junitxml="$JUNIT_DIR/e2e-tests.xml"
@@ -22,11 +23,11 @@ run_pytest_e2e() {
 }
 
 run_web_e2e() {
-  if [ -f "$ROOT_DIR/apps/web/package.json" ]; then
+  if [ -f "$ROOT_DIR/frontend/package.json" ]; then
     echo "[test-e2e] Preparando navegadores Playwright"
     if ! (
       cd "$ROOT_DIR" && \
-      npm run prepare:web:e2e --if-present
+      npm run prepare:frontend:e2e --if-present
     ); then
       echo "[test-e2e] Aviso: não foi possível instalar navegadores Playwright. Ignorando cenários E2E do frontend." >&2
       return 2
@@ -35,7 +36,7 @@ run_web_e2e() {
     echo "[test-e2e] Executando Playwright no frontend"
     (
       cd "$ROOT_DIR" && \
-      npm run test:web:e2e --if-present
+      npm run test:frontend:e2e --if-present
     )
     return 0
   fi

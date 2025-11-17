@@ -13,7 +13,7 @@
 
 ## Procedimento para Ativar o PSP Real
 1. **Pré-requisitos**
-   - Drivers reais registrados em `services/payments/gateways/` e validados em staging.
+   - Drivers reais registrados em `backend/services/payments/gateways/` e validados em staging.
    - Evidências atualizadas no checklist PCI e no roadmap de riscos.
    - Aprovação do steering operacional documentada em `docs/roadmap-riscos.md`.
 2. **Passos**

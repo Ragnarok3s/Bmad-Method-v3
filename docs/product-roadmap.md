@@ -34,8 +34,8 @@ Este documento define o backlog inicial e o roadmap do MVP para o produto Bmad M
 
 ### Atualização 2025-02-15 — Identidade Multi-Tenant
 
-- **Novo serviço de identidade**: foi criado `services/identity`, com endpoints `POST /tenants/{tenant_slug}/login`, `POST /tenants/{tenant_slug}/mfa/verify` e rotas de gestão de papéis (`/tenants/{tenant_slug}/roles`). A camada reutiliza o `AuthenticationService` do core e aplica isolamento via repositório `TenantAgentAccess`, garantindo autenticação e autorização alinhadas às dependências listadas na arquitetura core.
-- **Fluxo validado em testes automatizados**: a suíte dedicada `pytest tests/services/identity -q` documentada em [`docs/testing-strategy.md`](testing-strategy.md#suites-dedicadas-atualização-2025-02-15) cobre login, MFA e revogação de papéis por tenant, garantindo regressão automatizada.
+- **Novo serviço de identidade**: foi criado `backend/services/identity`, com endpoints `POST /tenants/{tenant_slug}/login`, `POST /tenants/{tenant_slug}/mfa/verify` e rotas de gestão de papéis (`/tenants/{tenant_slug}/roles`). A camada reutiliza o `AuthenticationService` do core e aplica isolamento via repositório `TenantAgentAccess`, garantindo autenticação e autorização alinhadas às dependências listadas na arquitetura core.
+- **Fluxo validado em testes automatizados**: a suíte dedicada `pytest tests/backend/services/identity -q` documentada em [`docs/testing-strategy.md`](testing-strategy.md#suites-dedicadas-atualização-2025-02-15) cobre login, MFA e revogação de papéis por tenant, garantindo regressão automatizada.
 - **Controles de segurança mapeados**: os impactos e checkpoints estão descritos em [`docs/security/security-scan-2025-02-14.md`](security/security-scan-2025-02-14.md#identity-service-hardening) e na matriz STRIDE atualizada ([`docs/security/stride-integracoes-housekeeping.md`](security/stride-integracoes-housekeeping.md#camada-de-identidade-multi-tenant)). O roadmap passa a rastrear esses artefatos como dependências explícitas do épico `BL-05`.
 
 ```mermaid

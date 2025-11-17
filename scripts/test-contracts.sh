@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$ROOT_DIR/backend"
 ARTIFACT_DIR="$ROOT_DIR/artifacts/contracts"
 PACT_OUTPUT="$ARTIFACT_DIR/pacts"
 JUNIT_DIR="$ROOT_DIR/artifacts/junit"
@@ -10,11 +11,11 @@ mkdir -p "$ARTIFACT_DIR" "$PACT_OUTPUT" "$JUNIT_DIR"
 
 echo "[contracts] Executando suíte de contratos Pact"
 (
-  cd "$ROOT_DIR"
+  cd "$BACKEND_DIR"
   pytest tests/contracts --junitxml="$JUNIT_DIR/contracts-tests.xml"
 )
 
-SOURCE_PACTS="$ROOT_DIR/tests/contracts/pacts"
+SOURCE_PACTS="$BACKEND_DIR/tests/contracts/pacts"
 if [ -d "$SOURCE_PACTS" ]; then
   echo "[contracts] Publicando pacts em $PACT_OUTPUT"
   rm -rf "$PACT_OUTPUT"

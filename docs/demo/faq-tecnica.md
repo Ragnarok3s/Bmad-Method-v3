@@ -16,7 +16,7 @@ Guia rápido para times de suporte e engenharia durante execuções de demo do B
 
 ### Como gerar dados de demonstração consistentes?
 - Execute `scripts/infra/seed-dev-data.sh` ou `scripts/infra/seed-data.sh` para popular o banco local com entidades base.
-- O `MarketplaceService` (registrado em `services/core/api/partners.py`) já inclui apps de exemplo para integrações.
+- O `MarketplaceService` (registrado em `backend/services/core/api/partners.py`) já inclui apps de exemplo para integrações.
 - Funções de mascaramento (`quality.privacy.mask_personal_identifiers`) garantem que PII não apareça em listagens.
 
 ### Quais testes devo rodar antes da apresentação?
@@ -32,7 +32,7 @@ Guia rápido para times de suporte e engenharia durante execuções de demo do B
 
 ### Onde encontro logs de auditoria da sessão demo?
 - Consulte `/governance/audit` no Core ou acesse o dashboard `grafana/compliance/compliance-overview.json`.
-- Eventos de autenticação ficam registrados via `record_audit_event` (`services/core/security/auth.py`).
+- Eventos de autenticação ficam registrados via `record_audit_event` (`backend/services/core/security/auth.py`).
 
 ### Como responder dúvidas sobre integrações de parceiros?
 - Direcione para `docs/api/core.md#marketplace-e-parcerias` que lista os endpoints `/marketplace`.

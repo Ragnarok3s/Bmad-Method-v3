@@ -1,7 +1,7 @@
 # Revisão dos serviços Identity e Payments
 
 ## Visão geral
-- **Status atual:** não existem diretórios `services/identity` ou `services/payments` no repositório.
+- **Status atual:** não existem diretórios `backend/services/identity` ou `backend/services/payments` no repositório.
 - **Impacto:** impossibilidade de mapear dependências, revisar controladores/repositórios/middlewares ou executar suítes de testes específicas para cada serviço.
 - **Ações correlatas:** issues abertas para rastrear a ausência dos serviços e a falha de testes globais relacionada a métricas do serviço Core.
 

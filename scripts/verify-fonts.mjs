@@ -9,7 +9,7 @@ const fontkit = require('fontkit');
 
 const MIN_FONT_BYTES = Number(process.env.MIN_WOFF2_BYTES ?? 1024);
 const roots = process.argv.slice(2);
-const searchRoots = roots.length > 0 ? roots : ['apps/web/.next/static/media'];
+const searchRoots = roots.length > 0 ? roots : ['frontend/.next/static/media'];
 
 async function pathExists(targetPath) {
   try {

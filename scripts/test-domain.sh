@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$ROOT_DIR/backend"
 ARTIFACT_DIR="$ROOT_DIR/artifacts"
 COVERAGE_DIR="$ARTIFACT_DIR/coverage"
 JUNIT_DIR="$ARTIFACT_DIR/junit"
@@ -15,7 +16,7 @@ run_suite() {
   echo "[test-domain] Executando suíte ${marker}" >&2
   export COVERAGE_FILE="$COVERAGE_DIR/.coverage.${name}"
   (
-    cd "$ROOT_DIR" && \
+    cd "$BACKEND_DIR" && \
     pytest \
       -m "$marker" \
       --maxfail=1 \

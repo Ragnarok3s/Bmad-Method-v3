@@ -1,7 +1,7 @@
 # Controles de Segurança do Serviço de Identidade
 
 ## Visão Geral
-O serviço `services/identity` implementa autenticação multi-tenant reutilizando os componentes centrais de segurança (`AuthenticationService`) e o repositório `TenantAccessRepository` para garantir isolamento entre tenants. Cada requisição é isolada por slug de tenant e validada pelo `TenantManager`, que associa a sessão de banco de dados ao escopo correto antes de executar a lógica de autenticação.
+O serviço `backend/services/identity` implementa autenticação multi-tenant reutilizando os componentes centrais de segurança (`AuthenticationService`) e o repositório `TenantAccessRepository` para garantir isolamento entre tenants. Cada requisição é isolada por slug de tenant e validada pelo `TenantManager`, que associa a sessão de banco de dados ao escopo correto antes de executar a lógica de autenticação.
 
 ## MFA e Gestão de Sessões
 - O login inicia via `TenantAwareAuthenticationService`, que delega à `AuthenticationService` as verificações de senha, bloqueio antiforça bruta e desafio MFA.
@@ -14,7 +14,7 @@ O serviço `services/identity` implementa autenticação multi-tenant reutilizan
 - O serviço ativa a instrumentação OTEL quando `observability.enable_*` está habilitado, exportando métricas e traces para a stack de monitoramento.
 
 ## Evidências e Testes
-- A suíte `pytest tests/services/identity` cobre fluxos de login, MFA, atribuição de papéis e cenários de isolamento multi-tenant. Ela também valida a presença de eventos de auditoria persistidos.
+- A suíte `pytest tests/backend/services/identity` cobre fluxos de login, MFA, atribuição de papéis e cenários de isolamento multi-tenant. Ela também valida a presença de eventos de auditoria persistidos.
 - O pipeline `backend.yml` garante a execução automatizada desses testes, gerando relatórios JUnit e cobertura para revisão do time de segurança.
 
 ## Checklist de Conformidade

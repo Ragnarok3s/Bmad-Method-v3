@@ -4,7 +4,7 @@ services:
   frontend:
     build:
       context: ..
-      dockerfile: apps/web/Dockerfile
+      dockerfile: frontend/Dockerfile
     environment:
       NEXT_PUBLIC_CORE_API_BASE_URL: "http://localhost:8000"
     ports:
@@ -19,7 +19,7 @@ services:
   backend:
     build:
       context: ..
-      dockerfile: services/core/Dockerfile
+      dockerfile: backend/services/core/Dockerfile
     environment:
       CORE_DATABASE_URL: "postgresql+psycopg://core:core@db:5432/core"
       CORE_ALLOWED_ORIGINS: "http://localhost:3000"
@@ -35,7 +35,7 @@ services:
   identity:
     build:
       context: ..
-      dockerfile: services/identity/Dockerfile
+      dockerfile: backend/services/identity/Dockerfile
     environment:
       CORE_DATABASE_URL: "postgresql+psycopg://core:core@db:5432/core"
       CORE_ALLOWED_ORIGINS: "http://localhost:3000"

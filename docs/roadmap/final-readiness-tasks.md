@@ -6,7 +6,7 @@ Conjunto de ações restantes para concluir a preparação comercial antes do go
 - Implementar a validação de `idempotency_key` no gateway de pagamentos e promover as atualizações necessárias no modelo de reconciliação do data warehouse para refletir os campos novos exigidos no relatório final de compliance.
 
 :::task-stub{title="Encerrar BILL-230 e atualizar reconciliação"}
-1. Revisar `services/billing/api/routes.py` e os drivers/clients do gateway em `services/payments/` (por exemplo `services/payments/drivers.py` e `services/payments/gateways/`) para garantir a propagação e validação do `idempotency_key` em chamadas externas (ticket `BILL-230`).
+1. Revisar `services/billing/api/routes.py` e os drivers/clients do gateway em `backend/services/payments/` (por exemplo `backend/services/payments/drivers.py` e `backend/services/payments/gateways/`) para garantir a propagação e validação do `idempotency_key` em chamadas externas (ticket `BILL-230`).
 2. Atualizar contratos e testes de integração relacionados (`tests/e2e/payments/test_gateway_flows.py`, `tests/integration/test_payments_gateway.py`) cobrindo cenários com chave idempotente repetida.
 3. Ajustar modelos do data warehouse em `analytics/dbt/models/` (criar pasta `payments/` se necessário) incorporando colunas de reconciliação exigidas no relatório e atualizar o arquivo `schema.yml` correspondente (por exemplo em `analytics/dbt/models/silver/schema.yml`).
 4. Atualizar checkboxes pendentes em `docs/compliance/releases/2024-07-15-billing-gateway/final-report.md` com evidências anexadas no mesmo diretório.
@@ -46,9 +46,9 @@ Conjunto de ações restantes para concluir a preparação comercial antes do go
 - Concluir a paridade funcional e de acessibilidade entre as rotas `/agentes` e `/agents`, incluindo telemetria e testes.
 
 :::task-stub{title="Finalizar BL-02 para a variante `/agentes`"}
-1. Implementar catálogo dinâmico na página `apps/web/app/agentes/page.tsx` reutilizando `useAgentsCatalog`, `AgentsFilters` e telemetria de pré-configuração; garantir internacionalização adequada em `apps/web/i18n/`.
-2. Extrair o botão de ação compartilhado para `apps/web/components/actions/LaunchBundleButton.tsx` (ou pasta equivalente) e substituir usos em `/agents` e `/agentes`.
-3. Adicionar testes RTL e axe em `apps/web/src/__tests__/agentes/` cobrindo estados carregado, vazio, erro e navegação por teclado; garantir execução via `npm run test --workspace @bmad/web`.
+1. Implementar catálogo dinâmico na página `frontend/app/agentes/page.tsx` reutilizando `useAgentsCatalog`, `AgentsFilters` e telemetria de pré-configuração; garantir internacionalização adequada em `frontend/i18n/`.
+2. Extrair o botão de ação compartilhado para `frontend/components/actions/LaunchBundleButton.tsx` (ou pasta equivalente) e substituir usos em `/agents` e `/agentes`.
+3. Adicionar testes RTL e axe em `frontend/src/__tests__/agentes/` cobrindo estados carregado, vazio, erro e navegação por teclado; garantir execução via `npm run test --workspace @bmad/web`.
 4. Atualizar `docs/product/backlog.md`, `docs/product-roadmap.md` e a issue `docs/issues/agents-page-feedback-a11y.md` com evidências (prints, logs de testes) e fechar o épico BL-02.
 :::
 

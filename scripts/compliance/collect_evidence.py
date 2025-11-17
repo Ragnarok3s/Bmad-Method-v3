@@ -32,9 +32,9 @@ EVIDENCE_TARGETS: Sequence[dict[str, object]] = (
         "id": "iam_access_control",
         "description": "Decisões de IAM/MFA e checkpoints de auditoria",
         "paths": [
-            Path("services/core/security/__init__.py"),
-            Path("services/core/security/auth.py"),
-            Path("services/core/observability.py"),
+            Path("backend/services/core/security/__init__.py"),
+            Path("backend/services/core/security/auth.py"),
+            Path("backend/services/core/observability.py"),
         ],
     },
     {

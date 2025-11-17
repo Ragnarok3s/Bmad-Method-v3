@@ -10,7 +10,7 @@ Este documento resume o estado de readiness das iniciativas prioritárias e apon
 | BL-01 | Onboarding | UX hand-off, APIs de cadastro, smoke tests Sprint 1 | Squad Core Platform — Laura Pinto / Rafael Monteiro | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-01-onboarding) |
 | BL-04 | Observabilidade | Dashboards seed, SLAs operacionais, alertas revisados com Platform Engineering | Squad Platform — Bruno Carvalho / Bianca Souza | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-04-observabilidade-fundacional) |
 | BL-05 | Governança | Matriz STRIDE identitária, runbooks de acesso, owners confirmados | Squad Security & Access — Carlos Mendes / Ana Ribeiro | [DoR Sprint 1](evidencias/dor-sprint1-validacoes.md#bl-05-governança-perfis-básicos) |
-| BL-PAY01 | Pagamentos PCI Ready | Drivers `services/payments/gateways` (Stripe/Adyen), cofre de tokens (`SecureTokenVault`), suíte de testes PCI, reconciliação 30/07 (`docs/integracoes/2024-07-30-pagamentos-recon.md`) | Payments & Security — Rafael Monteiro / Camila Duarte | [Controles PCI](compliance/controles.md#pci-dss-—-tokenização-e-fluxo-de-pagamentos) |
+| BL-PAY01 | Pagamentos PCI Ready | Drivers `backend/services/payments/gateways` (Stripe/Adyen), cofre de tokens (`SecureTokenVault`), suíte de testes PCI, reconciliação 30/07 (`docs/integracoes/2024-07-30-pagamentos-recon.md`) | Payments & Security — Rafael Monteiro / Camila Duarte | [Controles PCI](compliance/controles.md#pci-dss-—-tokenização-e-fluxo-de-pagamentos) |
 
 ## Responsáveis e Próximos Marcos
 - **Product Owner (Ana Ribeiro)**: mantém prioridade dos épicos BL-HK01/02 e aprova alterações via RFCs `RFC-2024-07-22-HK-SYNC` e `RFC-2024-07-22-PARTNER-WEBHOOKS`.

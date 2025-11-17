@@ -7,7 +7,7 @@
       "description": "Decisões de IAM/MFA e checkpoints de auditoria",
       "files": [
         {
-          "path": "services/core/observability.py",
+          "path": "backend/services/core/observability.py",
           "exists": true,
           "kind": "file",
           "sha256": "070e567dbf857c76d598c83d39444eb51495e5a55af3dd109aa4fd11dade8656",
@@ -15,7 +15,7 @@
           "modified_at": "2025-10-29T02:24:00.086212Z"
         },
         {
-          "path": "services/core/security/__init__.py",
+          "path": "backend/services/core/security/__init__.py",
           "exists": true,
           "kind": "file",
           "sha256": "57218163aba358eb9301b6e4870903e88a76b509b9d6d6f0c7c8a5027fb6d7f3",
@@ -23,7 +23,7 @@
           "modified_at": "2025-10-29T02:25:04.058057Z"
         },
         {
-          "path": "services/core/security/auth.py",
+          "path": "backend/services/core/security/auth.py",
           "exists": true,
           "kind": "file",
           "sha256": "9e087ae9772c1db18c2ee0549be7172ea66ff2c1886337dc5ee948dbcf626070",

@@ -1,7 +1,7 @@
 # Runbook – Observabilidade dos Serviços Core
 
 ## Objetivo
-Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar métricas, logs e traces para a stack definida em `docs/observability-stack.md`, com evidências versionadas nos pipelines.
+Garantir que backend (`backend/services/core`) e frontend (`frontend`) estejam a enviar métricas, logs e traces para a stack definida em `docs/observability-stack.md`, com evidências versionadas nos pipelines.
 
 ## Checklist Diário
 
@@ -34,7 +34,7 @@ Garantir que backend (`services/core`) e frontend (`apps/web`) estejam a enviar 
    - Frontend: inspecionar contador `bmad_web_page_view_total` (confirmar que o app foi acedido após deploy).
    - Reservas: validar `bmad_web_reservations_fetch_outcome_total` (sem picos de `result="error"`) e `bmad_web_reservation_status_outcome_total` (erros de mutação devem ser transitórios).
 3. **Logs/Traces**
-   - Confirmar que `services/core/observability.py` adicionou handler de logging (verificar `service.instance.id` nos logs Loki).
+   - Confirmar que `backend/services/core/observability.py` adicionou handler de logging (verificar `service.instance.id` nos logs Loki).
    - Validar `signals.logs.last_event` e `signals.traces.last_event` via `/health/otel`.
    - Verificar se o Collector está encaminhando para Loki/Tempo conforme manifestos de infra (`logs -> loki`, `traces -> tempo`).
 4. **Reprocessamento**

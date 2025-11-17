@@ -13,11 +13,11 @@ Os componentes principais são:
 
 | Componente | Responsabilidade |
 | --- | --- |
-| `services/core/communications` | Motor de templates, entregabilidade e histórico de mensagens |
-| `services/core/api/rest` | APIs REST `/guest-experience/*` e `/communications/*` |
-| `services/core/automation.py` | Sincronização de preferências e telemetria de satisfação |
-| `apps/web/app/guest-experience` | Painel operacional para times de experiência |
-| `apps/web/app/analytics` | Indicadores de jornada digital no dashboard executivo |
+| `backend/services/core/communications` | Motor de templates, entregabilidade e histórico de mensagens |
+| `backend/services/core/api/rest` | APIs REST `/guest-experience/*` e `/communications/*` |
+| `backend/services/core/automation.py` | Sincronização de preferências e telemetria de satisfação |
+| `frontend/app/guest-experience` | Painel operacional para times de experiência |
+| `frontend/app/analytics` | Indicadores de jornada digital no dashboard executivo |
 
 ## Painel de Saúde
 

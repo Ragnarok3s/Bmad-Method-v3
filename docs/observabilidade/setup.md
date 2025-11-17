@@ -37,7 +37,7 @@ Este documento acompanha a revisão contínua dos scripts `scripts/infra/provisi
    - Dispara `scripts/infra/seed-staging-data.sh`, que delega para `seed-data.sh` com parâmetros apropriados, garantindo consistência dos dados entre ambientes.【F:scripts/infra/reset-staging.sh†L4-L29】【F:scripts/infra/seed-staging-data.sh†L1-L6】
 
 ## Observabilidade pós-execução
-- Validar `GET /health/otel` do backend para garantir que traces, métricas e logs continuam ativos (os sinais são atualizados por `services/core/observability.py`).
+- Validar `GET /health/otel` do backend para garantir que traces, métricas e logs continuam ativos (os sinais são atualizados por `backend/services/core/observability.py`).
 - Conferir dashboards `grafana/staging/bmad-agents-001.json` e `bmad-ops-002.json`, além das regras `grafana/alerts/staging.yaml`, utilizando o script `scripts/run-quality-gates.sh` para capturar evidências de conformidade.【F:scripts/run-quality-gates.sh†L1-L20】【F:scripts/verify_observability_gates.py†L26-L107】
 - Registrar anomalias seguindo `docs/runbooks/observabilidade-servicos.md`.
 

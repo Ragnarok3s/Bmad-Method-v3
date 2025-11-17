@@ -26,15 +26,15 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 - Regras de alerta para cerimônias de QA configuradas em `grafana/alerts/qa-observability.yaml`, notificando o canal `#qa-reviews`.
 - Runbook específico para revisão de QA/observabilidade disponível em `docs/runbooks/qa-observability-review.md`.
 - Métricas de seed (`seed_job_success` e `seed_job_last_run_timestamp`) exportadas por `scripts/infra/seed-*-data.sh` e alertas dedicados em `grafana/alerts/seed-jobs.yaml`.
-- Instrumentação backend publicada em `services/core/observability.py` e métricas de domínio em `services/core/metrics.py`.
-- Telemetria do frontend inicializada via `apps/web/components/telemetry/TelemetryProvider.tsx` e `apps/web/telemetry/init.ts`, respeitando `NEXT_PUBLIC_ENABLE_TELEMETRY` e só criando exportadores OTLP quando `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` está definido.
+- Instrumentação backend publicada em `backend/services/core/observability.py` e métricas de domínio em `backend/services/core/metrics.py`.
+- Telemetria do frontend inicializada via `frontend/components/telemetry/TelemetryProvider.tsx` e `frontend/telemetry/init.ts`, respeitando `NEXT_PUBLIC_ENABLE_TELEMETRY` e só criando exportadores OTLP quando `NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` está definido.
 - Dashboards novos (`grafana/staging/bmad-agents-001.json`, `grafana/staging/bmad-ops-002.json`) e alertas `grafana/alerts/staging.yaml` alinhados aos serviços core/web.
 
 ## Logs
 
 | Camada | Ferramenta | Motivo | Implementação |
 |--------|------------|--------|---------------|
-| Aplicação | OpenTelemetry SDK (FastAPI/Next.js) | Instrumentação nativa e correlação com métricas/traces | Exporters OTLP configurados em `services/core/observability.py` e condicionados pelas variáveis `NEXT_PUBLIC_ENABLE_TELEMETRY`/`NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` em `apps/web/telemetry/init.ts` |
+| Aplicação | OpenTelemetry SDK (FastAPI/Next.js) | Instrumentação nativa e correlação com métricas/traces | Exporters OTLP configurados em `backend/services/core/observability.py` e condicionados pelas variáveis `NEXT_PUBLIC_ENABLE_TELEMETRY`/`NEXT_PUBLIC_OTEL_EXPORTER_OTLP_ENDPOINT` em `frontend/telemetry/init.ts` |
 | Coletor | OpenTelemetry Collector | Normaliza OTLP (gRPC/HTTP), aplica enriquecimento e roteia para destinos múltiplos | Deploy Helm/Kustomize com pipelines `logs -> loki` e `logs -> S3` (opcional) |
 | Armazenamento | Grafana Loki | Consulta rápida por labels (`service.name`, `deployment.environment`) e retenção econômica | StatefulSet gerenciado pelo time de plataforma; configuração referenciada em `grafana/` |
 | Visualização | Grafana Explore | Interface unificada com correlação por traceID e dashboards versionados | Dashboards/queries salvos em `grafana/staging/*.json` |
@@ -43,7 +43,7 @@ Este documento recomenda ferramentas e práticas de logs, métricas e alertas pa
 
 | Camada | Ferramenta | Motivo | Implementação |
 |--------|------------|--------|---------------|
-| Instrumentação | OpenTelemetry SDK (metrics API) | Conjuntos de métricas compartilhados entre backend e frontend | Counters/recorders definidos em `services/core/metrics.py` e `apps/web/telemetry/init.ts` |
+| Instrumentação | OpenTelemetry SDK (metrics API) | Conjuntos de métricas compartilhados entre backend e frontend | Counters/recorders definidos em `backend/services/core/metrics.py` e `frontend/telemetry/init.ts` |
 | Gateway | OpenTelemetry Collector | Converte OTLP -> Prometheus Remote Write e agrega atributos padrão | Pipeline `metrics -> prometheusremotewrite` com labels `service.namespace`, `deployment.environment` |
 | Armazenamento | Prometheus + Thanos | Retenção >30 dias e query distribuída | Instâncias dedicadas por ambiente com sidecar Thanos para histórico | 
 | Visualização | Grafana | Dashboards multi-fonte e alertas versionados | Dashboards em `grafana/staging/` validados por `verify_observability_gates.py` |

@@ -2,8 +2,8 @@
 
 Esta pasta concentra a documentação de referência dos serviços HTTP expostos pelo MVP.
 
-- [`core.md`](core.md) — Endpoints REST e operações GraphQL do serviço `services/core`.
-- [`identity.md`](identity.md) — Fluxos de autenticação e governança multi-tenant do serviço `services/identity`.
+- [`core.md`](core.md) — Endpoints REST e operações GraphQL do serviço `backend/services/core`.
+- [`identity.md`](identity.md) — Fluxos de autenticação e governança multi-tenant do serviço `backend/services/identity`.
 
 > **Headers multi-tenant**
 >

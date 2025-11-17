@@ -5,9 +5,9 @@
 
 | Controle | Arquivo | Existe? | Tipo | Hash | Última alteração |
 | --- | --- | --- | --- | --- | --- |
-| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | services/core/observability.py | ✅ | file | 070e567dbf857c76d598c83d39444eb51495e5a55af3dd109aa4fd11dade8656 | 2025-10-29T02:24:00.086212Z |
-| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | services/core/security/__init__.py | ✅ | file | 57218163aba358eb9301b6e4870903e88a76b509b9d6d6f0c7c8a5027fb6d7f3 | 2025-10-29T02:25:04.058057Z |
-| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | services/core/security/auth.py | ✅ | file | 9e087ae9772c1db18c2ee0549be7172ea66ff2c1886337dc5ee948dbcf626070 | 2025-10-29T00:00:45.775388Z |
+| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | backend/services/core/observability.py | ✅ | file | 070e567dbf857c76d598c83d39444eb51495e5a55af3dd109aa4fd11dade8656 | 2025-10-29T02:24:00.086212Z |
+| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | backend/services/core/security/__init__.py | ✅ | file | 57218163aba358eb9301b6e4870903e88a76b509b9d6d6f0c7c8a5027fb6d7f3 | 2025-10-29T02:25:04.058057Z |
+| iam_access_control — Decisões de IAM/MFA e checkpoints de auditoria | backend/services/core/security/auth.py | ✅ | file | 9e087ae9772c1db18c2ee0549be7172ea66ff2c1886337dc5ee948dbcf626070 | 2025-10-29T00:00:45.775388Z |
 | governance_audit_log — Histórico de auditoria funcional | docs/evidencias/compliance | ✅ | directory | - | 2025-10-29T00:00:45.763388Z |
 | governance_audit_log — Histórico de auditoria funcional | docs/evidencias/compliance/README.md | ✅ | file | f9015ee71d9690f74bf3ada5fe2bd6029f9cb3cc7c5e693c1c8dfc321b979a80 | 2025-10-29T00:00:45.763388Z |
 | governance_audit_log — Histórico de auditoria funcional | docs/evidencias/security | ✅ | directory | - | 2025-10-29T00:00:45.763388Z |

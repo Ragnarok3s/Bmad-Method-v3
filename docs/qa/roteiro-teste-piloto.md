@@ -6,7 +6,7 @@ Garantir que as rotinas críticas de reservas, pagamentos e integrações OTA es
 ## Escopo do Piloto
 - **Propriedades participantes**: selecionar 3 hotéis urbanos e 2 resorts com mix de tarifas flexíveis e não reembolsáveis.
 - **Período de observação**: 30 dias corridos com janelas quinzenais de checkpoint.
-- **Métricas base**: ocupação, ADR e receita calculadas pelo serviço `services/core/analytics/reports.py` com filtros por propriedade.
+- **Métricas base**: ocupação, ADR e receita calculadas pelo serviço `backend/services/core/analytics/reports.py` com filtros por propriedade.
 
 ## Preparação
 1. Instrumentar o backend executando `pytest -m reservations/payments/ota` via `./scripts/test-domain.sh` para garantir estabilidade das suites críticas antes de cada onda do piloto.
@@ -33,4 +33,4 @@ Garantir que as rotinas críticas de reservas, pagamentos e integrações OTA es
 
 ## Follow-up
 - Consolidar evidências no documento `docs/revisao-validacao-artefatos.md` na próxima revisão trimestral.
-- Atualizar componentes do dashboard QA conforme feedback de adoção (ver `apps/web/app/reports/page.tsx`).
+- Atualizar componentes do dashboard QA conforme feedback de adoção (ver `frontend/app/reports/page.tsx`).

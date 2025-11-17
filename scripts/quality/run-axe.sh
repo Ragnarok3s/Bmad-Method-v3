@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-APP_DIR="$ROOT_DIR/apps/web"
-OUTPUT_DIR="$ROOT_DIR/quality/reports/a11y"
+APP_DIR="$ROOT_DIR/frontend"
+OUTPUT_DIR="$ROOT_DIR/backend/quality/reports/a11y"
 PORT="${AXE_PORT:-3100}"
 HOST="127.0.0.1"
 BASE_URL="http://${HOST}:${PORT}"

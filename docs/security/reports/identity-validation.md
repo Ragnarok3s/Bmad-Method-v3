@@ -2,12 +2,12 @@
 
 ## Contexto da Execução
 - **Data/Hora (UTC):** 2025-11-03T18:07:24Z
-- **Escopo:** validação automatizada dos fluxos multi-tenant, MFA e auditoria do serviço `services/identity`.
+- **Escopo:** validação automatizada dos fluxos multi-tenant, MFA e auditoria do serviço `backend/services/identity`.
 
 ## Evidências
 | Verificação | Evidência |
 | ----------- | --------- |
-| Execução da suíte dedicada | `pytest tests/services/identity -q` → 4 testes aprovados cobrindo MFA, isolamento multi-tenant e auditoria de papéis. |
+| Execução da suíte dedicada | `pytest tests/backend/services/identity -q` → 4 testes aprovados cobrindo MFA, isolamento multi-tenant e auditoria de papéis. |
 | Persistência de auditoria para papéis | Eventos `tenant_role_assigned` e `tenant_role_revoked` gravados em `AuditLog` e validados nos testes automatizados. |
 | Observabilidade de tentativas negadas | Eventos `tenant_access_denied` capturados via `services.core.observability._STATE.audit_events`, garantindo trilha para incidentes de spoofing entre tenants. |
 

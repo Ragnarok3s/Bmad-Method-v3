@@ -57,8 +57,8 @@
 | Validar automação de changelog nas pipelines de release com feedback das squads | Joana Silva & Bruno Carvalho | 2024-07-19 | **Em andamento** | Teste piloto previsto para pipeline de 12/07; recolher feedback na retro da Sprint 0. |
 | Garantir versionamento contínuo das evidências de compliance e ações corretivas no repositório | PMO (Ana Ribeiro & Miguel Costa) | 2024-07-15 | **Em andamento** | Checklist de publicação atualizado; confirmar anexos no gate Kick-off. |
 | Ajustar foco visível no modal de confirmação (Web) pós-hand-off | Design Systems Ops | 2024-07-18 | **Em andamento** | Gap identificado no checklist `design/hospitality-ux/checklist-acessibilidade-hand-off-2024-07-15.md`; validação prevista no QA de Sprint 1. |
-| Confirmar descrição alternativa do ícone de sincronização offline (Mobile) | QA Acessibilidade | 2024-07-17 | **Concluída (aguardando validação dev)** | Atualizar card `UX-HK-25` após merge; acompanhar testes instrumentados no board mobile. |
-| Reordenar leitura do card de quartos no app mobile | Engenharia Mobile | 2024-07-22 | **Em andamento** | Dependência do componente React Native compartilhado; retestar com NVDA/VoiceOver conforme checklist de hand-off. |
+| Confirmar descrição alternativa do ícone de sincronização offline (Web) | QA Acessibilidade | 2024-07-17 | **Concluída (aguardando validação dev)** | Atualizar card `UX-HK-25` após merge; acompanhar testes instrumentados no board web. |
+| Reordenar leitura do card de quartos na interface web | Engenharia Frontend | 2024-07-22 | **Em andamento** | Ajustar componentes React e retestar com NVDA/VoiceOver conforme checklist de hand-off. |
 
 ## Escopo da Revisão
 Foram avaliados os seguintes artefatos entregues:
