@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$ROOT_DIR/backend"
 ARTIFACT_DIR="$ROOT_DIR/artifacts"
 COVERAGE_DIR="$ARTIFACT_DIR/coverage"
 JUNIT_DIR="$ARTIFACT_DIR/junit"
@@ -9,11 +10,11 @@ JUNIT_DIR="$ARTIFACT_DIR/junit"
 mkdir -p "$COVERAGE_DIR" "$JUNIT_DIR"
 
 run_pytest_unit() {
-  if find "$ROOT_DIR/tests" -type f -name "*.py" -print -quit 2>/dev/null | grep -q '.'; then
+  if find "$BACKEND_DIR/tests" -type f -name "*.py" -print -quit 2>/dev/null | grep -q '.'; then
     echo "[test-unit] Executando pytest com cobertura"
     export COVERAGE_FILE="$COVERAGE_DIR/.coverage.unit"
     (
-      cd "$ROOT_DIR" && \
+      cd "$BACKEND_DIR" && \
       pytest \
         -m "not integration and not e2e" \
         --cov=services.core \
@@ -52,7 +53,7 @@ run_api_client_unit() {
 }
 
 run_web_unit() {
-  if [ -f "$ROOT_DIR/apps/web/package.json" ]; then
+  if [ -f "$ROOT_DIR/frontend/package.json" ]; then
     echo "[test-unit] Executando testes unitários do frontend"
     (
       cd "$ROOT_DIR" && \
@@ -60,7 +61,7 @@ run_web_unit() {
         --coverage \
         --coverageReporters=cobertura \
         --coverageReporters=text \
-        --coverageDirectory=../../artifacts/coverage/web \
+        --coverageDirectory=../artifacts/coverage/web \
         --runInBand
     )
     local coverage_output="$COVERAGE_DIR/web"

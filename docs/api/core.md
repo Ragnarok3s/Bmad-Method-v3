@@ -1,11 +1,11 @@
 # Core Hospitality API
 
-Referência dos endpoints expostos por `services/core`. O serviço é entregue via FastAPI, usa autenticação delegada pelo gateway e aplica isolamento multi-tenant através dos headers `X-Tenant-*` descritos em [`README.md`](README.md).
+Referência dos endpoints expostos por `backend/services/core`. O serviço é entregue via FastAPI, usa autenticação delegada pelo gateway e aplica isolamento multi-tenant através dos headers `X-Tenant-*` descritos em [`README.md`](README.md).
 
 - **Base URL REST:** `/`
 - **Base URL GraphQL:** `/graphql`
 - **Autenticação:** tokens geridos pelo gateway/Identity. Operações que alteram estado requerem agente autenticado.
-- **Versionamento:** o schema atual corresponde à versão `0.1.0` do serviço (vide `services/core/main.py`).
+- **Versionamento:** o schema atual corresponde à versão `0.1.0` do serviço (vide `backend/services/core/main.py`).
 
 ## Endpoints REST
 

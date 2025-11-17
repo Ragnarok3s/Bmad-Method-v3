@@ -34,7 +34,7 @@ done
 
 if command -v bandit >/dev/null 2>&1; then
   echo "[quality-gates] Executando bandit"
-  bandit -q -r "$ROOT_DIR/quality" --severity-level medium --confidence-level medium -f json -o "$SECURITY_DIR/bandit-report.json"
+  bandit -q -r "$ROOT_DIR/backend/quality" --severity-level medium --confidence-level medium -f json -o "$SECURITY_DIR/bandit-report.json"
 else
   echo "[quality-gates] Bandit não disponível" >&2
   exit 1
@@ -50,7 +50,7 @@ fi
 
 if command -v pip-audit >/dev/null 2>&1; then
   echo "[quality-gates] Executando pip-audit"
-  pip-audit --requirement "$ROOT_DIR/requirements.txt" --format json --output "$SECURITY_DIR/pip-audit.json" || true
+  pip-audit --requirement "$ROOT_DIR/backend/requirements.txt" --format json --output "$SECURITY_DIR/pip-audit.json" || true
 else
   echo "[quality-gates] pip-audit não disponível" >&2
 fi

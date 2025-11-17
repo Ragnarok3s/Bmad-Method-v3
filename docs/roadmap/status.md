@@ -2,8 +2,8 @@
 
 ## Visão geral
 - **Lançamento Billing Gateway 2024-07-15** aprovado com ressalvas operacionais após sessão de go/no-go; deploy condicionado à execução do check `BILL-230` e monitoramento reforçado das métricas de retenção e observabilidade.【F:releases/2024-07-15-billing-gateway/go-no-go.md†L4-L29】【F:docs/roadmap/readiness-meetings.md†L16-L33】
-- **Épico BL-02 (Configuração de Agentes)** passou para estado "Entregue" após a paridade completa da rota `/agentes`, incluindo catálogo dinâmico, filtros acessíveis, telemetria de bundles e testes de regressão publicados.【F:docs/product/backlog.md†L6-L108】【F:apps/web/components/agents/AgentsCatalogView.tsx†L1-L236】
-- A issue de acessibilidade associada foi encerrada com as novas evidências e componentes partilhados documentados nos testes e backlog.【F:docs/issues/agents-page-feedback-a11y.md†L1-L84】【F:apps/web/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】
+- **Épico BL-02 (Configuração de Agentes)** passou para estado "Entregue" após a paridade completa da rota `/agentes`, incluindo catálogo dinâmico, filtros acessíveis, telemetria de bundles e testes de regressão publicados.【F:docs/product/backlog.md†L6-L108】【F:frontend/components/agents/AgentsCatalogView.tsx†L1-L236】
+- A issue de acessibilidade associada foi encerrada com as novas evidências e componentes partilhados documentados nos testes e backlog.【F:docs/issues/agents-page-feedback-a11y.md†L1-L84】【F:frontend/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】
 
 ## Status detalhado
 | Epic | Item de backlog | Situação | Comentários | Próximos passos |

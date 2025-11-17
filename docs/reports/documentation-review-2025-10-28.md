@@ -1,9 +1,9 @@
 # Revisão de Documentação – 28/10/2025
 
 ## 1. Atualizações aplicadas
-- **Plataforma & stack**: `platform-architecture-decisions.md` agora descreve a arquitetura real (Next.js 14 + FastAPI único, OTLP e GitOps com Argo CD), removendo referências a microserviços NestJS e serviços AWS que não existem no repositório.【F:platform-architecture-decisions.md†L3-L54】【F:services/core/main.py†L1-L24】【F:apps/web/telemetry/init.ts†L1-L79】
+- **Plataforma & stack**: `platform-architecture-decisions.md` agora descreve a arquitetura real (Next.js 14 + FastAPI único, OTLP e GitOps com Argo CD), removendo referências a microserviços NestJS e serviços AWS que não existem no repositório.【F:platform-architecture-decisions.md†L3-L54】【F:backend/services/core/main.py†L1-L24】【F:frontend/telemetry/init.ts†L1-L79】
 - **Scripts de infraestrutura**: `docs/observabilidade/setup.md` documenta as validações atuais dos scripts de provisionamento/reset, citando manifests versionados e o fluxo de seed automatizado recentemente adicionado.【F:docs/observabilidade/setup.md†L1-L51】【F:scripts/infra/provision-dev.sh†L7-L61】【F:scripts/infra/reset-staging.sh†L4-L29】
-- **Stack de observabilidade**: `docs/observability-stack.md` foi alinhado à stack LGTM (Loki/Grafana/Tempo/Prometheus) e à instrumentação OTEL existente, substituindo a dependência antiga de Logstash/Elastic.【F:docs/observability-stack.md†L33-L64】【F:services/core/observability.py†L1-L120】
+- **Stack de observabilidade**: `docs/observability-stack.md` foi alinhado à stack LGTM (Loki/Grafana/Tempo/Prometheus) e à instrumentação OTEL existente, substituindo a dependência antiga de Logstash/Elastic.【F:docs/observability-stack.md†L33-L64】【F:backend/services/core/observability.py†L1-L120】
 - **Runbook operacional**: `docs/runbooks/observabilidade-servicos.md` aponta para Grafana Explore/Loki e orienta o uso dos quality gates para evidências, removendo menções a Kibana e Logstash.【F:docs/runbooks/observabilidade-servicos.md†L8-L37】
 
 ## 2. Lacunas identificadas

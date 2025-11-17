@@ -14,7 +14,7 @@ Este manual orienta administradores e colaboradores na configuração e uso diá
 
 ### Matriz de Permissões de Agentes
 
-O backend implementa uma hierarquia de papéis alinhada ao módulo `services/core/security.py`. Cada agente recebe um `role` e herdará os privilégios indicados abaixo.
+O backend implementa uma hierarquia de papéis alinhada ao módulo `backend/services/core/security.py`. Cada agente recebe um `role` e herdará os privilégios indicados abaixo.
 
 | Papel | Pode Executar | Escopo Herdado |
 |-------|---------------|----------------|

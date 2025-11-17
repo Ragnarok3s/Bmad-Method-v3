@@ -30,7 +30,7 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
 
 ### Política de Acesso dos Agentes Core
 
-- **Fonte de Verdade**: módulo `services/core/security.py`, que mantém o catálogo de permissões (`PermissionDefinition`) e as políticas hierárquicas (`RolePolicy`). Toda alteração passa pelos endpoints `/governance/permissions`, `/governance/roles` e possui registro automático em `/governance/audit`.
+- **Fonte de Verdade**: módulo `backend/services/core/security.py`, que mantém o catálogo de permissões (`PermissionDefinition`) e as políticas hierárquicas (`RolePolicy`). Toda alteração passa pelos endpoints `/governance/permissions`, `/governance/roles` e possui registro automático em `/governance/audit`.
 - **Papéis e herança padrão**:
   - `admin`: administração completa de reservas, propriedades, agentes e integrações OTA, com acesso a todas as operações de governança.
   - `property_manager`: gestão operacional das propriedades atribuídas, consulta de políticas e exportação de auditorias.
@@ -56,7 +56,7 @@ Legenda: **R** = Responsável, **A** = Aprovador, **C** = Consultado, **I** = In
 #### Checklist STRIDE para Revisões Extraordinárias
 
 - **Spoofing**: validar MFA obrigatório e revogar credenciais compartilhadas.
-- **Tampering**: revisar histórico em `/governance/audit` e confirmar hashes de configuração no repositório (`services/core/security.py`).
+- **Tampering**: revisar histórico em `/governance/audit` e confirmar hashes de configuração no repositório (`backend/services/core/security.py`).
 - **Repudiation**: garantir exportação e assinatura digital do relatório mensal.
 - **Information Disclosure**: verificar se perfis OTA não possuem permissões de `governance.audit.export`.
 - **Denial of Service**: confirmar limites de rate limiting nos endpoints `/governance/*` e alertas de abuso.

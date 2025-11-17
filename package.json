@@ -1,27 +1,23 @@
 {
-  "name": "bmad-method-monorepo",
+  "name": "bmad-method",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "apps/web",
-    "apps/mobile",
+    "frontend",
     "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @bmad/web",
     "build": "npm run build --workspace @bmad/web",
     "lint": "npm run lint --workspace @bmad/web",
-    "test:web:unit": "npm run test --workspace @bmad/web",
-    "test:web:e2e": "npm run test:e2e --workspace @bmad/web",
-    "prepare:web:e2e": "npm run playwright:install --workspace @bmad/web",
+    "test:frontend:unit": "npm run test --workspace @bmad/web",
+    "test:frontend:e2e": "npm run test:e2e --workspace @bmad/web",
+    "prepare:frontend:e2e": "npm run playwright:install --workspace @bmad/web",
     "verify-fonts": "node scripts/verify-fonts.mjs",
-    "dev:mobile": "npm run start --workspace @bmad/mobile",
-    "build:mobile": "npm run build --workspace @bmad/mobile",
-    "test:mobile:e2e": "npm run test:e2e --workspace @bmad/mobile"
+    "dev:backend": "cd backend && uvicorn services.core.main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:stack": "docker compose up --build"
   },
   "devDependencies": {
-    "fontkit": "^2.0.4",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "fontkit": "^2.0.4"
   }
 }

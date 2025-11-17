@@ -28,7 +28,7 @@
 - Dispatch dry-run log: `releases/staging/2024.07.10-rc1/quality/workflow-dispatch/first-run.md`.
 - Pytest end-to-end log: `tests/e2e` run on 2025-11-04 (see command output in CI artefacts or local logs).
 - Pytest contract log: `tests/contracts` run on 2025-11-04.
-- Jest accessibility log: `apps/web` path.
+- Jest accessibility log: `frontend` path.
 
 ## 5. QA Sign-off
 - Reviewer: Patricia Oliveira (QA)

@@ -23,6 +23,6 @@
 - [ ] Atingir ≥ 70% de integrações testadas permanece em aberto (revisitar em 12/07).
 
 ## Atualizações 10/07/2024
-- ✅ Revisão das pendências "serviço ausente" confirmou disponibilidade dos módulos `services/identity` e `services/payments`; documentação atualizada em `docs/issues/identity-service-missing.md` e `docs/issues/payments-service-missing.md`.
-- ✅ Suite `tests/services/identity/test_identity_api.py` e teste de integração `tests/integration/test_payments_gateway.py` comunicados como fontes oficiais de validação.
+- ✅ Revisão das pendências "serviço ausente" confirmou disponibilidade dos módulos `backend/services/identity` e `backend/services/payments`; documentação atualizada em `docs/issues/identity-service-missing.md` e `docs/issues/payments-service-missing.md`.
+- ✅ Suite `tests/backend/services/identity/test_identity_api.py` e teste de integração `tests/integration/test_payments_gateway.py` comunicados como fontes oficiais de validação.
 - ✅ Renata Almeida informou stakeholders no canal "Bmad Steering" sobre o falso positivo e encaminhou resumo executivo para evitar novos alarmes.

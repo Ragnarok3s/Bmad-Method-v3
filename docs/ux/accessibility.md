@@ -3,7 +3,7 @@
 ## Atualizações de julho de 2024
 
 ### Tokens de cor revistos
-- Novos tokens centralizados em `apps/web/src/theme/statusTokens.ts` asseguram contraste ≥ 4.5:1 entre texto e fundo para variantes `success`, `warning`, `critical`, `info` e `neutral` em modos claro/escuro.
+- Novos tokens centralizados em `frontend/src/theme/statusTokens.ts` asseguram contraste ≥ 4.5:1 entre texto e fundo para variantes `success`, `warning`, `critical`, `info` e `neutral` em modos claro/escuro.
 - Variáveis CSS dedicadas (`--status-*-surface`, `--status-*-text`, `--status-*-border` e `--status-*-icon`) foram adicionadas ao `globals.css`, permitindo auditoria e evolução consistente das cores de feedback.
 
 ### Componentes atualizados

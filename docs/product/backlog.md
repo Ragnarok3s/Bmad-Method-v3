@@ -4,21 +4,21 @@
 
 ### Escopo
 - Itens avaliados: épico `BL-02 Configuração de Agentes` do roadmap e issue "Feedback insuficiente e acessibilidade limitada na página de agentes".
-- Implementação verificada: rota `/agentes` do front-end web (`apps/web/app/agentes/page.tsx`).
+- Implementação verificada: rota `/agentes` do front-end web (`frontend/app/agentes/page.tsx`).
 
 ### Resumo da verificação
-- O épico `BL-02` foi **concluído** na variante em português após alinhar a rota `/agentes` ao catálogo dinâmico (`useAgentsCatalog`, filtros, paginação e telemetria) reutilizado de `/agents`. O catálogo agora integra filtros acessíveis, paginação focável e instrumentação de bundles.【F:apps/web/components/agents/AgentsCatalogView.tsx†L1-L236】【F:apps/web/app/agentes/page.tsx†L1-L36】
-- A issue de acessibilidade foi **encerrada** com a introdução de alertas com foco automático, botões com foco visível e componentes reutilizáveis documentados nos testes de regressão.【F:apps/web/components/agents/AgentActionButton.tsx†L1-L63】【F:apps/web/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】
+- O épico `BL-02` foi **concluído** na variante em português após alinhar a rota `/agentes` ao catálogo dinâmico (`useAgentsCatalog`, filtros, paginação e telemetria) reutilizado de `/agents`. O catálogo agora integra filtros acessíveis, paginação focável e instrumentação de bundles.【F:frontend/components/agents/AgentsCatalogView.tsx†L1-L236】【F:frontend/app/agentes/page.tsx†L1-L36】
+- A issue de acessibilidade foi **encerrada** com a introdução de alertas com foco automático, botões com foco visível e componentes reutilizáveis documentados nos testes de regressão.【F:frontend/components/agents/AgentActionButton.tsx†L1-L63】【F:frontend/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】
 
 ### Evidências da entrega `BL-02`
-- **Catálogo dinâmico**: `/agentes` partilha a mesma infraestrutura de catálogo da rota em inglês, com filtros, paginação e telemetria OTel/Analytics acionadas conforme os critérios T1.【F:apps/web/components/agents/AgentsCatalogView.tsx†L42-L209】【F:apps/web/app/agentes/page.tsx†L1-L36】
-- **Filtros e alertas acessíveis**: `AgentsFilters` continua a anunciar filtros ativos e agora é reutilizado na rota localizada, garantindo paridade de UX e acessibilidade.【F:apps/web/components/agents/AgentsCatalogView.tsx†L112-L150】【F:apps/web/components/agents/AgentsFilters.tsx†L1-L172】
-- **Pré-configuração acionável**: o botão reutilizável aciona métricas `bundle_view`/`bundle_launch`, respeitando estados de carregamento e foco visível exigidos pelo T3.【F:apps/web/components/agents/AgentsCatalogView.tsx†L70-L107】【F:apps/web/components/agents/AgentActionButton.tsx†L1-L63】
+- **Catálogo dinâmico**: `/agentes` partilha a mesma infraestrutura de catálogo da rota em inglês, com filtros, paginação e telemetria OTel/Analytics acionadas conforme os critérios T1.【F:frontend/components/agents/AgentsCatalogView.tsx†L42-L209】【F:frontend/app/agentes/page.tsx†L1-L36】
+- **Filtros e alertas acessíveis**: `AgentsFilters` continua a anunciar filtros ativos e agora é reutilizado na rota localizada, garantindo paridade de UX e acessibilidade.【F:frontend/components/agents/AgentsCatalogView.tsx†L112-L150】【F:frontend/components/agents/AgentsFilters.tsx†L1-L172】
+- **Pré-configuração acionável**: o botão reutilizável aciona métricas `bundle_view`/`bundle_launch`, respeitando estados de carregamento e foco visível exigidos pelo T3.【F:frontend/components/agents/AgentsCatalogView.tsx†L70-L107】【F:frontend/components/agents/AgentActionButton.tsx†L1-L63】
 
 ### Issues relacionadas
 | Issue | Situação | Evidência |
 |-------|----------|-----------|
-| `docs/issues/agents-page-feedback-a11y.md` | Encerrada; alertas com foco automático, resumo `aria-live` e testes RTL + `axe` documentados na variante localizada. | 【F:docs/issues/agents-page-feedback-a11y.md†L1-L84】【F:apps/web/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】 |
+| `docs/issues/agents-page-feedback-a11y.md` | Encerrada; alertas com foco automático, resumo `aria-live` e testes RTL + `axe` documentados na variante localizada. | 【F:docs/issues/agents-page-feedback-a11y.md†L1-L84】【F:frontend/app/agentes/__tests__/AgentesPage.test.tsx†L1-L115】 |
 
 ## Plano de ação atualizado
 

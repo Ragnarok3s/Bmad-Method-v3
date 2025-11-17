@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$ROOT_DIR/backend"
 ARTIFACT_DIR="$ROOT_DIR/artifacts"
 COVERAGE_DIR="$ARTIFACT_DIR/coverage"
 JUNIT_DIR="$ARTIFACT_DIR/junit"
@@ -9,11 +10,11 @@ JUNIT_DIR="$ARTIFACT_DIR/junit"
 mkdir -p "$COVERAGE_DIR" "$JUNIT_DIR"
 
 run_pytest_integration() {
-  if compgen -G "$ROOT_DIR/tests/integration/*.py" > /dev/null; then
+  if compgen -G "$BACKEND_DIR/tests/integration/*.py" > /dev/null; then
     echo "[test-integration] Executando pytest -m integration"
     export COVERAGE_FILE="$COVERAGE_DIR/.coverage.integration"
     (\
-      cd "$ROOT_DIR" && \
+      cd "$BACKEND_DIR" && \
       pytest \
         -m integration \
         --cov=services.core \
