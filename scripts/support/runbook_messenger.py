@@ -72,6 +72,7 @@ class MessengerConfig:
     context: Dict[str, str] = field(default_factory=dict)
     webhook_url: Optional[str] = None
     dry_run: bool = False
+    timeout: float = 10.0
 
     @classmethod
     def from_args(cls, argv: Optional[Mapping[str, str]] = None) -> "MessengerConfig":
@@ -125,6 +126,12 @@ class MessengerConfig:
             action="store_true",
             help="Enable debug logging output.",
         )
+        parser.add_argument(
+            "--timeout",
+            type=float,
+            default=10.0,
+            help="Timeout in seconds for webhook delivery requests.",
+        )
 
         args = parser.parse_args(argv)
 
@@ -148,6 +155,9 @@ class MessengerConfig:
             key, value = item.split("=", 1)
             context[key.strip()] = value.strip()
 
+        if args.timeout <= 0:
+            raise ValueError("--timeout must be greater than zero seconds.")
+
         return cls(
             runbook=args.runbook,
             channel=args.channel.lower(),
@@ -155,6 +165,7 @@ class MessengerConfig:
             context=dict(context),
             webhook_url=args.webhook_url,
             dry_run=bool(args.dry_run),
+            timeout=float(args.timeout),
         )
 
 
@@ -229,7 +240,7 @@ def dispatch_message(config: MessengerConfig, message: str) -> None:
     )
 
     try:
-        with urllib.request.urlopen(request) as response:
+        with urllib.request.urlopen(request, timeout=config.timeout) as response:
             body = response.read().decode("utf-8")
             logger.debug("Webhook response status=%s body=%s", response.status, body)
             if 200 <= response.status < 300:
