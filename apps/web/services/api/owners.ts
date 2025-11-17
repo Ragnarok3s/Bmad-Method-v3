@@ -232,6 +232,15 @@ const FALLBACK_STATE = {
       adr: 118,
       lastIncidentAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
       issuesOpen: 2
+    },
+    {
+      propertyId: 104,
+      propertyName: 'Faro Beach Villas',
+      occupancyRate: 0.91,
+      revenueMtd: 12650,
+      adr: 156,
+      lastIncidentAt: new Date(Date.now() - 6 * 24 * 3600 * 1000).toISOString(),
+      issuesOpen: 0
     }
   ] satisfies OwnerPropertySummary[],
   invoices: [

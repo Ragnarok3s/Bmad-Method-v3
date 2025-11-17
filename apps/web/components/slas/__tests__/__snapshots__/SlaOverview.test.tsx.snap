@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
 <div>
@@ -11,17 +11,36 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
       role="alert"
     >
       <span
-        class="jsx-3638802884 status-badge"
+        class="jsx-2316e3eaaf427909 status-badge"
         data-variant="critical"
+        role="status"
+        style="--status-badge-surface: var(--status-critical-surface); --status-badge-text: var(--status-critical-text); --status-badge-border: var(--status-critical-border); --status-badge-icon: var(--status-critical-icon);"
       >
-        <span
+        <svg
           aria-hidden="true"
-          class="jsx-3638802884 status-badge__icon"
+          class="lucide lucide-octagon-alert jsx-2316e3eaaf427909 status-badge__icon"
+          fill="none"
+          height="14"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="14"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          ⨉
-        </span>
+          <path
+            d="M12 16h.01"
+          />
+          <path
+            d="M12 8v4"
+          />
+          <path
+            d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
+          />
+        </svg>
         <span
-          class="jsx-3638802884 status-badge__text"
+          class="jsx-2316e3eaaf427909 status-badge__text"
         >
           Violação de SLA
         </span>
@@ -33,43 +52,95 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
       </span>
     </div>
     <div
-      class="jsx-3544339692 responsive-grid"
+      class="jsx-4066219320 responsive-grid"
     >
       <article
-        class="jsx-2858078647 card"
+        class="jsx-a806ab7bf70b2d4 card"
+        data-accent="success"
+        style="--card-accent-border: var(--status-success-border); --card-accent-text: var(--status-success-text); --card-accent-icon: var(--status-success-icon); --card-accent-surface: var(--status-success-surface);"
       >
         <header
-          class="jsx-2858078647"
+          class="jsx-a806ab7bf70b2d4 card__header"
         >
+          <div
+            class="jsx-a806ab7bf70b2d4 card__accent"
+            data-variant="success"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-circle-check jsx-a806ab7bf70b2d4 card__accent-icon"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+              />
+              <path
+                d="m9 12 2 2 4-4"
+              />
+            </svg>
+            <span
+              class="jsx-a806ab7bf70b2d4 card__accent-label"
+            >
+              Estado: sucesso
+            </span>
+          </div>
           <h3
-            class="jsx-2858078647"
+            class="jsx-a806ab7bf70b2d4"
           >
             AirLaundry · Janela de recolha
           </h3>
           <p
-            class="jsx-2858078647 card-description"
+            class="jsx-a806ab7bf70b2d4 card-description"
           >
             Meta 45 min · Revisado 22/07/24, 10:00
           </p>
         </header>
         <div
-          class="jsx-2858078647"
+          class="jsx-a806ab7bf70b2d4"
         >
           <div
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-3632567003 status-badge"
+              class="jsx-2316e3eaaf427909 status-badge"
               data-variant="success"
+              role="status"
+              style="--status-badge-surface: var(--status-success-surface); --status-badge-text: var(--status-success-text); --status-badge-border: var(--status-success-border); --status-badge-icon: var(--status-success-icon);"
             >
-              <span
+              <svg
                 aria-hidden="true"
-                class="jsx-3632567003 status-badge__icon"
+                class="lucide lucide-circle-check jsx-2316e3eaaf427909 status-badge__icon"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                ✔︎
-              </span>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <path
+                  d="m9 12 2 2 4-4"
+                />
+              </svg>
               <span
-                class="jsx-3632567003 status-badge__text"
+                class="jsx-2316e3eaaf427909 status-badge__text"
               >
                 No prazo
               </span>
@@ -143,40 +214,94 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
         </div>
       </article>
       <article
-        class="jsx-4100245982 card"
+        class="jsx-a806ab7bf70b2d4 card"
+        data-accent="warning"
+        style="--card-accent-border: var(--status-warning-border); --card-accent-text: var(--status-warning-text); --card-accent-icon: var(--status-warning-icon); --card-accent-surface: var(--status-warning-surface);"
       >
         <header
-          class="jsx-4100245982"
+          class="jsx-a806ab7bf70b2d4 card__header"
         >
+          <div
+            class="jsx-a806ab7bf70b2d4 card__accent"
+            data-variant="warning"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-triangle-alert jsx-a806ab7bf70b2d4 card__accent-icon"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+              />
+              <path
+                d="M12 9v4"
+              />
+              <path
+                d="M12 17h.01"
+              />
+            </svg>
+            <span
+              class="jsx-a806ab7bf70b2d4 card__accent-label"
+            >
+              Estado: alerta
+            </span>
+          </div>
           <h3
-            class="jsx-4100245982"
+            class="jsx-a806ab7bf70b2d4"
           >
             FixItNow · Despacho manutenção
           </h3>
           <p
-            class="jsx-4100245982 card-description"
+            class="jsx-a806ab7bf70b2d4 card-description"
           >
             Meta 60 min · Revisado 22/07/24, 09:45
           </p>
         </header>
         <div
-          class="jsx-4100245982"
+          class="jsx-a806ab7bf70b2d4"
         >
           <div
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-3142698214 status-badge"
+              class="jsx-2316e3eaaf427909 status-badge"
               data-variant="warning"
+              role="status"
+              style="--status-badge-surface: var(--status-warning-surface); --status-badge-text: var(--status-warning-text); --status-badge-border: var(--status-warning-border); --status-badge-icon: var(--status-warning-icon);"
             >
-              <span
+              <svg
                 aria-hidden="true"
-                class="jsx-3142698214 status-badge__icon"
+                class="lucide lucide-triangle-alert jsx-2316e3eaaf427909 status-badge__icon"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                ⚠︎
-              </span>
+                <path
+                  d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"
+                />
+                <path
+                  d="M12 9v4"
+                />
+                <path
+                  d="M12 17h.01"
+                />
+              </svg>
               <span
-                class="jsx-3142698214 status-badge__text"
+                class="jsx-2316e3eaaf427909 status-badge__text"
               >
                 Em risco
               </span>
@@ -250,40 +375,94 @@ exports[`SlaOverview renderiza os estados principais de SLA 1`] = `
         </div>
       </article>
       <article
-        class="jsx-1814848195 card"
+        class="jsx-a806ab7bf70b2d4 card"
+        data-accent="critical"
+        style="--card-accent-border: var(--status-critical-border); --card-accent-text: var(--status-critical-text); --card-accent-icon: var(--status-critical-icon); --card-accent-surface: var(--status-critical-surface);"
       >
         <header
-          class="jsx-1814848195"
+          class="jsx-a806ab7bf70b2d4 card__header"
         >
+          <div
+            class="jsx-a806ab7bf70b2d4 card__accent"
+            data-variant="critical"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-octagon-alert jsx-a806ab7bf70b2d4 card__accent-icon"
+              fill="none"
+              height="16"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="16"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 16h.01"
+              />
+              <path
+                d="M12 8v4"
+              />
+              <path
+                d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
+              />
+            </svg>
+            <span
+              class="jsx-a806ab7bf70b2d4 card__accent-label"
+            >
+              Estado: crítico
+            </span>
+          </div>
           <h3
-            class="jsx-1814848195"
+            class="jsx-a806ab7bf70b2d4"
           >
             Partner OTA Hub · Disponibilidade API
           </h3>
           <p
-            class="jsx-1814848195 card-description"
+            class="jsx-a806ab7bf70b2d4 card-description"
           >
             Meta 15 min · Revisado 22/07/24, 09:00
           </p>
         </header>
         <div
-          class="jsx-1814848195"
+          class="jsx-a806ab7bf70b2d4"
         >
           <div
             class="jsx-f2db18b9b3d57b67 sla-overview__status"
           >
             <span
-              class="jsx-3638802884 status-badge"
+              class="jsx-2316e3eaaf427909 status-badge"
               data-variant="critical"
+              role="status"
+              style="--status-badge-surface: var(--status-critical-surface); --status-badge-text: var(--status-critical-text); --status-badge-border: var(--status-critical-border); --status-badge-icon: var(--status-critical-icon);"
             >
-              <span
+              <svg
                 aria-hidden="true"
-                class="jsx-3638802884 status-badge__icon"
+                class="lucide lucide-octagon-alert jsx-2316e3eaaf427909 status-badge__icon"
+                fill="none"
+                height="14"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="14"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                ⨉
-              </span>
+                <path
+                  d="M12 16h.01"
+                />
+                <path
+                  d="M12 8v4"
+                />
+                <path
+                  d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"
+                />
+              </svg>
               <span
-                class="jsx-3638802884 status-badge__text"
+                class="jsx-2316e3eaaf427909 status-badge__text"
               >
                 Violado
               </span>

@@ -140,9 +140,9 @@ describe('CalendarPage', () => {
       within(typeFilterGroup).getByRole('button', { name: /^Todos os tipos/ })
     ).toBeInTheDocument();
 
-    expect(screen.getByText('2 pendentes')).toBeInTheDocument();
-    expect(screen.getByText('Reserva #101')).toBeInTheDocument();
-    expect(screen.getByText('Item #301')).toBeInTheDocument();
+    expect(await screen.findByText('2 pendentes')).toBeInTheDocument();
+    expect(await screen.findByText('Reserva #101')).toBeInTheDocument();
+    expect(await screen.findByText('Item #301')).toBeInTheDocument();
   });
 
   it('shows loading states while calendar and reconciliation data are being fetched', () => {
