@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, type JSX, type ReactNode } from 'react';
 import { BmadApiClient, createApiClient } from '@bmad/api-client';
 
 interface ApiProviderProps {

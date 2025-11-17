@@ -1,15 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "jsx": "react-native",
+    "jsx": "react-jsx",
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "node",
     "allowJs": false,
     "strict": true,
     "noEmit": true,
-    "types": ["jest", "react", "react-native"]
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["jest", "react", "react-native", "detox"]
   },
-  "include": ["./src", "App.tsx", "e2e"],
+  "include": ["./src", "App.tsx"],
   "exclude": ["node_modules", "dist"]
 }

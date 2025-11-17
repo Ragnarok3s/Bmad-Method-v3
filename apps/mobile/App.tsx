@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useMemo, type JSX } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Button, StyleSheet, Text, View } from 'react-native';
 
