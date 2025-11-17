@@ -10,7 +10,6 @@
 - **bmad-2d-phaser-game-dev**: agentes `game-designer`, `game-developer`, `game-sm` e equipa `phaser-2d-nodejs-game-team`. 【39f873†L1-L3】【fcfc67†L1-L4】【dcbd91†L1-L2】
 - **bmad-2d-unity-game-dev**: agentes `game-architect`, `game-designer`, `game-developer`, `game-sm` e equipa `unity-2d-game-team`. 【627901†L1-L3】【01b9d8†L1-L4】【372c17†L1-L2】
 - **bmad-creative-writing**: dez agentes editoriais (ex.: `plot-architect`, `cover-designer`) e equipa `agent-team`. 【9fc747†L1-L3】【d79b47†L1-L10】【0757ca†L1-L2】
-- **bmad-godot-game-dev**: dez agentes multidisciplinares (ex.: `game-qa`, `game-ux-expert`) e equipa `godot-game-team`. 【7f9167†L1-L3】【5df01c†L1-L10】【6e6778†L1-L2】
 - **bmad-infrastructure-devops**: agente único `infra-devops-platform`. 【800e5d†L1-L3】【9156d0†L1-L2】
 
 ### Observações sobre priorização por uso
