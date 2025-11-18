@@ -13,11 +13,9 @@ import {
   CheckSquare,
   ClipboardCheck,
   LayoutDashboard,
-  LineChart,
   ShieldCheck,
   Sparkles,
-  Workflow,
-  Smartphone
+  Workflow
 } from 'lucide-react';
 
 interface NavItem {
@@ -79,18 +77,6 @@ const NAV_SECTIONS: { heading: string; items: NavItem[] }[] = [
         label: 'Onboarding',
         description: 'Wizard guiado para novas propriedades e equipas',
         icon: Sparkles
-      },
-      {
-        href: '/mobile/housekeeping',
-        label: 'App Housekeeping',
-        description: 'Execução mobile com suporte offline',
-        icon: Smartphone
-      },
-      {
-        href: '/mobile/gestor',
-        label: 'App Gestor',
-        description: 'KPIs móveis e aprovações rápidas',
-        icon: LineChart
       }
     ]
   },

@@ -5,9 +5,13 @@ artifacts/
 .eggs/
 *.egg-info/
 .pytest_cache/
+coverage/
+coverage.*
 node_modules/
 dist/
 frontend/.next/
 frontend/out/
+*.log
+.DS_Store
 **/.next/static/media/*.woff2
 backend/tests/contracts/pacts/*.json

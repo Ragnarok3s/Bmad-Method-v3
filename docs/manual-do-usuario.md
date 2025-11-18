@@ -79,8 +79,8 @@ Para garantir consistência com os fluxos documentados em [`design/hospitality-u
 
 | Fluxo operacional | Referência UX | Pontos verificados |
 |-------------------|---------------|--------------------|
-| Execução de Playbook → acompanhamento em tempo real | `user-flows.md` → *Fluxo de Housekeeping* (quadro de tarefas mobile) | Checklist mobile confirma possibilidade de registar incidentes e sincronizar status conforme passo 4 deste manual. |
-| Gestão de Agentes → ajuste de parâmetros e metas | `prototipo-interativo.md` → *Módulo Housekeeping* + *App Mobile Gestor* | Hotspots de configuração demonstram campos e notificações alinhados ao passo 3 deste manual. |
+| Execução de Playbook → acompanhamento em tempo real | `user-flows.md` → *Fluxo de Housekeeping* (quadro de tarefas web responsivo) | Checklist web confirma possibilidade de registar incidentes e sincronizar status conforme passo 4 deste manual. |
+| Gestão de Agentes → ajuste de parâmetros e metas | `prototipo-interativo.md` → *Módulo Housekeeping* no painel web | Hotspots de configuração demonstram campos e notificações alinhados ao passo 3 deste manual. |
 | Tratamento de Incidentes → escalonamento e pós-incidente | `user-flows.md` → *Fluxo de Calendário Operacional* (resolução de conflitos) | Alertas e sugestões de resolução espelham a etapa 4 deste manual, garantindo mesma nomenclatura e sequência. |
 | Métricas em Analytics → revisão de KPIs | `prototipo-interativo.md` → *Dashboard Web* | Cartões de KPIs exibem exatamente os indicadores citados em “Dashboard Inicial”, assegurando terminologia consistente. |
 | Checklists de lançamento → validação de acesso | `wireframes.md` → *Onboarding & Access Management* | Estados de confirmação nos wireframes reforçam a necessidade de validar MFA e papéis, conforme a checklist abaixo. |
