@@ -14,7 +14,7 @@ Demonstrar a experiência ponta-a-ponta do workspace Bmad Method v3 para stakeho
 |-------|---------|----------|----------------------------------|
 | 1. Abertura & Contexto | 5 min | Relembrar metas da sprint e métricas-chave. | Confirmar que o apresentador está autenticado como `admin` (mostrar badge no cabeçalho). |
 | 2. Configurações Iniciais | 5 min | Navegar por Configurações → Acesso & Permissões. | Mostrar matriz de papéis, executar filtro por `housekeeping`, validar auditoria mensal e destacar botão "Exportar CSV". |
-| 3. Fluxo de Playbook & Housekeeping | 7 min | Executar playbook sandbox e demonstrar app mobile. | Alternar para visão `housekeeping`, registrar conclusão de tarefa e evidenciar limites de edição (sem acesso a metas globais). |
+| 3. Fluxo de Playbook & Housekeeping | 7 min | Executar playbook sandbox e demonstrar o quadro web de tarefas. | Alternar para visão `housekeeping`, registrar conclusão de tarefa e evidenciar limites de edição (sem acesso a metas globais). |
 | 4. Calendário Operacional & Incidentes | 5 min | Resolver conflito de overbooking. | Logar como `property_manager`, exibir banner de acesso restrito a integrações OTA e provar que permissões de administração permanecem bloqueadas. |
 | 5. Analytics & Auditoria | 4 min | Revisar KPIs e logs de acesso. | Mostrar dashboard de auditorias, destacar trilha `/audit/access`, reforçar revisão trimestral de papéis. |
 | 6. Encerramento & Próximos Passos | 4 min | Recapitular SLAs e ações de follow-up. | Reforçar necessidade de abrir ticket ITSM para mudanças futuras e apontar runbook correspondente. |
@@ -31,7 +31,7 @@ Demonstrar a experiência ponta-a-ponta do workspace Bmad Method v3 para stakeho
 3. **Demonstração do Fluxo Housekeeping**
    - Trocar para sessão `housekeeping` (usar modo incógnito ou sessão secundária).
    - Executar playbook "Limpeza pré-check-in"; mostrar impossibilidade de editar metas, apenas atualizar status.
-   - Compartilhar captura do protótipo mobile para reforçar correspondência com implementação.
+   - Destacar o quadro web responsivo (lista/kanban) e como ele substitui o protótipo mobile anterior.
 4. **Gestão de Overbooking (Property Manager)**
    - Iniciar sessão `property_manager` e abrir módulo Calendário.
    - Mostrar alerta de conflito, utilizar ação "Reatribuir quarto" e evidenciar log no painel lateral.
